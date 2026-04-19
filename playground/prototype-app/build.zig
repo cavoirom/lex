@@ -1,7 +1,21 @@
 const std = @import("std");
 
+fn defaultOptimize(b: *std.Build) std.builtin.OptimizeMode {
+    if (b.option(std.builtin.OptimizeMode, "optimize", "Prioritize performance, safety, or binary size")) |mode| {
+        return mode;
+    }
+    if (b.option(bool, "release", "Optimize for end users; defaults to ReleaseSmall") orelse false) {
+        return .ReleaseSmall;
+    }
+    return switch (b.release_mode) {
+        .off, .any, .small => .ReleaseSmall,
+        .fast => .ReleaseFast,
+        .safe => .ReleaseSafe,
+    };
+}
+
 pub fn build(b: *std.Build) void {
-    const optimize = b.standardOptimizeOption(.{});
+    const optimize = defaultOptimize(b);
 
     // Match LSMinimumSystemVersion in Info.plist
     const target = b.resolveTargetQuery(.{
@@ -57,11 +71,18 @@ pub fn build(b: *std.Build) void {
     swiftc.step.dependOn(&repack.step);
     swiftc.has_side_effects = true;
 
-    // Step 4: Ad-hoc codesign
+    // Step 4: Strip local symbols before codesigning
+    const strip = b.addSystemCommand(&.{
+        "strip", "-x", "macos/Lex.app/Contents/MacOS/Lex",
+    });
+    strip.step.dependOn(&swiftc.step);
+    strip.has_side_effects = true;
+
+    // Step 5: Ad-hoc codesign
     const codesign = b.addSystemCommand(&.{
         "codesign", "-f", "-s", "-", "macos/Lex.app",
     });
-    codesign.step.dependOn(&swiftc.step);
+    codesign.step.dependOn(&strip.step);
     codesign.has_side_effects = true;
 
     // Wire into default install step
