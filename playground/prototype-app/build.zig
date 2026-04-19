@@ -56,7 +56,13 @@ pub fn build(b: *std.Build) void {
     };
     const swift_target = b.fmt("{s}-apple-macosx26.0", .{swift_arch});
 
-    // Step 3: Compile Swift and link with the Zig library
+    // Step 3: Ensure the app bundle executable directory exists.
+    const mkdir_app_bin = b.addSystemCommand(&.{
+        "/bin/mkdir", "-p", "macos/Lex.app/Contents/MacOS",
+    });
+    mkdir_app_bin.has_side_effects = true;
+
+    // Step 4: Compile Swift and link with the Zig library
     const swiftc = b.addSystemCommand(&.{
         "swiftc",
         "macos/Lex.swift",
@@ -69,16 +75,17 @@ pub fn build(b: *std.Build) void {
     swiftc.addArgs(&.{"-llex"});
     swiftc.addArgs(&.{ "-o", "macos/Lex.app/Contents/MacOS/Lex" });
     swiftc.step.dependOn(&repack.step);
+    swiftc.step.dependOn(&mkdir_app_bin.step);
     swiftc.has_side_effects = true;
 
-    // Step 4: Strip local symbols before codesigning
+    // Step 5: Strip local symbols before codesigning
     const strip = b.addSystemCommand(&.{
         "strip", "-x", "macos/Lex.app/Contents/MacOS/Lex",
     });
     strip.step.dependOn(&swiftc.step);
     strip.has_side_effects = true;
 
-    // Step 5: Ad-hoc codesign
+    // Step 6: Ad-hoc codesign
     const codesign = b.addSystemCommand(&.{
         "codesign", "-f", "-s", "-", "macos/Lex.app",
     });
