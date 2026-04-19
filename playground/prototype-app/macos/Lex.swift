@@ -147,7 +147,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     /// Compute and emit the minimal diff between currentRendered and nextRendered
-    func applyDiff(next: [UniChar]) {
+    func applyDiff(proxy: CGEventTapProxy, next: [UniChar]) {
         guard let source = syntheticSource else { return }
 
         // Find longest common prefix
@@ -160,12 +160,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let numBackspaces = currentRendered.count - diverge
         let replacementChars = Array(next.suffix(from: diverge))
 
-        // Emit backspaces
-        for _ in 0..<numBackspaces {
-            if let down = CGEvent(keyboardEventSource: source, virtualKey: 0x33, keyDown: true),
-               let up = CGEvent(keyboardEventSource: source, virtualKey: 0x33, keyDown: false) {
-                down.post(tap: .cgSessionEventTap)
-                up.post(tap: .cgSessionEventTap)
+        // Emit backspaces — allocate once, reuse across iterations
+        if numBackspaces > 0,
+           let down = CGEvent(keyboardEventSource: source, virtualKey: 0x33, keyDown: true),
+           let up = CGEvent(keyboardEventSource: source, virtualKey: 0x33, keyDown: false) {
+            for _ in 0..<numBackspaces {
+                down.tapPostEvent(proxy)
+                up.tapPostEvent(proxy)
             }
         }
 
@@ -176,8 +177,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                let up = CGEvent(keyboardEventSource: source, virtualKey: 0, keyDown: false) {
                 down.keyboardSetUnicodeString(stringLength: chars.count, unicodeString: &chars)
                 up.keyboardSetUnicodeString(stringLength: chars.count, unicodeString: &chars)
-                down.post(tap: .cgSessionEventTap)
-                up.post(tap: .cgSessionEventTap)
+                down.tapPostEvent(proxy)
+                up.tapPostEvent(proxy)
             }
         }
 
@@ -274,7 +275,7 @@ func eventTapCallback(
                     appDelegate.currentRendered = []
                     return Unmanaged.passUnretained(event)
                 }
-                appDelegate.applyDiff(next: next)
+                appDelegate.applyDiff(proxy: proxy, next: next)
                 return nil // swallow the original backspace
             }
         }
@@ -304,7 +305,7 @@ func eventTapCallback(
 
     // Consumed — read composed output and diff
     if let next = appDelegate.readComposed() {
-        appDelegate.applyDiff(next: next)
+        appDelegate.applyDiff(proxy: proxy, next: next)
         return nil // swallow original keystroke
     }
 
