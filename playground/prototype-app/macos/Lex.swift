@@ -11,6 +11,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var syntheticSource: CGEventSource?
     var vietnameseEnabled: Bool = true
     var hotKeyRef: EventHotKeyRef?
+    var toggleSound: NSSound?
 
     // Engine state (allocated by Swift, owned by Zig)
     var engineState: UnsafeMutableRawPointer!
@@ -132,7 +133,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if let button = statusItem.button {
             button.title = vietnameseEnabled ? "Ꝟ" : "𝙰"
         }
-        NSSound(named: NSSound.Name(vietnameseEnabled ? "Tink" : "Pop"))?.play()
+        toggleSound?.stop()
+        toggleSound = NSSound(named: NSSound.Name(vietnameseEnabled ? "Tink" : "Pop"))
+        toggleSound?.play()
     }
 
     /// Read composed UTF-16 from the engine into composeBuf, returns the array or nil on overflow
