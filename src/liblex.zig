@@ -7,6 +7,7 @@ const Diacritic = enum(u8) {
     circumflex, // dấu nón: â, ô, ê.
     horn, // dấu móc: ư, ơ.
     breve, // dấu ă.
+    bar, // dấu gạch: đ.
 };
 
 const Tone = enum(u8) {
@@ -22,27 +23,127 @@ const Span = extern struct {
     // Alphabet ASCII character, could be lowercase or uppercase.
     base: u8,
     // By default, it's plain alphabet character.
-    diacritic: Diacritic = Diacritic.empty,
+    diacritic: Diacritic = .empty,
     // By default, no tone is placed.
-    tone: Tone = Tone.level,
+    tone: Tone = .level,
 
+    // Create a Span with plain alphabet character, no diacritic, no tone.
     pub fn init(base: u8) Span {
+        return Span.init_diacritic_tone(base, .empty, .level);
+    }
+
+    // Create a Span with diacritic, no tone.
+    pub fn init_diacritic(base: u8, diacritic: Diacritic) Span {
+        return Span.init_diacritic_tone(base, diacritic, .level);
+    }
+
+    pub fn init_diacritic_tone(base: u8, diacritic: Diacritic, tone: Tone) Span {
         // Only allow a-zA-Z.
         assert(std.ascii.isAlphabetic(base));
-        return .{ .base = base };
+
+        // Only allow a valid Vietnamese alphabet combinations.
+        switch (diacritic) {
+            // All alphabet is allowed without diacritic.
+            .empty => {},
+            // Only a, o, e are valid with circumflex.
+            .circumflex => switch (base) {
+                'A', 'E', 'O', 'a', 'e', 'o' => {},
+                else => unreachable,
+            },
+            // Only u, o are valid with horn.
+            .horn => switch (base) {
+                'O', 'U', 'o', 'u' => {},
+                else => unreachable,
+            },
+            // Only a is valid with breve.
+            .breve => switch (base) {
+                'A', 'a' => {},
+                else => unreachable,
+            },
+            // Only d is valid with bar.
+            .bar => switch (base) {
+                'D', 'd' => {},
+                else => unreachable,
+            },
+        }
+
+        // Only allow tone on valid Vietnamese vowels based on Vietnamese rules.
+        switch (tone) {
+            // All alphabet is allowed with level.
+            .level => {},
+            // All vowels is allowed with remaining tones.
+            .rising, .falling, .dipping_rising, .rising_glottalized, .falling_glottalized => switch (base) {
+                'A', 'E', 'I', 'O', 'U', 'Y', 'a', 'e', 'i', 'o', 'u', 'y' => {},
+                else => unreachable,
+            },
+        }
+
+        return .{ .base = base, .diacritic = diacritic, .tone = tone };
     }
 };
 
 test "expect Span.init allows alphabet characters" {
-    inline for ("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz") |c| {
+    for ("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz") |c| {
         // Act
         const sp = Span.init(c);
 
         // Assert
         try expectEqual(c, sp.base);
-        try expectEqual(Diacritic.empty, sp.diacritic);
-        try expectEqual(Tone.level, sp.tone);
+        try expectEqual(.empty, sp.diacritic);
+        try expectEqual(.level, sp.tone);
     }
+}
+
+test "expect Span.init_diacritic can construct any alphabet characters" {
+    for ("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz") |c| {
+        // Act
+        const sp = Span.init_diacritic(c, .empty);
+
+        // Assert
+        try expectEqual(c, sp.base);
+        try expectEqual(.empty, sp.diacritic);
+        try expectEqual(.level, sp.tone);
+    }
+}
+
+test "expect Span.init_diacritic can construct any Vietnamese characters" {
+    const chars = .{
+        .{ .base = 'A', .diacritic = .breve }, // Ă.
+        .{ .base = 'a', .diacritic = .breve }, // ă.
+        .{ .base = 'A', .diacritic = .circumflex }, // Â.
+        .{ .base = 'a', .diacritic = .circumflex }, // â.
+        .{ .base = 'E', .diacritic = .circumflex }, // Ê.
+        .{ .base = 'e', .diacritic = .circumflex }, // ê.
+        .{ .base = 'O', .diacritic = .circumflex }, // Ô.
+        .{ .base = 'o', .diacritic = .circumflex }, // ô.
+        .{ .base = 'O', .diacritic = .horn }, // Ơ.
+        .{ .base = 'o', .diacritic = .horn }, // ơ.
+        .{ .base = 'U', .diacritic = .horn }, // Ư.
+        .{ .base = 'u', .diacritic = .horn }, // ư.
+        .{ .base = 'D', .diacritic = .bar }, // Đ.
+        .{ .base = 'd', .diacritic = .bar }, // đ.
+    };
+
+    // Need `inline for` to know the tuple at comptime.
+    inline for (chars) |c| {
+        // Act
+        const sp = Span.init_diacritic(c.base, c.diacritic);
+
+        // Assert
+        try expectEqual(c.base, sp.base);
+        try expectEqual(c.diacritic, sp.diacritic);
+        try expectEqual(.level, sp.tone);
+    }
+}
+
+test "expect Span.init_diacritic_tone can construct all vowels with all tones" {
+    // Act
+    const sp = Span.init_diacritic_tone('A', .circumflex, .rising);
+
+    // Assert
+    try expectEqual('A', sp.base);
+    try expectEqual(.circumflex, sp.diacritic);
+    try expectEqual(.rising, sp.tone);
 }
 
 const InputMode = enum(u8) {
@@ -66,5 +167,5 @@ const State = extern struct {
     // value, -1 mean no literal index).
     literal_start_index: i8,
     // Determine if we will process input in the specified mode (Telex) or append the character as is.
-    mode: InputMode = InputMode.literal,
+    mode: InputMode = .literal,
 };
