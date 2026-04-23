@@ -1,0 +1,721 @@
+{
+  "v": 222,
+  "id": "T-019db591-a502-73fd-987b-2986e5a30b91",
+  "env": {
+    "initial": {
+      "tags": [
+        "model:claude-opus-4-6"
+      ],
+      "trees": [
+        {
+          "uri": "file:///<redacted>/lex",
+          "displayName": "lex"
+        }
+      ],
+      "platform": {
+        "os": "darwin",
+        "client": "JetBrains",
+        "osVersion": "26.5",
+        "clientType": "cli",
+        "webBrowser": false,
+        "clientVersion": "0.0.1776834056-gfb3ba0",
+        "installationID": "<redacted>",
+        "cpuArchitecture": "arm64",
+        "deviceFingerprint": "<redacted>"
+      }
+    }
+  },
+  "meta": {
+    "traces": [
+      {
+        "id": "ULOR1",
+        "name": "agent",
+        "context": {
+          "messageId": 0
+        },
+        "endTime": "2026-04-22T14:23:22.521Z",
+        "startTime": "2026-04-22T14:22:32.644Z"
+      },
+      {
+        "id": "78KTc",
+        "name": "inference",
+        "parent": "ULOR1",
+        "context": {
+          "messageId": 0
+        },
+        "endTime": "2026-04-22T14:22:38.665Z",
+        "startTime": "2026-04-22T14:22:32.644Z"
+      },
+      {
+        "id": "vRpFb",
+        "name": "tools",
+        "parent": "ULOR1",
+        "context": {
+          "messageId": 1
+        },
+        "endTime": "2026-04-22T14:23:17.289Z",
+        "startTime": "2026-04-22T14:22:38.665Z"
+      },
+      {
+        "id": "KAqIP",
+        "name": "inference",
+        "parent": "ULOR1",
+        "context": {
+          "messageId": 0
+        },
+        "endTime": "2026-04-22T14:23:22.521Z",
+        "startTime": "2026-04-22T14:23:17.290Z"
+      }
+    ],
+    "deleted": false,
+    "usesDtw": false,
+    "agentMode": "smart",
+    "projectID": null,
+    "visibility": "private",
+    "workspaceID": null,
+    "sharedGroupIDs": [],
+    "createdOnServer": false,
+    "lastUserMessageAt": "2026-04-22T14:22:32.639Z"
+  },
+  "title": "TigerBeetle code indentation style",
+  "created": 1776867715506,
+  "messages": [
+    {
+      "meta": {
+        "sentAt": 1776867752639
+      },
+      "role": "user",
+      "content": [
+        {
+          "text": "Use The Librarian to verify what kind of code indentation TigerBeetle uses and why?",
+          "type": "text"
+        }
+      ],
+      "agentMode": "smart",
+      "messageId": 0,
+      "userState": {
+        "activeEditor": "file:///<redacted>/lex/src/liblex.zig",
+        "cursorLocation": {
+          "line": 28,
+          "column": 26
+        },
+        "currentlyVisibleFiles": [
+          "file:///<redacted>/lex/src/liblex.zig",
+          "file:///<redacted>/lex/devlog/2026-04-22__define-liblex-state.md"
+        ]
+      }
+    },
+    {
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "tool_use"
+      },
+      "usage": {
+        "model": "claude-opus-4-6",
+        "timestamp": "2026-04-22T14:22:38.664Z",
+        "inputTokens": 10,
+        "outputTokens": 197,
+        "maxInputTokens": 300000,
+        "totalInputTokens": 16102,
+        "cacheReadInputTokens": 14553,
+        "cacheCreationInputTokens": 1539
+      },
+      "content": [
+        {
+          "type": "thinking",
+          "provider": "anthropic",
+          "thinking": "The user wants me to use the Librarian tool to find out about TigerBeetle's code indentation style and the reasoning behind it.",
+          "finalTime": 1776867756260,
+          "signature": "<redacted>",
+          "startTime": 1776867755193
+        },
+        {
+          "id": "toolu_vrtx_01NQfgstxEWRdMtyPSegmtUv",
+          "name": "librarian",
+          "type": "tool_use",
+          "input": {
+            "query": "What kind of code indentation does TigerBeetle use in their Zig codebase, and what is the rationale behind their choice? Look at their style guide, contributing guidelines, or any documentation explaining their indentation conventions.",
+            "context": "TigerBeetle is a financial transactions database written in Zig. I need to understand their specific indentation style (spaces vs tabs, width) and any documented reasoning for that choice."
+          },
+          "complete": true,
+          "finalTime": 1776867758634,
+          "startTime": 1776867756260
+        }
+      ],
+      "messageId": 1
+    },
+    {
+      "role": "user",
+      "content": [
+        {
+          "run": {
+            "result": "I have everything I need. Here's the complete picture:\n\n---\n\n## TigerBeetle's Indentation Style\n\n### The Rule: 4 Spaces\n\nTigerBeetle uses **4 spaces of indentation** (not tabs). This is explicitly stated in the **\"Style By The Numbers\"** section of their style guide, [`docs/TIGER_STYLE.md`](https://github.com/tigerbeetle/tigerbeetle/blob/main/docs/TIGER_STYLE.md):\n\n> **Use 4 spaces of indentation, rather than 2 spaces, as that is more obvious to the eye at a distance.**\n\nThis is enforced in practice by `zig fmt` — the Zig standard formatter — which is also listed as the very first rule in that same section:\n\n> **Run `zig fmt`.**\n\nYou can see 4-space indentation throughout the actual codebase, for example in [`src/tigerbeetle.zig`](https://github.com/tigerbeetle/tigerbeetle/blob/main/src/tigerbeetle.zig):\n\n```zig\npub const Account = extern struct {\n    id: u128,\n    debits_pending: u128,\n    // ...\n\n    pub fn debits_exceed_credits(self: *const Account, amount: u128) bool {\n        return (self.flags.debits_must_not_exceed_credits and\n            self.debits_pending + self.debits_posted + amount > self.credits_posted);\n    }\n};\n```\n\n---\n\n### The Rationale\n\nThe reasoning given is **visual clarity at a distance**: 4 spaces creates a more *obvious* indent than 2 spaces when you're scanning code without focusing closely — particularly useful in a safety-critical, high-complexity codebase where misreading nesting depth could matter.\n\nThis sits within a broader philosophy in TigerStyle. Two closely related rules provide context:\n\n1. **Hard 70-line function limit** — Functions must fit on a screen. Since code can't sprawl *vertically*, it's always visible in full, meaning deeper/wider indents don't force you to scroll horizontally more than the 100-column line limit allows.\n2. **Hard 100-column line limit** — \"Nothing should be hidden by a horizontal scrollbar.\" The combination of 4-space indents and a 100-column limit means code stays readable without pathological nesting.\n\nTogether, these three constraints form a consistent physical/typographic contract:\n\n| Rule | Value | Rationale |\n|---|---|---|\n| Indentation | 4 spaces | More obvious to the eye at a distance |\n| Line length | 100 columns max | Fits two files side-by-side on screen |\n| Function length | 70 lines max | Fits one function on screen without scrolling |\n\n---\n\n### No `.editorconfig`, No Tabs\n\nThere is no `.editorconfig` in the repository — enforcement is purely via **`zig fmt`**, which is Zig's built-in formatter. The Zig formatter natively uses spaces (not tabs), and TigerBeetle's style guide overrides Zig's default 4-space convention by... also choosing 4 spaces — explicitly affirming it rather than diverging from it.",
+            "status": "done",
+            "~debug": {
+              "inferences": [
+                {
+                  "usage": {
+                    "model": "claude-sonnet-4-6",
+                    "timestamp": "2026-04-22T14:22:41.846Z",
+                    "inputTokens": 426,
+                    "outputTokens": 154,
+                    "maxInputTokens": 936000,
+                    "thinkingBudget": 4000,
+                    "totalInputTokens": 5661,
+                    "cacheReadInputTokens": 5235,
+                    "cacheCreationInputTokens": 0
+                  },
+                  "inferenceTimeMs": 2716.8909579999745
+                },
+                {
+                  "usage": {
+                    "model": "claude-sonnet-4-6",
+                    "timestamp": "2026-04-22T14:22:48.168Z",
+                    "inputTokens": 1,
+                    "outputTokens": 211,
+                    "maxInputTokens": 936000,
+                    "thinkingBudget": 4000,
+                    "totalInputTokens": 7539,
+                    "cacheReadInputTokens": 5235,
+                    "cacheCreationInputTokens": 2303
+                  },
+                  "inferenceTimeMs": 3769.4588329996914
+                },
+                {
+                  "usage": {
+                    "model": "claude-sonnet-4-6",
+                    "timestamp": "2026-04-22T14:22:51.375Z",
+                    "inputTokens": 1,
+                    "outputTokens": 144,
+                    "maxInputTokens": 936000,
+                    "thinkingBudget": 4000,
+                    "totalInputTokens": 7902,
+                    "cacheReadInputTokens": 7538,
+                    "cacheCreationInputTokens": 363
+                  },
+                  "inferenceTimeMs": 2443.780332999304
+                },
+                {
+                  "usage": {
+                    "model": "claude-sonnet-4-6",
+                    "timestamp": "2026-04-22T14:22:54.484Z",
+                    "inputTokens": 1,
+                    "outputTokens": 151,
+                    "maxInputTokens": 936000,
+                    "thinkingBudget": 4000,
+                    "totalInputTokens": 8154,
+                    "cacheReadInputTokens": 5235,
+                    "cacheCreationInputTokens": 2918
+                  },
+                  "inferenceTimeMs": 2480.6676659993827
+                },
+                {
+                  "usage": {
+                    "model": "claude-sonnet-4-6",
+                    "timestamp": "2026-04-22T14:22:59.333Z",
+                    "inputTokens": 1,
+                    "outputTokens": 211,
+                    "maxInputTokens": 936000,
+                    "thinkingBudget": 4000,
+                    "totalInputTokens": 16641,
+                    "cacheReadInputTokens": 5235,
+                    "cacheCreationInputTokens": 11405
+                  },
+                  "inferenceTimeMs": 4291.3456250000745
+                },
+                {
+                  "usage": {
+                    "model": "claude-sonnet-4-6",
+                    "timestamp": "2026-04-22T14:23:17.287Z",
+                    "inputTokens": 1,
+                    "outputTokens": 765,
+                    "maxInputTokens": 936000,
+                    "thinkingBudget": 4000,
+                    "totalInputTokens": 17802,
+                    "cacheReadInputTokens": 16640,
+                    "cacheCreationInputTokens": 1161
+                  },
+                  "inferenceTimeMs": 17206.790374999866
+                }
+              ]
+            },
+            "progress": [
+              {
+                "reasoning": "Let me explore the TigerBeetle repository to find their style guide, contributing guidelines, and indentation conventions.",
+                "tool_uses": [
+                  {
+                    "id": "toolu_vrtx_01RiRbDZ63jktnWuyggRe4r9",
+                    "input": {
+                      "pattern": "tigerbeetle"
+                    },
+                    "result": {
+                      "totalCount": 30,
+                      "repositories": [
+                        {
+                          "name": "tigerbeetle/tigerbeetle",
+                          "private": false,
+                          "language": "Zig",
+                          "forksCount": 802,
+                          "description": "The financial transactions database designed for mission critical safety and performance.",
+                          "stargazersCount": 15678
+                        },
+                        {
+                          "name": "tigerbeetle/viewstamped-replication-made-famous",
+                          "private": false,
+                          "language": "Zig",
+                          "forksCount": 12,
+                          "description": "A $20k consensus challenge based on TigerBeetle's implementation of the pioneering Viewstamped Replication protocol.",
+                          "stargazersCount": 219
+                        },
+                        {
+                          "name": "tigerbeetle/tigerlings",
+                          "private": false,
+                          "language": "Shell",
+                          "forksCount": 13,
+                          "description": "Learn TigerBeetle by fixing tiny broken scripts!",
+                          "stargazersCount": 177
+                        },
+                        {
+                          "name": "rbino/tigerbeetlex",
+                          "private": false,
+                          "language": "Elixir",
+                          "forksCount": 11,
+                          "description": "An Elixir client for TigerBeetle",
+                          "stargazersCount": 111
+                        },
+                        {
+                          "name": "tigerbeetle-rust/tigerbeetle-unofficial",
+                          "private": false,
+                          "language": "Rust",
+                          "forksCount": 11,
+                          "description": "Safe bindings to TigerBeetle client.",
+                          "stargazersCount": 77
+                        },
+                        {
+                          "name": "tigerbeetle/tigerbeetle-go",
+                          "private": false,
+                          "language": "Go",
+                          "forksCount": 11,
+                          "description": "TigerBeetle Go client",
+                          "stargazersCount": 72
+                        },
+                        {
+                          "name": "tigerbeetle/tigerbeetle-node",
+                          "private": false,
+                          "language": "Zig",
+                          "forksCount": 8,
+                          "description": "TigerBeetle Node.js client",
+                          "stargazersCount": 25
+                        },
+                        {
+                          "name": "lil5/tigerbeetle_api",
+                          "private": false,
+                          "language": "Go",
+                          "forksCount": 8,
+                          "description": "TigerBeetle Rest/gRPC API Server (3rd party)",
+                          "stargazersCount": 21
+                        },
+                        {
+                          "name": "nurturenature/jepsen-tigerbeetle",
+                          "private": false,
+                          "language": "Clojure",
+                          "forksCount": 0,
+                          "description": "A Jepsen Test for TigerBeetle.",
+                          "stargazersCount": 17
+                        },
+                        {
+                          "name": "antstorm/tigerbeetle-ruby",
+                          "private": false,
+                          "language": "Ruby",
+                          "forksCount": 3,
+                          "description": "A Ruby client for TigerBeetle",
+                          "stargazersCount": 17
+                        },
+                        {
+                          "name": "tigerbeetle/hackathon-2023",
+                          "private": false,
+                          "language": null,
+                          "forksCount": 5,
+                          "description": "TigerBeetle Hackathon at Interledger Summit 2023",
+                          "stargazersCount": 14
+                        },
+                        {
+                          "name": "agentultra/tigerbeetle-hs",
+                          "private": false,
+                          "language": "Haskell",
+                          "forksCount": 2,
+                          "description": "A Tigerbeetle database client library for Haskell",
+                          "stargazersCount": 13
+                        },
+                        {
+                          "name": "kassane/tigerbeetle-cpp",
+                          "private": false,
+                          "language": "CMake",
+                          "forksCount": 1,
+                          "description": "TigerBeetle C++ client",
+                          "stargazersCount": 12
+                        },
+                        {
+                          "name": "Meenachinmay/5-million-Txns-in-Tigerbeetle",
+                          "private": false,
+                          "language": "Go",
+                          "forksCount": 0,
+                          "description": "Trying Tigerbeetle transactional database.",
+                          "stargazersCount": 11
+                        },
+                        {
+                          "name": "jepsen-io/tigerbeetle",
+                          "private": false,
+                          "language": "Clojure",
+                          "forksCount": 0,
+                          "description": "Jepsen tests for the TigerBeetle distributed database",
+                          "stargazersCount": 8
+                        },
+                        {
+                          "name": "hnakamur/tigerbeetle-io",
+                          "private": false,
+                          "language": "Zig",
+                          "forksCount": 0,
+                          "description": "See https://github.com/Cloudef/zig-aio or https://codeberg.org/dude_the_builder/iofthetiger instead",
+                          "stargazersCount": 7
+                        },
+                        {
+                          "name": "lightpanda-io/tigerbeetle-io",
+                          "private": false,
+                          "language": "Zig",
+                          "forksCount": 1,
+                          "description": "Tigerbeetle Event Loop from https://github.com/tigerbeetledb/tigerbeetle",
+                          "stargazersCount": 7
+                        },
+                        {
+                          "name": "tigerbeetle/devhubdb",
+                          "private": false,
+                          "language": null,
+                          "forksCount": 1,
+                          "description": null,
+                          "stargazersCount": 6
+                        },
+                        {
+                          "name": "tigerbeetle/docs",
+                          "private": false,
+                          "language": "HTML",
+                          "forksCount": 4,
+                          "description": "TigerBeetle documentation site",
+                          "stargazersCount": 5
+                        },
+                        {
+                          "name": "resonatehq-examples/example-tigerbeetle-account-creation-ts",
+                          "private": false,
+                          "language": "TypeScript",
+                          "forksCount": 0,
+                          "description": "An example demonstrating how to maintain consistency in the absence of transactions, using the Write Last, Read First principle featuring TigerBeetle",
+                          "stargazersCount": 5
+                        },
+                        {
+                          "name": "tigerbeetle/tigerbeetle-dotnet",
+                          "private": false,
+                          "language": "C#",
+                          "forksCount": 1,
+                          "description": "TigerBeetle C#/dotnet client",
+                          "stargazersCount": 4
+                        },
+                        {
+                          "name": "kizzx2/tigerbeetle-benchmarks",
+                          "private": false,
+                          "language": "Go",
+                          "forksCount": 2,
+                          "description": "Benchmarking 1000x faster OLTP database in Go. Vibe coded.",
+                          "stargazersCount": 5
+                        },
+                        {
+                          "name": "matklad/tigerbeetle-filtered",
+                          "private": false,
+                          "language": "Zig",
+                          "forksCount": 0,
+                          "description": null,
+                          "stargazersCount": 4
+                        },
+                        {
+                          "name": "BaalouReda/tigerbeetle-banking-app",
+                          "private": false,
+                          "language": null,
+                          "forksCount": 0,
+                          "description": "transctaion app build with spring boot and tigerbeetle for managin transcation and postgres as olgp postgress ",
+                          "stargazersCount": 4
+                        },
+                        {
+                          "name": "openMF/fineract-tigerbeetle-plugin",
+                          "private": false,
+                          "language": null,
+                          "forksCount": 3,
+                          "description": "Apache Fineract TigerBeetle Plugin for Savings ",
+                          "stargazersCount": 3
+                        },
+                        {
+                          "name": "batiati/tigerbeetle-clients-benchmarks",
+                          "private": false,
+                          "language": "D",
+                          "forksCount": 3,
+                          "description": null,
+                          "stargazersCount": 3
+                        },
+                        {
+                          "name": "Yknot-BCS/tigerbeetle-terraform",
+                          "private": false,
+                          "language": "HCL",
+                          "forksCount": 0,
+                          "description": "Example production setup for tigerbeetle database using terraform and ansible",
+                          "stargazersCount": 3
+                        },
+                        {
+                          "name": "tigerbeetle/powering",
+                          "private": false,
+                          "language": "HTML",
+                          "forksCount": 0,
+                          "description": null,
+                          "stargazersCount": 3
+                        },
+                        {
+                          "name": "tigerbeetle/tigerbeetle-java",
+                          "private": false,
+                          "language": "Java",
+                          "forksCount": 2,
+                          "description": "TigerBeetle Java client",
+                          "stargazersCount": 2
+                        },
+                        {
+                          "name": "Mo7ammedXD/Tigerbeetle-studio",
+                          "private": false,
+                          "language": "Vue",
+                          "forksCount": 0,
+                          "description": null,
+                          "stargazersCount": 2
+                        }
+                      ]
+                    },
+                    "status": "done",
+                    "tool_name": "list_repositories"
+                  },
+                  {
+                    "id": "toolu_vrtx_01AeEtBi1VK8Rbn1eKZf5cpk",
+                    "input": {
+                      "pattern": "indentation tabs spaces style",
+                      "repository": "tigerbeetle/tigerbeetle"
+                    },
+                    "result": {
+                      "results": [],
+                      "totalCount": 0
+                    },
+                    "status": "done",
+                    "tool_name": "search_github"
+                  }
+                ],
+                "isThinking": false
+              },
+              {
+                "tool_uses": [
+                  {
+                    "id": "toolu_vrtx_01MisyhcqzooaR5x7P5zGYSE",
+                    "input": {
+                      "path": ".",
+                      "repository": "tigerbeetle/tigerbeetle"
+                    },
+                    "result": [
+                      ".github/",
+                      "docs/",
+                      "src/",
+                      "zig/",
+                      ".gitignore",
+                      "build.zig",
+                      "CHANGELOG.md",
+                      "LICENSE",
+                      "README.md"
+                    ],
+                    "status": "done",
+                    "tool_name": "list_directory_github"
+                  },
+                  {
+                    "id": "toolu_vrtx_01Dw7udqnkPERNejqTpazDL8",
+                    "input": {
+                      "repository": "tigerbeetle/tigerbeetle",
+                      "filePattern": "**/*CONTRIBUT*"
+                    },
+                    "result": [],
+                    "status": "done",
+                    "tool_name": "glob_github"
+                  },
+                  {
+                    "id": "toolu_vrtx_01Q3PYpvogoE7bj9WfropYFB",
+                    "input": {
+                      "repository": "tigerbeetle/tigerbeetle",
+                      "filePattern": "**/*style*"
+                    },
+                    "result": [
+                      "src/devhub/style.css",
+                      "src/docs_website/assets/style/style.css"
+                    ],
+                    "status": "done",
+                    "tool_name": "glob_github"
+                  }
+                ],
+                "isThinking": false
+              },
+              {
+                "tool_uses": [
+                  {
+                    "id": "toolu_vrtx_01DbnuEAmLD8Bf4bjTPV5ZN8",
+                    "input": {
+                      "path": "docs",
+                      "repository": "tigerbeetle/tigerbeetle"
+                    },
+                    "result": [
+                      "coding/",
+                      "concepts/",
+                      "internals/",
+                      "operating/",
+                      "reference/",
+                      "ARCHITECTURE.md",
+                      "README.md",
+                      "start.md",
+                      "TIGER_STYLE.md"
+                    ],
+                    "status": "done",
+                    "tool_name": "list_directory_github"
+                  },
+                  {
+                    "id": "toolu_vrtx_01KAjo9G2e5a1pd4AjubBp6H",
+                    "input": {
+                      "path": ".github",
+                      "repository": "tigerbeetle/tigerbeetle"
+                    },
+                    "result": [
+                      "ci/",
+                      "workflows/"
+                    ],
+                    "status": "done",
+                    "tool_name": "list_directory_github"
+                  }
+                ],
+                "isThinking": false
+              },
+              {
+                "tool_uses": [
+                  {
+                    "id": "toolu_vrtx_014nD5n42fEMyWuFcFsULpuX",
+                    "input": {
+                      "path": "docs/TIGER_STYLE.md",
+                      "repository": "tigerbeetle/tigerbeetle"
+                    },
+                    "result": {
+                      "content": "1: # TigerStyle\n2: \n3: ## The Essence Of Style\n4: \n5: > “There are three things extremely hard: steel, a diamond, and to know one's self.” — Benjamin\n6: > Franklin\n7: \n8: TigerBeetle's coding style is evolving. A collective give-and-take at the intersection of\n9: engineering and art. Numbers and human intuition. Reason and experience. First principles and\n10: knowledge. Precision and poetry. Just like music. A tight beat. A rare groove. Words that rhyme and\n11: rhymes that break. Biodigital jazz. This is what we've learned along the way. The best is yet to\n12: come.\n13: \n14: ## Why Have Style?\n15: \n16: Another word for style is design.\n17: \n18: > “The design is not just what it looks like and feels like. The design is how it works.” — Steve\n19: > Jobs\n20: \n21: Our design goals are safety, performance, and developer experience. In that order. All three are\n22: important. Good style advances these goals. Does the code make for more or less safety, performance\n23: or developer experience? That is why we need style.\n24: \n25: Put this way, style is more than readability, and readability is table stakes, a means to an end\n26: rather than an end in itself.\n27: \n28: > “...in programming, style is not something to pursue directly. Style is necessary only where\n29: > understanding is missing.” ─ [Let Over\n30: > Lambda](https://letoverlambda.com/index.cl/guest/chap1.html)\n31: \n32: This document explores how we apply these design goals to coding style. First, a word on simplicity,\n33: elegance and technical debt.\n34: \n35: ## On Simplicity And Elegance\n36: \n37: Simplicity is not a free pass. It's not in conflict with our design goals. It need not be a\n38: concession or a compromise.\n39: \n40: Rather, simplicity is how we bring our design goals together, how we identify the “super idea” that\n41: solves the axes simultaneously, to achieve something elegant.\n42: \n43: > “Simplicity and elegance are unpopular because they require hard work and discipline to achieve” —\n44: > Edsger Dijkstra\n45: \n46: Contrary to popular belief, simplicity is also not the first attempt but the hardest revision. It's\n47: easy to say “let's do something simple”, but to do that in practice takes thought, multiple passes,\n48: many sketches, and still we may have to [“throw one\n49: away”](https://en.wikipedia.org/wiki/The_Mythical_Man-Month).\n50: \n51: The hardest part, then, is how much thought goes into everything.\n52: \n53: We spend this mental energy upfront, proactively rather than reactively, because we know that when\n54: the thinking is done, what is spent on the design will be dwarfed by the implementation and testing,\n55: and then again by the costs of operation and maintenance.\n56: \n57: An hour or day of design is worth weeks or months in production:\n58: \n59: > “the simple and elegant systems tend to be easier and faster to design and get right, more\n60: > efficient in execution, and much more reliable” — Edsger Dijkstra\n61: \n62: ## Technical Debt\n63: \n64: What could go wrong? What's wrong? Which question would we rather ask? The former, because code,\n65: like steel, is less expensive to change while it's hot. A problem solved in production is many times\n66: more expensive than a problem solved in implementation, or a problem solved in design.\n67: \n68: Since it's hard enough to discover showstoppers, when we do find them, we solve them. We don't allow\n69: potential memcpy latency spikes, or exponential complexity algorithms to slip through.\n70: \n71: > “You shall not pass!” — Gandalf\n72: \n73: In other words, TigerBeetle has a “zero technical debt” policy. We do it right the first time. This\n74: is important because the second time may not transpire, and because doing good work, that we can be\n75: proud of, builds momentum.\n76: \n77: We know that what we ship is solid. We may lack crucial features, but what we have meets our design\n78: goals. This is the only way to make steady incremental progress, knowing that the progress we have\n79: made is indeed progress.\n80: \n81: ## Safety\n82: \n83: > “The rules act like the seat-belt in your car: initially they are perhaps a little uncomfortable,\n84: > but after a while their use becomes second-nature and not using them becomes unimaginable.” —\n85: > Gerard J. Holzmann\n86: \n87: [NASA's Power of Ten — Rules for Developing Safety Critical\n88: Code](https://spinroot.com/gerard/pdf/P10.pdf) will change the way you code forever. To expand:\n89: \n90: - Use **only very simple, explicit control flow** for clarity. **Do not use recursion** to ensure\n91:   that all executions that should be bounded are bounded. Use **only a minimum of excellent\n92:   abstractions** but only if they make the best sense of the domain. Abstractions are [never zero\n93:   cost](https://isaacfreund.com/blog/2022-05/). Every abstraction introduces the risk of a leaky\n94:   abstraction.\n95: \n96: - **Put a limit on everything** because, in reality, this is what we expect—everything has a limit.\n97:   For example, all loops and all queues must have a fixed upper bound to prevent infinite loops or\n98:   tail latency spikes. This follows the [“fail-fast”](https://en.wikipedia.org/wiki/Fail-fast)\n99:   principle so that violations are detected sooner rather than later. Where a loop cannot terminate\n100:   (e.g. an event loop), this must be asserted.\n101: \n102: - Use explicitly-sized types like `u32` for everything, avoid architecture-specific `usize`.\n103: \n104: - **Assertions detect programmer errors. Unlike operating errors, which are expected and which must\n105:   be handled, assertion failures are unexpected. The only correct way to handle corrupt code is to\n106:   crash. Assertions downgrade catastrophic correctness bugs into liveness bugs. Assertions are a\n107:   force multiplier for discovering bugs by fuzzing.**\n108: \n109:   - **Assert all function arguments and return values, pre/postconditions and invariants.** A\n110:     function must not operate blindly on data it has not checked. The purpose of a function is to\n111:     increase the probability that a program is correct. Assertions within a function are part of how\n112:     functions serve this purpose. The assertion density of the code must average a minimum of two\n113:     assertions per function.\n114: \n115:   - **[Pair assertions](https://tigerbeetle.com/blog/2023-12-27-it-takes-two-to-contract).** For\n116:     every property you want to enforce, try to find at least two different code paths where an\n117:     assertion can be added. For example, assert validity of data right before writing it to disk,\n118:     and also immediately after reading from disk.\n119: \n120:   - On occasion, you may use a blatantly true assertion instead of a comment as stronger\n121:     documentation where the assertion condition is critical and surprising.\n122: \n123:   - Split compound assertions: prefer `assert(a); assert(b);` over `assert(a and b);`.\n124:     The former is simpler to read, and provides more precise information if the condition fails.\n125: \n126:   - Use single-line `if` to assert an implication: `if (a) assert(b)`.\n127: \n128:   - **Assert the relationships of compile-time constants** as a sanity check, and also to document\n129:     and enforce [subtle\n130:     invariants](https://github.com/coilhq/tigerbeetle/blob/db789acfb93584e5cb9f331f9d6092ef90b53ea6/src/vsr/journal.zig#L45-L47)\n131:     or [type\n132:     sizes](https://github.com/coilhq/tigerbeetle/blob/578ac603326e1d3d33532701cb9285d5d2532fe7/src/ewah.zig#L41-L53).\n133:     Compile-time assertions are extremely powerful because they are able to check a program's design\n134:     integrity _before_ the program even executes.\n135: \n136:   - **The golden rule of assertions is to assert the _positive space_ that you do expect AND to\n137:     assert the _negative space_ that you do not expect** because where data moves across the\n138:     valid/invalid boundary between these spaces is where interesting bugs are often found. This is\n139:     also why **tests must test exhaustively**, not only with valid data but also with invalid data,\n140:     and as valid data becomes invalid.\n141: \n142:   - Assertions are a safety net, not a substitute for human understanding. With simulation testing,\n143:     there is the temptation to trust the fuzzer. But a fuzzer can prove only the presence of bugs,\n144:     not their absence. Therefore:\n145:     - Build a precise mental model of the code first,\n146:     - encode your understanding in the form of assertions,\n147:     - write the code and comments to explain and justify the mental model to your reviewer,\n148:     - and use VOPR as the final line of defense, to find bugs in your and reviewer's understanding\n149:       of code.\n150: \n151: - All memory must be statically allocated at startup. **No memory may be dynamically allocated (or\n152:   freed and reallocated) after initialization.** This avoids unpredictable behavior that can\n153:   significantly affect performance, and avoids use-after-free. As a second-order effect, it is our\n154:   experience that this also makes for more efficient, simpler designs that are more performant and\n155:   easier to maintain and reason about, compared to designs that do not consider all possible memory\n156:   usage patterns upfront as part of the design.\n157: \n158: - Declare variables at the **smallest possible scope**, and **minimize the number of variables in\n159:   scope**, to reduce the probability that variables are misused.\n160: \n161: - There's a sharp discontinuity between a function fitting on a screen, and having to scroll to\n162:   see how long it is. For this physical reason we enforce a **hard limit of 70 lines per function**.\n163:   Art is born of constraints. There are many ways to cut a wall of code into chunks of 70 lines,\n164:   but only a few splits will feel right. Some rules of thumb:\n165: \n166:   * Good function shape is often the inverse of an hourglass: a few parameters, a simple return\n167:     type, and a lot of meaty logic between the braces.\n168:   * Centralize control flow. When splitting a large function, try to keep all switch/if\n169:     statements in the \"parent\" function, and move non-branchy logic fragments to helper\n170:     functions. Divide responsibility. All control flow should be handled by _one_ function, the rest shouldn't\n171:     care about control flow at all. In other words,\n172:     [\"push `if`s up and `for`s down\"](https://matklad.github.io/2023/11/15/push-ifs-up-and-fors-down.html).\n173:   * Similarly, centralize state manipulation. Let the parent function keep all relevant state in\n174:     local variables, and use helpers to compute what needs to change, rather than applying the\n175:     change directly. Keep leaf functions pure.\n176: \n177: - Appreciate, from day one, **all compiler warnings at the compiler's strictest setting**.\n178: \n179: - Whenever your program has to interact with external entities, **don't do things directly in\n180:   reaction to external events**. Instead, your program should run at its own pace. Not only does\n181:   this make your program safer by keeping the control flow of your program under your control, it\n182:   also improves performance for the same reason (you get to batch, instead of context switching on\n183:   every event). Additionally, this makes it easier to maintain bounds on work done per time period.\n184: \n185: Beyond these rules:\n186: \n187: - Compound conditions that evaluate multiple booleans make it difficult for the reader to verify\n188:   that all cases are handled. Split compound conditions into simple conditions using nested\n189:   `if/else` branches. Split complex `else if` chains into `else { if { } }` trees. This makes the\n190:   branches and cases clear. Again, consider whether a single `if` does not also need a matching\n191:   `else` branch, to ensure that the positive and negative spaces are handled or asserted.\n192: \n193: - Negations are not easy! State invariants positively. When working with lengths and indexes, this\n194:   form is easy to get right (and understand):\n195: \n196:   ```zig\n197:   if (index < length) {\n198:     // The invariant holds.\n199:   } else {\n200:     // The invariant doesn't hold.\n201:   }\n202:   ```\n203: \n204:   This form is harder, and also goes against the grain of how `index` would typically be compared to\n205:   `length`, for example, in a loop condition:\n206: \n207:   ```zig\n208:   if (index >= length) {\n209:     // It's not true that the invariant holds.\n210:   }\n211:   ```\n212: \n213: - All errors must be handled. An [analysis of production failures in distributed data-intensive\n214:   systems](https://www.usenix.org/system/files/conference/osdi14/osdi14-paper-yuan.pdf) found that\n215:   the majority of catastrophic failures could have been prevented by simple testing of error\n216:   handling code.\n217: \n218: > “Specifically, we found that almost all (92%) of the catastrophic system failures are the result\n219: > of incorrect handling of non-fatal errors explicitly signaled in software.”\n220: \n221: - **Always motivate, always say why**. Never forget to say why. Because if you explain the rationale\n222:   for a decision, it not only increases the hearer's understanding, and makes them more likely to\n223:   adhere or comply, but it also shares criteria with them with which to evaluate the decision and\n224:   its importance.\n225: \n226: - **Explicitly pass options to library functions at the call site, instead of relying on the\n227:   defaults**. For example, write `@prefetch(a, .{ .cache = .data, .rw = .read, .locality = 3 });`\n228:   over `@prefetch(a, .{});`. This improves readability but most of all avoids latent, potentially\n229:   catastrophic bugs in case the library ever changes its defaults.\n230: \n231: ## Performance\n232: \n233: > “The lack of back-of-the-envelope performance sketches is the root of all evil.” — Rivacindela\n234: > Hudsoni\n235: \n236: - Think about performance from the outset, from the beginning. **The best time to solve performance,\n237:   to get the huge 1000x wins, is in the design phase, which is precisely when we can't measure or\n238:   profile.** It's also typically harder to fix a system after implementation and profiling, and the\n239:   gains are less. So you have to have mechanical sympathy. Like a carpenter, work with the grain.\n240: \n241: - **Perform back-of-the-envelope sketches with respect to the four resources (network, disk, memory,\n242:   CPU) and their two main characteristics (bandwidth, latency).** Sketches are cheap. Use sketches\n243:   to be “roughly right” and land within 90% of the global maximum.\n244: \n245: - Optimize for the slowest resources first (network, disk, memory, CPU) in that order, after\n246:   compensating for the frequency of usage, because faster resources may be used many times more. For\n247:   example, a memory cache miss may be as expensive as a disk fsync, if it happens many times more.\n248: \n249: - Distinguish between the control plane and data plane. A clear delineation between control plane\n250:   and data plane through the use of batching enables a high level of assertion safety without losing\n251:   performance. See our [July 2021 talk on Zig SHOWTIME](https://youtu.be/BH2jvJ74npM?t=1958) for\n252:   examples.\n253: \n254: - Amortize network, disk, memory and CPU costs by batching accesses.\n255: \n256: - Let the CPU be a sprinter doing the 100m. Be predictable. Don't force the CPU to zig zag and\n257:   change lanes. Give the CPU large enough chunks of work. This comes back to batching.\n258: \n259: - Be explicit. Minimize dependence on the compiler to do the right thing for you.\n260: \n261:   In particular, extract hot loops into stand-alone functions with primitive arguments without\n262:   `self` (see [an example](https://github.com/tigerbeetle/tigerbeetle/blob/0.16.19/src/lsm/compaction.zig#L1932-L1937)).\n263:   That way, the compiler doesn't need to prove that it can cache struct's fields in registers, and a\n264:   human reader can spot redundant computations easier.\n265: \n266: ## Developer Experience\n267: \n268: > “There are only two hard things in Computer Science: cache invalidation, naming things, and\n269: > off-by-one errors.” — Phil Karlton\n270: \n271: ### Naming Things\n272: \n273: - **Get the nouns and verbs just right.** Great names are the essence of great code, they capture\n274:   what a thing is or does, and provide a crisp, intuitive mental model. They show that you\n275:   understand the domain. Take time to find the perfect name, to find nouns and verbs that work\n276:   together, so that the whole is greater than the sum of its parts.\n277: \n278: - Use `snake_case` for function, variable, and file names. The underscore is the closest thing we\n279:   have as programmers to a space, and helps to separate words and encourage descriptive names. We\n280:   don't use Zig's `CamelCase.zig` style for \"struct\" files to keep the convention simple and\n281:   consistent.\n282: \n283: - Do not abbreviate variable names, unless the variable is a primitive integer type used as an\n284:   argument to a sort function or matrix calculation. Use long form arguments in scripts: `--force`,\n285:   not `-f`. Single letter flags are for interactive usage.\n286: \n287: - Use proper capitalization for acronyms (`VSRState`, not `VsrState`).\n288: \n289: - For the rest, follow the Zig style guide.\n290: \n291: - Add units or qualifiers to variable names, and put the units or qualifiers last, sorted by\n292:   descending significance, so that the variable starts with the most significant word, and ends with\n293:   the least significant word. For example, `latency_ms_max` rather than `max_latency_ms`. This will\n294:   then line up nicely when `latency_ms_min` is added, as well as group all variables that relate to\n295:   latency.\n296: \n297: - Infuse names with meaning. For example, `allocator: Allocator` is a good, if boring name,\n298:   but `gpa: Allocator` and `arena: Allocator` are excellent. They inform the reader whether\n299:   `deinit` should be called explicitly.\n300: \n301: - When choosing related names, try hard to find names with the same number of characters so that\n302:   related variables all line up in the source. For example, as arguments to a memcpy function,\n303:   `source` and `target` are better than `src` and `dest` because they have the second-order effect\n304:   that any related variables such as `source_offset` and `target_offset` will all line up in\n305:   calculations and slices. This makes the code symmetrical, with clean blocks that are easier for\n306:   the eye to parse and for the reader to check.\n307: \n308: - When a single function calls out to a helper function or callback, prefix the name of the helper\n309:   function with the name of the calling function to show the call history. For example,\n310:   `read_sector()` and `read_sector_callback()`.\n311: \n312: - Callbacks go last in the list of parameters. This mirrors control flow: callbacks are also\n313:   _invoked_ last.\n314: \n315: - _Order_ matters for readability (even if it doesn't affect semantics). On the first read, a file\n316:   is read top-down, so put important things near the top. The `main` function goes first.\n317: \n318:   The same goes for `structs`, the order is fields then types then methods:\n319: \n320:   ```zig\n321:   time: Time,\n322:   process_id: ProcessID,\n323: \n324:   const ProcessID = struct { cluster: u128, replica: u8 };\n325:   const Tracer = @This(); // This alias concludes the types section.\n326: \n327:   pub fn init(gpa: std.mem.Allocator, time: Time) !Tracer {\n328:       ...\n329:   }\n330:   ```\n331: \n332:   If a nested type is complex, make it a top-level struct.\n333: \n334:   At the same time, not everything has a single right order. When in doubt, consider sorting\n335:   alphabetically, taking advantage of big-endian naming.\n336: \n337: - Don't overload names with multiple meanings that are context-dependent. For example, TigerBeetle\n338:   has a feature called _pending transfers_ where a pending transfer can be subsequently _posted_ or\n339:   _voided_. At first, we called them _two-phase commit transfers_, but this overloaded the\n340:   _two-phase commit_ terminology that was used in our consensus protocol, causing confusion.\n341: \n342: - Think of how names will be used outside the code, in documentation or communication. For example,\n343:   a noun is often a better descriptor than an adjective or present participle, because a noun can be\n344:   directly used in correspondence without having to be rephrased. Compare `replica.pipeline` vs\n345:   `replica.preparing`. The former can be used directly as a section header in a document or\n346:   conversation, whereas the latter must be clarified. Noun names compose more clearly for derived\n347:   identifiers, e.g. `config.pipeline_max`.\n348: \n349: - Zig has named arguments through the `options: struct` pattern. Use it when arguments can be\n350:   mixed up. A function taking two `u64` must use an options struct. If an argument can be `null`,\n351:   it should be named so that the meaning of `null` literal at the call site is clear.\n352: \n353:   Because dependencies like an allocator or a tracer are singletons with unique types, they should\n354:   be threaded through constructors positionally, from the most general to the most specific.\n355: \n356: - **Write descriptive commit messages** that inform and delight the reader, because your commit\n357:   messages are being read. Note that a pull request description is not stored in the git repository\n358:   and is invisible in `git blame`, and therefore is not a replacement for a commit message.\n359: \n360: - Don't forget to say why. Code alone is not documentation. Use comments to explain why you wrote\n361:   the code the way you did. Show your workings.\n362: \n363: - Don't forget to say how. For example, when writing a test, think of writing a description at the\n364:   top to explain the goal and methodology of the test, to help your reader get up to speed, or to\n365:   skip over sections, without forcing them to dive in.\n366: \n367: - Comments are sentences, with a space after the slash, with a capital letter and a full stop, or a\n368:   colon if they relate to something that follows. Comments are well-written prose describing the\n369:   code, not just scribblings in the margin. Comments after the end of a line _can_ be phrases, with\n370:   no punctuation.\n371: \n372: ### Cache Invalidation\n373: \n374: - Don't duplicate variables or take aliases to them. This will reduce the probability that state\n375:   gets out of sync.\n376: \n377: - If you don't mean a function argument to be copied when passed by value, and if the argument type\n378:   is more than 16 bytes, then pass the argument as `*const`. This will catch bugs where the caller\n379:   makes an accidental copy on the stack before calling the function.\n380: \n381: - Construct larger structs _in-place_ by passing an _out pointer_ during initialization.\n382: \n383:   In-place initializations can assume **pointer stability** and **immovable types** while\n384:   eliminating intermediate copy-move allocations, which can lead to undesirable stack growth.\n385: \n386:   Keep in mind that in-place initializations are viral — if any field is initialized\n387:   in-place, the entire container struct should be initialized in-place as well.\n388: \n389:   **Prefer:**\n390:   ```zig\n391:   fn init(target: *LargeStruct) !void {\n392:     target.* = .{\n393:       // in-place initialization.\n394:     };\n395:   }\n396: \n397:   fn main() !void {\n398:     var target: LargeStruct = undefined;\n399:     try target.init();\n400:   }\n401:   ```\n402: \n403:   **Over:**\n404:   ```zig\n405:   fn init() !LargeStruct {\n406:     return LargeStruct {\n407:       // moving the initialized object.\n408:     }\n409:   }\n410: \n411:   fn main() !void {\n412:     var target = try LargeStruct.init();\n413:   }\n414:   ```\n415: \n416: - **Shrink the scope** to minimize the number of variables at play and reduce the probability that\n417:   the wrong variable is used.\n418: \n419: - Calculate or check variables close to where/when they are used. **Don't introduce variables before\n420:   they are needed.** Don't leave them around where they are not. This will reduce the probability of\n421:   a POCPOU (place-of-check to place-of-use), a distant cousin to the infamous\n422:   [TOCTOU](https://en.wikipedia.org/wiki/Time-of-check_to_time-of-use). Most bugs come down to a\n423:   semantic gap, caused by a gap in time or space, because it's harder to check code that's not\n424:   contained along those dimensions.\n425: \n426: - Use simpler function signatures and return types to reduce dimensionality at the call site, the\n427:   number of branches that need to be handled at the call site, because this dimensionality can also\n428:   be viral, propagating through the call chain. For example, as a return type, `void` trumps `bool`,\n429:   `bool` trumps `u64`, `u64` trumps `?u64`, and `?u64` trumps `!u64`.\n430: \n431: - Ensure that functions run to completion without suspending, so that precondition assertions are\n432:   true throughout the lifetime of the function. These assertions are useful documentation without a\n433:   suspend, but may be misleading otherwise.\n434: \n435: - Be on your guard for **[buffer bleeds](https://en.wikipedia.org/wiki/Heartbleed)**. This is a\n436:   buffer underflow, the opposite of a buffer overflow, where a buffer is not fully utilized, with\n437:   padding not zeroed correctly. This may not only leak sensitive information, but may cause\n438:   deterministic guarantees as required by TigerBeetle to be violated.\n439: \n440: - Use newlines to **group resource allocation and deallocation**, i.e. before the resource\n441:   allocation and after the corresponding `defer` statement, to make leaks easier to spot.\n442: \n443: ### Off-By-One Errors\n444: \n445: - **The usual suspects for off-by-one errors are casual interactions between an `index`, a `count`\n446:   or a `size`.** These are all primitive integer types, but should be seen as distinct types, with\n447:   clear rules to cast between them. To go from an `index` to a `count` you need to add one, since\n448:   indexes are _0-based_ but counts are _1-based_. To go from a `count` to a `size` you need to\n449:   multiply by the unit. Again, this is why including units and qualifiers in variable names is\n450:   important.\n451: \n452: - Show your intent with respect to division. For example, use `@divExact()`, `@divFloor()` or\n453:   `div_ceil()` to show the reader you've thought through all the interesting scenarios where\n454:   rounding may be involved.\n455: \n456: ### Style By The Numbers\n457: \n458: - Run `zig fmt`.\n459: \n460: - Use 4 spaces of indentation, rather than 2 spaces, as that is more obvious to the eye at a\n461:   distance.\n462: \n463: - Hard limit all line lengths, without exception, to at most 100 columns for a good typographic\n464:   \"measure\". Use it up. Never go beyond. Nothing should be hidden by a horizontal scrollbar. Let\n465:   your editor help you by setting a column ruler. To wrap a function signature, call or data\n466:   structure, add a trailing comma, close your eyes and let `zig fmt` do the rest.\n467: \n468:   Similar to function length, the motivation behind the number 100 is physical: just enough\n469:   to fit two copies of the code side-by-side on a screen.\n470: \n471: - Add braces to the `if` statement unless it fits on a single line for consistency and defense in\n472:   depth against \"goto fail;\" bugs.\n473: \n474: ### Dependencies\n475: \n476: TigerBeetle has **a “zero dependencies” policy**, apart from the Zig toolchain. Dependencies, in\n477: general, inevitably lead to supply chain attacks, safety and performance risk, and slow install\n478: times. For foundational infrastructure in particular, the cost of any dependency is further\n479: amplified throughout the rest of the stack.\n480: \n481: ### Tooling\n482: \n483: Similarly, tools have costs. A small standardized toolbox is simpler to operate than an array of\n484: specialized instruments each with a dedicated manual. Our primary tool is Zig. It may not be the\n485: best for everything, but it's good enough for most things. We invest into our Zig tooling to ensure\n486: that we can tackle new problems quickly, with a minimum of accidental complexity in our local\n487: development environment.\n488: \n489: > “The right tool for the job is often the tool you are already using—adding new tools has a higher\n490: > cost than many people appreciate” — John Carmack\n491: \n492: For example, the next time you write a script, instead of `scripts/*.sh`, write `scripts/*.zig`.\n493: \n494: This not only makes your script cross-platform and portable, but introduces type safety and\n495: increases the probability that running your script will succeed for everyone on the team, instead of\n496: hitting a Bash/Shell/OS-specific issue.\n497: \n498: Standardizing on Zig for tooling is important to ensure that we reduce dimensionality, as the team,\n499: and therefore the range of personal tastes, grows. This may be slower for you in the short term, but\n500: makes for more velocity for the team in the long term.\n501: \n502: ## The Last Stage\n503: \n504: At the end of the day, keep trying things out, have fun, and remember—it's called TigerBeetle, not\n505: only because it's fast, but because it's small!\n506: \n507: > You don’t really suppose, do you, that all your adventures and escapes were managed by mere luck,\n508: > just for your sole benefit? You are a very fine person, Mr. Baggins, and I am very fond of you;\n509: > but you are only quite a little fellow in a wide world after all!”\n510: >\n511: > “Thank goodness!” said Bilbo laughing, and handed him the tobacco-jar.\n512: ",
+                      "absolutePath": "docs/TIGER_STYLE.md"
+                    },
+                    "status": "done",
+                    "tool_name": "read_github"
+                  },
+                  {
+                    "id": "toolu_vrtx_01MHCeiCAvRe2EMcUVSQDpS2",
+                    "input": {
+                      "path": "docs/coding",
+                      "repository": "tigerbeetle/tigerbeetle"
+                    },
+                    "result": [
+                      "clients/",
+                      "recipes/",
+                      "api-changes.md",
+                      "data-modeling.md",
+                      "financial-accounting.md",
+                      "linked-events.md",
+                      "README.md",
+                      "reliable-transaction-submission.md",
+                      "requests.md",
+                      "system-architecture.md",
+                      "time.md",
+                      "two-phase-transfers.md"
+                    ],
+                    "status": "done",
+                    "tool_name": "list_directory_github"
+                  }
+                ],
+                "isThinking": false
+              },
+              {
+                "message": "Now let me also check if there's any `.editorconfig` or formatter config that reinforces this, and look at actual source files to confirm the style in practice:",
+                "tool_uses": [
+                  {
+                    "id": "toolu_vrtx_01CcWZPdXabdaUi3oigt53mg",
+                    "input": {
+                      "repository": "tigerbeetle/tigerbeetle",
+                      "filePattern": ".editorconfig"
+                    },
+                    "result": [],
+                    "status": "done",
+                    "tool_name": "glob_github"
+                  },
+                  {
+                    "id": "toolu_vrtx_01N2bY3ZjRqZ8WShGQD1csJg",
+                    "input": {
+                      "path": "src/tigerbeetle.zig",
+                      "read_range": [
+                        1,
+                        60
+                      ],
+                      "repository": "tigerbeetle/tigerbeetle"
+                    },
+                    "result": {
+                      "content": "1: const std = @import(\"std\");\n2: const builtin = @import(\"builtin\");\n3: const assert = std.debug.assert;\n4: \n5: const vsr = @import(\"vsr.zig\");\n6: const constants = vsr.constants;\n7: const stdx = vsr.stdx;\n8: const maybe = stdx.maybe;\n9: \n10: pub const Account = extern struct {\n11:     id: u128,\n12:     debits_pending: u128,\n13:     debits_posted: u128,\n14:     credits_pending: u128,\n15:     credits_posted: u128,\n16:     /// Opaque third-party identifiers to link this account (many-to-one) to external entities.\n17:     user_data_128: u128,\n18:     user_data_64: u64,\n19:     user_data_32: u32,\n20:     /// Reserved for accounting policy primitives.\n21:     reserved: u32,\n22:     ledger: u32,\n23:     /// A chart of accounts code describing the type of account (e.g. clearing, settlement).\n24:     code: u16,\n25:     flags: AccountFlags,\n26:     timestamp: u64,\n27: \n28:     comptime {\n29:         assert(stdx.no_padding(Account));\n30:         assert(@sizeOf(Account) == 128);\n31:         assert(@alignOf(Account) == 16);\n32:     }\n33: \n34:     pub fn debits_exceed_credits(self: *const Account, amount: u128) bool {\n35:         return (self.flags.debits_must_not_exceed_credits and\n36:             self.debits_pending + self.debits_posted + amount > self.credits_posted);\n37:     }\n38: \n39:     pub fn credits_exceed_debits(self: *const Account, amount: u128) bool {\n40:         return (self.flags.credits_must_not_exceed_debits and\n41:             self.credits_pending + self.credits_posted + amount > self.debits_posted);\n42:     }\n43: };\n44: \n45: pub const AccountFlags = packed struct(u16) {\n46:     /// When the .linked flag is specified, it links an event with the next event in the batch, to\n47:     /// create a chain of events, of arbitrary length, which all succeed or fail together. The tail\n48:     /// of a chain is denoted by the first event without this flag. The last event in a batch may\n49:     /// therefore never have the .linked flag set as this would leave a chain open-ended. Multiple\n50:     /// chains or individual events may coexist within a batch to succeed or fail independently.\n51:     /// Events within a chain are executed within order, or are rolled back on error, so that the\n52:     /// effect of each event in the chain is visible to the next, and so that the chain is either\n53:     /// visible or invisible as a unit to subsequent events after the chain. The event that was the\n54:     /// first to break the chain will have a unique error result. Other events in the chain will\n55:     /// have their error result set to .linked_event_failed.\n56:     linked: bool = false,\n57:     debits_must_not_exceed_credits: bool = false,\n58:     credits_must_not_exceed_debits: bool = false,\n59:     history: bool = false,\n60:     imported: bool = false,",
+                      "absolutePath": "src/tigerbeetle.zig"
+                    },
+                    "status": "done",
+                    "tool_name": "read_github"
+                  }
+                ],
+                "isThinking": false
+              },
+              {
+                "message": "I have everything I need. Here's the complete picture:\n\n---\n\n## TigerBeetle's Indentation Style\n\n### The Rule: 4 Spaces\n\nTigerBeetle uses **4 spaces of indentation** (not tabs). This is explicitly stated in the **\"Style By The Numbers\"** section of their style guide, [`docs/TIGER_STYLE.md`](https://github.com/tigerbeetle/tigerbeetle/blob/main/docs/TIGER_STYLE.md):\n\n> **Use 4 spaces of indentation, rather than 2 spaces, as that is more obvious to the eye at a distance.**\n\nThis is enforced in practice by `zig fmt` — the Zig standard formatter — which is also listed as the very first rule in that same section:\n\n> **Run `zig fmt`.**\n\nYou can see 4-space indentation throughout the actual codebase, for example in [`src/tigerbeetle.zig`](https://github.com/tigerbeetle/tigerbeetle/blob/main/src/tigerbeetle.zig):\n\n```zig\npub const Account = extern struct {\n    id: u128,\n    debits_pending: u128,\n    // ...\n\n    pub fn debits_exceed_credits(self: *const Account, amount: u128) bool {\n        return (self.flags.debits_must_not_exceed_credits and\n            self.debits_pending + self.debits_posted + amount > self.credits_posted);\n    }\n};\n```\n\n---\n\n### The Rationale\n\nThe reasoning given is **visual clarity at a distance**: 4 spaces creates a more *obvious* indent than 2 spaces when you're scanning code without focusing closely — particularly useful in a safety-critical, high-complexity codebase where misreading nesting depth could matter.\n\nThis sits within a broader philosophy in TigerStyle. Two closely related rules provide context:\n\n1. **Hard 70-line function limit** — Functions must fit on a screen. Since code can't sprawl *vertically*, it's always visible in full, meaning deeper/wider indents don't force you to scroll horizontally more than the 100-column line limit allows.\n2. **Hard 100-column line limit** — \"Nothing should be hidden by a horizontal scrollbar.\" The combination of 4-space indents and a 100-column limit means code stays readable without pathological nesting.\n\nTogether, these three constraints form a consistent physical/typographic contract:\n\n| Rule | Value | Rationale |\n|---|---|---|\n| Indentation | 4 spaces | More obvious to the eye at a distance |\n| Line length | 100 columns max | Fits two files side-by-side on screen |\n| Function length | 70 lines max | Fits one function on screen without scrolling |\n\n---\n\n### No `.editorconfig`, No Tabs\n\nThere is no `.editorconfig` in the repository — enforcement is purely via **`zig fmt`**, which is Zig's built-in formatter. The Zig formatter natively uses spaces (not tabs), and TigerBeetle's style guide overrides Zig's default 4-space convention by... also choosing 4 spaces — explicitly affirming it rather than diverging from it.",
+                "tool_uses": [],
+                "isThinking": false
+              }
+            ]
+          },
+          "type": "tool_result",
+          "toolUseID": "toolu_vrtx_01NQfgstxEWRdMtyPSegmtUv"
+        }
+      ],
+      "messageId": 2
+    },
+    {
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "end_turn"
+      },
+      "usage": {
+        "model": "claude-opus-4-6",
+        "timestamp": "2026-04-22T14:23:22.520Z",
+        "inputTokens": 1,
+        "outputTokens": 72,
+        "maxInputTokens": 300000,
+        "totalInputTokens": 17072,
+        "cacheReadInputTokens": 14553,
+        "cacheCreationInputTokens": 2518
+      },
+      "content": [
+        {
+          "text": "TigerBeetle uses **4 spaces**, enforced by `zig fmt`. Their rationale: \"more obvious to the eye at a distance.\" This works in concert with their 100-column line limit and 70-line function limit — together ensuring code stays fully visible on screen without scrolling in either direction.",
+          "type": "text",
+          "finalTime": 1776867802481,
+          "startTime": 1776867800095
+        }
+      ],
+      "messageId": 3,
+      "turnElapsedMs": 49877
+    }
+  ],
+  "agentMode": "smart",
+  "updatedAt": "2026-04-22T14:22:32.639Z",
+  "creatorUserID": "<redacted>",
+  "nextMessageId": 4
+}
