@@ -34,4 +34,4 @@
 ## Code
 
 - Assertion strategy when dealing with many parameters: use `switch` for main parameter to narrow
-  the scope and use `assert` on each arm of the switch.
+  the scope and use `assert` on each arm of the switch. Could use `if` for further narrowing.

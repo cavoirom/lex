@@ -137,13 +137,46 @@ test "expect Span.init_diacritic can construct any Vietnamese characters" {
 }
 
 test "expect Span.init_diacritic_tone can construct all vowels with all tones" {
-    // Act
-    const sp = Span.init_diacritic_tone('A', .circumflex, .rising);
+    const chars = .{
+        .{ .base = 'A', .diacritic = .empty }, // A.
+        .{ .base = 'A', .diacritic = .breve }, // Ă.
+        .{ .base = 'A', .diacritic = .circumflex }, // Â.
+        .{ .base = 'E', .diacritic = .empty }, // E.
+        .{ .base = 'E', .diacritic = .circumflex }, // Ê.
+        .{ .base = 'I', .diacritic = .empty }, // I.
+        .{ .base = 'O', .diacritic = .empty }, // O.
+        .{ .base = 'O', .diacritic = .circumflex }, // Ô.
+        .{ .base = 'O', .diacritic = .horn }, // Ơ.
+        .{ .base = 'U', .diacritic = .empty }, // U.
+        .{ .base = 'U', .diacritic = .horn }, // Ư.
+        .{ .base = 'Y', .diacritic = .empty }, // Y.
+        .{ .base = 'a', .diacritic = .empty }, // a.
+        .{ .base = 'a', .diacritic = .breve }, // ă.
+        .{ .base = 'a', .diacritic = .circumflex }, // â.
+        .{ .base = 'e', .diacritic = .empty }, // e.
+        .{ .base = 'e', .diacritic = .circumflex }, // ê.
+        .{ .base = 'i', .diacritic = .empty }, // i.
+        .{ .base = 'o', .diacritic = .empty }, // o.
+        .{ .base = 'o', .diacritic = .circumflex }, // ô.
+        .{ .base = 'o', .diacritic = .horn }, // ơ.
+        .{ .base = 'u', .diacritic = .empty }, // u.
+        .{ .base = 'u', .diacritic = .horn }, // ư.
+        .{ .base = 'y', .diacritic = .empty }, // y.
+    };
 
-    // Assert
-    try expectEqual('A', sp.base);
-    try expectEqual(.circumflex, sp.diacritic);
-    try expectEqual(.rising, sp.tone);
+    const tones = .{ .level, .rising, .falling, .dipping_rising, .rising_glottalized, .falling_glottalized };
+
+    inline for (chars) |c| {
+        inline for (tones) |t| {
+            // Act
+            const sp = Span.init_diacritic_tone(c.base, c.diacritic, t);
+
+            // Assert
+            try expectEqual(c.base, sp.base);
+            try expectEqual(c.diacritic, sp.diacritic);
+            try expectEqual(t, sp.tone);
+        }
+    }
 }
 
 const InputMode = enum(u8) {
@@ -165,7 +198,7 @@ const State = extern struct {
     // has higher priority, e.g. if the mode is `telex` but the engine is working on position on or
     // after literal index, the engine will skip Vietnamese input processing (we only count positive
     // value, -1 mean no literal index).
-    literal_start_index: i8,
+    literal_start_index: i8 = -1,
     // Determine if we will process input in the specified mode (Telex) or append the character as is.
     mode: InputMode = .literal,
 };
