@@ -41,7 +41,7 @@ The name of diacritics and tones were taken from Wikipedia:
 ## Technical debts
 
 - ~~`inline for`~~.
-- `@import`.
+- ~~`@import`~~.
 - Error union.
 
 ## Tomorrow
