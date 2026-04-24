@@ -83,6 +83,7 @@ const Span = extern struct {
 };
 
 test "expect Span.init allows alphabet characters" {
+    // Arrange
     for ("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz") |c| {
         // Act
         const sp = Span.init(c);
@@ -95,6 +96,7 @@ test "expect Span.init allows alphabet characters" {
 }
 
 test "expect Span.init_diacritic can construct any alphabet characters" {
+    // Arrange
     for ("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz") |c| {
         // Act
         const sp = Span.init_diacritic(c, .empty);
@@ -107,6 +109,7 @@ test "expect Span.init_diacritic can construct any alphabet characters" {
 }
 
 test "expect Span.init_diacritic can construct any Vietnamese characters" {
+    // Arrange
     const chars = .{
         .{ .base = 'A', .diacritic = .breve }, // Ă.
         .{ .base = 'a', .diacritic = .breve }, // ă.
@@ -137,6 +140,7 @@ test "expect Span.init_diacritic can construct any Vietnamese characters" {
 }
 
 test "expect Span.init_diacritic_tone can construct all vowels with all tones" {
+    // Arrange
     const chars = .{
         .{ .base = 'A', .diacritic = .empty }, // A.
         .{ .base = 'A', .diacritic = .breve }, // Ă.
@@ -191,8 +195,8 @@ const State = extern struct {
     // longer than 16.
     buffer_effective: [16]Span,
     // The maximum buffer length that the engine still keeps the effective buffer, after the maximum
-    // value (256), we will reset the effective buffer and this value.
-    buffer_length: u8,
+    // value (255), we will reset the effective buffer and this value.
+    buffer_length: u8 = 0,
     // Mark the position (inclusive) in buffer where we will switch to literal mode (due to manually
     // switch, input cancellation, exceed effective buffer). This value is independent from mode and
     // has higher priority, e.g. if the mode is `telex` but the engine is working on position on or
@@ -201,4 +205,22 @@ const State = extern struct {
     literal_start_index: i8 = -1,
     // Determine if we will process input in the specified mode (Telex) or append the character as is.
     mode: InputMode = .literal,
+
+    // Initialize the State on allocated memory.
+    pub fn init(state_pointer: *State) void {
+        state_pointer.* = .{
+            .buffer_effective = undefined,
+        };
+    }
 };
+
+// Simple ABI wrapper for initialize allocated memory.
+export fn lex_state_init(state_pointer: *State) void {
+    State.init(state_pointer);
+}
+
+// Needed for the caller to allocate memory for our State.
+export const lex_state_size: usize = @sizeOf(State);
+
+// Needed for the caller to allocate memory for our State.
+export const lex_state_alignment: usize = @alignOf(State);
