@@ -42,7 +42,8 @@ The name of diacritics and tones were taken from Wikipedia:
 
 - ~~`inline for`~~.
 - ~~`@import`~~.
-- Error union.
+- ~~Error union? A normal type combine with `!` (error), force the receiving side to handle the
+  error.~~
 
 ## Tomorrow
 

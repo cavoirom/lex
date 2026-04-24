@@ -12,6 +12,10 @@
   wrapper such as `lex_state_init`.
 - Need export _size_ and _alignment_ of the struct for memory allocation.
 
+## Telex knowledge
+
+- Non-Vietnamese onset: _f_, _j_, _w_, _z_.
+
 ## Code
 
 - To run Swift tests, we must introduce SPM to our code base. Add 2 file: `Package.swift` and
@@ -19,8 +23,12 @@
 
 ## Technical debts
 
-- Alignment contract?
-- Swift SPM?
+- ~~Alignment contract? The alignment is a number that determine how many byte is the unit of the
+  memory area, the alignment is needed to calculate offset of each field in struct and determine
+  where padding should be added. The Wikipedia article about "Data structure alignment" has an
+  example about alignment and padding.~~
+- ~~Swift SPM? It's package manager:
+  https://docs.swift.org/swiftpm/documentation/packagemanagerdocs/~~
 
 ## Tomorrow
 
