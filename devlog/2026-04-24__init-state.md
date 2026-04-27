@@ -29,8 +29,3 @@
   example about alignment and padding.~~
 - ~~Swift SPM? It's package manager:
   https://docs.swift.org/swiftpm/documentation/packagemanagerdocs/~~
-
-## Tomorrow
-
-- Add C header for liblex.
-- Add Swift tests to test memory allocation and Swift-Zig interoperate.

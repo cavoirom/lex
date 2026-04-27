@@ -1,6 +1,7 @@
 const std = @import("std");
 const assert = std.debug.assert;
 const expectEqual = std.testing.expectEqual;
+const Allocator = std.mem.Allocator;
 
 const Diacritic = enum(u8) {
     empty, // nguyên âm, không dấu.
@@ -197,12 +198,15 @@ const State = extern struct {
     // The maximum buffer length that the engine still keeps the effective buffer, after the maximum
     // value (255), we will reset the effective buffer and this value.
     buffer_length: u8 = 0,
+    // Mark the earliest position (inclusive) in buffer where we modified the span, will be used to
+    // calculate backspaces and replacement characters.
+    buffer_modification_index: i8 = -1,
     // Mark the position (inclusive) in buffer where we will switch to literal mode (due to manually
     // switch, input cancellation, exceed effective buffer). This value is independent from mode and
     // has higher priority, e.g. if the mode is `telex` but the engine is working on position on or
     // after literal index, the engine will skip Vietnamese input processing (we only count positive
     // value, -1 mean no literal index).
-    literal_start_index: i8 = -1,
+    literal_index: i8 = -1,
     // Determine if we will process input in the specified mode (Telex) or append the character as is.
     mode: InputMode = .literal,
 
@@ -224,3 +228,114 @@ export const lex_state_size: usize = @sizeOf(State);
 
 // Needed for the caller to allocate memory for our State.
 export const lex_state_alignment: usize = @alignOf(State);
+
+// Add operations to the given state based on Telex rules, operations are determined by the input
+// character.
+export fn lex_add(state_pointer: *State, c: u8) void {
+    // Only allow a-zA-Z.
+    assert(std.ascii.isAlphabetic(c));
+
+    switch (c) {
+        'A', 'a' => {}, // circumflex.
+        'D', 'd' => {}, // bar.
+        'E', 'e' => {}, // circumflex.
+        'F', 'f' => {}, // falling.
+        'J', 'j' => {}, // falling_glottalized.
+        'N', 'n' => {}, // fill missing diacritic.
+        'O', 'o' => {}, // circumflex.
+        'R', 'r' => {}, // dipping_rising.
+        'S', 's' => {}, // rising.
+        'W', 'w' => {}, // breve.
+        'X', 'x' => {}, // rising_glottalized.
+        'Z', 'z' => {}, // level / reset.
+        else => { // literal.
+            // These characters will be added to state literally.
+
+            // Check if we can add new span for input character.
+            if (state_pointer.buffer_length < state_pointer.buffer_effective.len) {
+                // Add character to span.
+                state_pointer.buffer_effective[state_pointer.buffer_length] = Span.init(c);
+            }
+            // Increase the buffer length for tracking, we will need it went handling backspace.
+            state_pointer.buffer_length = state_pointer.buffer_length + 1;
+            // Set modification index to -1 because we didn't modify any existing span.
+            state_pointer.buffer_modification_index = -1;
+            // Set literal index if it's not set and the length exceed the buffer_effective.
+            if (state_pointer.literal_index == -1 and state_pointer.buffer_length >= state_pointer.buffer_effective.len) {
+                // Set literal mode since buffer index 16 (just after the last buffer_effective
+                // item) because we don't have span for these position, we stop processing Telex
+                // rules but we will continue processing if user use backpsaces to move back to the
+                // buffer_effective range, all existing spans must work as expected.
+                state_pointer.literal_index = state_pointer.buffer_effective.len;
+            }
+        },
+    }
+}
+
+test "expect lex_add handles non-Telex characters less than buffer_effective range" {
+    // Arrange
+
+    // Allocate memory, only specify on this test to simulate runtime allocation.
+    const raw_pointer = std.testing.allocator.rawAlloc(lex_state_size, .fromByteUnits(lex_state_alignment), @returnAddress()) orelse return error.OutOfMemory;
+    defer std.testing.allocator.rawFree(raw_pointer[0..lex_state_size], .fromByteUnits(lex_state_alignment), @returnAddress());
+    const state: *align(lex_state_alignment) State = @ptrCast(@alignCast(raw_pointer));
+
+    // Initialize state.
+    lex_state_init(state);
+    state.mode = .telex;
+
+    const input_sequence = "bbbbbccccc";
+
+    // Act
+    for (input_sequence) |c| {
+        lex_add(state, c);
+    }
+
+    // Assert
+    // We only fill and increase the buffer_length based on input.
+    try expectEqual(10, state.buffer_length);
+    // Because we don't modify any existing character since the last input, expect -1.
+    try expectEqual(-1, state.buffer_modification_index);
+    // Because we didn't exceed the buffer_affective, don't set literal_index.
+    try expectEqual(-1, state.literal_index);
+    // Don't touch on input mode.
+    try expectEqual(.telex, state.mode);
+    // Verify every the spans, must exactly the same with the input.
+    for (input_sequence, 0..) |c, i| {
+        const sp = state.buffer_effective[i];
+        try expectEqual(c, sp.base);
+        try expectEqual(.empty, sp.diacritic);
+        try expectEqual(.level, sp.tone);
+    }
+}
+
+test "expect lex_add handles non-Telex characters exceed the buffer_effective range" {
+    // Arrange
+    var state: State = undefined;
+    lex_state_init(&state);
+    state.mode = .telex;
+
+    const input_sequence = "bbbbbbbbbbcccccccccc";
+
+    // Act
+    for (input_sequence) |c| {
+        lex_add(&state, c);
+    }
+
+    // Assert
+    // We only fill and increase the buffer_length based on input.
+    try expectEqual(20, state.buffer_length);
+    // Because we don't modify any existing character since the last input, expect -1.
+    try expectEqual(-1, state.buffer_modification_index);
+    // Because the input exceed the buffer_effective, we set literal_index after the last effective spans (16).
+    try expectEqual(16, state.literal_index);
+    // Don't touch on input mode.
+    try expectEqual(.telex, state.mode);
+    // Verify every the spans, must exactly the same with the input.
+    for (input_sequence[0..16], 0..) |c, i| {
+        const sp = state.buffer_effective[i];
+        try expectEqual(c, sp.base);
+        try expectEqual(.empty, sp.diacritic);
+        try expectEqual(.level, sp.tone);
+    }
+}

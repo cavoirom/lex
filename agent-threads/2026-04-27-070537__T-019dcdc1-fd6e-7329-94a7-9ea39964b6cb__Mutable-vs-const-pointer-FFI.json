@@ -1,0 +1,142 @@
+{
+  "v": 37,
+  "id": "T-019dcdc1-fd6e-7329-94a7-9ea39964b6cb",
+  "env": {
+    "initial": {
+      "tags": [
+        "model:claude-opus-4-7"
+      ],
+      "trees": [
+        {
+          "uri": "file:///<redacted>/lex",
+          "displayName": "lex"
+        }
+      ],
+      "platform": {
+        "os": "darwin",
+        "client": "JetBrains",
+        "osVersion": "26.5",
+        "clientType": "cli",
+        "webBrowser": false,
+        "clientVersion": "0.0.1777116343-g95d5aa",
+        "installationID": "<redacted>",
+        "cpuArchitecture": "arm64",
+        "deviceFingerprint": "<redacted>"
+      }
+    }
+  },
+  "meta": {
+    "traces": [
+      {
+        "id": "gKb9L",
+        "name": "agent",
+        "context": {
+          "messageId": 0
+        },
+        "endTime": "2026-04-27T07:08:07.553Z",
+        "startTime": "2026-04-27T07:07:58.444Z"
+      },
+      {
+        "id": "6l2fn",
+        "name": "inference",
+        "parent": "gKb9L",
+        "context": {
+          "messageId": 0
+        },
+        "endTime": "2026-04-27T07:08:07.554Z",
+        "startTime": "2026-04-27T07:07:58.445Z"
+      }
+    ],
+    "deleted": false,
+    "createdOnServer": false,
+    "lastUserMessageAt": "2026-04-27T07:07:58.426Z",
+    "workspaceID": null,
+    "projectID": null,
+    "visibility": "private",
+    "sharedGroupIDs": [],
+    "agentMode": "smart",
+    "usesDtw": false
+  },
+  "title": "Mutable vs const pointer FFI",
+  "created": 1777273537196,
+  "messages": [
+    {
+      "meta": {
+        "sentAt": 1777273678426
+      },
+      "role": "user",
+      "content": [
+        {
+          "text": "in `lex_state_init` in @src/liblex.zig I use `*State` for parameter type instead of `*const State`. Explain to me the difference and which one is better in case this function will be called in C ABI compatible FFI caller.",
+          "type": "text"
+        }
+      ],
+      "agentMode": "smart",
+      "messageId": 0,
+      "userState": {
+        "activeEditor": "file:///<redacted>/lex/src/liblex.zig",
+        "cursorLocation": {
+          "line": 314,
+          "column": 8
+        },
+        "currentlyVisibleFiles": [
+          "file:///<redacted>/lex/src/liblex.zig",
+          "file:///<redacted>/lex/devlog/2026-04-22__define-liblex-state.md",
+          "file:///<redacted>/lex/devlog/2026-04-23__implement-span-init-diacritic.md",
+          "file:///<redacted>/lex/devlog/2026-04-24__init-state.md",
+          "file:///<redacted>/lex/README.md",
+          "file:///<redacted>/AGENTS.md",
+          "file:///<redacted>/lex/macos/Lex.swift",
+          "file:///Users/vinh/.asdf/installs/zig/master/lib/std/testing.zig",
+          "file:///Users/vinh/.asdf/installs/zig/master/lib/std/heap/debug_allocator.zig",
+          "file:///Users/vinh/.asdf/installs/zig/master/lib/std/mem/Allocator.zig"
+        ]
+      },
+      "fileMentions": {
+        "files": [
+          {
+            "uri": "file:///<redacted>/lex/src/liblex.zig",
+            "content": "",
+            "isImage": false
+          }
+        ],
+        "mentions": [
+          {
+            "uri": "file:///<redacted>/lex/src/liblex.zig"
+          }
+        ]
+      }
+    },
+    {
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "end_turn"
+      },
+      "usage": {
+        "model": "claude-opus-4-7",
+        "timestamp": "2026-04-27T07:08:07.553Z",
+        "inputTokens": 6,
+        "outputTokens": 414,
+        "maxInputTokens": 300000,
+        "totalInputTokens": 23617,
+        "cacheReadInputTokens": 15000,
+        "cacheCreationInputTokens": 8611
+      },
+      "content": [
+        {
+          "text": "# `*State` vs `*const State`\n\n**`*State`** — mutable pointer. Callee may write through it.\n**`*const State`** — read-only pointer. Callee may only read.\n\nIn C ABI, both are just `State*` at the machine level (a pointer is a pointer; `const` is a compile-time contract, not a runtime difference). The two map to:\n\n- `*State` → `State*`\n- `*const State` → `const State*`\n\n## Which is correct here\n\n`lex_state_init` **writes** to the memory (`state_pointer.* = .{...}`). It must be `*State`. Using `*const State` would be a compile error in Zig because you cannot assign through a const pointer.\n\nThe same applies to `lex_add` — it mutates the state, so `*State` is required.\n\n`*const State` would only be appropriate for a read-only function, e.g. a hypothetical `lex_state_get_length(state: *const State) u8`. Using `const` there documents intent to the C caller (header would show `const State*`) and lets the compiler catch accidental writes.\n\n## Rule of thumb for FFI\n\n- Mutates the pointee → `*T` (C: `T*`)\n- Reads only → `*const T` (C: `const T*`)\n\nSo your current `*State` is correct. Don't change it.",
+          "type": "text",
+          "finalTime": 1777273687522,
+          "startTime": 1777273680049
+        }
+      ],
+      "messageId": 1,
+      "turnElapsedMs": 9109
+    }
+  ],
+  "agentMode": "smart",
+  "nextMessageId": 2,
+  "creatorUserID": "<redacted>",
+  "updatedAt": "2026-04-27T07:07:58.426Z"
+}
