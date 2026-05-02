@@ -211,16 +211,150 @@ const State = extern struct {
     mode: InputMode = .literal,
 
     // Initialize the State on allocated memory.
-    pub fn init(state_pointer: *State) void {
-        state_pointer.* = .{
+    pub fn init(self: *State) void {
+        self.* = .{
             .buffer_effective = undefined,
         };
+    }
+
+    pub fn add(self: *State, c: u8) void {
+        // Only allow a-zA-Z.
+        assert(std.ascii.isAlphabetic(c));
+
+        // The buffer_modification index must be inbound of the buffer_effective.
+        assert(self.buffer_modification_index >= -1 and self.buffer_modification_index < self.buffer_effective.len);
+
+        // The literal_index value must be in range -1 -> 16 (buffer_effective length) because we won't
+        // process Vietnamese input outside the buffer_effective.
+        assert(self.literal_index >= -1 and self.literal_index <= self.buffer_effective.len);
+        // The literal_index value must be less than buffer length.
+        assert(self.literal_index < self.buffer_length);
+
+        // Input mode must be either .literal or .telex.
+        assert(self.mode == .literal or self.mode == .telex);
+
+        switch (c) {
+            'A', 'a' => { // circumflex.
+                if (self.literal_index > -1 or self.mode == .literal) {
+                    // Enable literal input when literal_index is set or on literal mode. The
+                    // literal_index is also set when the word starts with non-Vietnamese onsets.
+
+                    // Check if we can add new span for input character.
+                    if (self.buffer_length < self.buffer_effective.len) {
+                        // Add character to span.
+                        self.buffer_effective[self.buffer_length] = Span.init(c);
+                    }
+                    // Increase the buffer length for tracking, we will need it went handling backspace.
+                    self.buffer_length = self.buffer_length + 1;
+
+                    // Set modification index to -1 because we didn't modify any existing span.
+                    self.buffer_modification_index = -1;
+                } else {
+                    // buffer_length must inbound of buffer_effective.
+                    assert(self.buffer_length < self.buffer_effective.len);
+
+                    // literal_index must not be set in order to process Vietnamese input.
+                    assert(self.literal_index == -1);
+
+                    // Vietnamese input.
+                    // Possible cases:
+                    // - circumplex.
+                    // - cancel circumflex.
+                    // - plain append.
+
+                    if (self.buffer_length == 0 or (self.buffer_effective[self.buffer_length - 1].base != std.ascii.toUpper(c) and self.buffer_effective[self.buffer_length - 1].base != std.ascii.toLower(c))) {
+                        // Plain append when start of the buffer or the previous character don't match
+                        // circumflex rules.
+
+                        // Check if we can add new span for input character.
+                        if (self.buffer_length < self.buffer_effective.len) {
+                            // Add character to span.
+                            self.buffer_effective[self.buffer_length] = Span.init(c);
+                        }
+                        // Increase the buffer length for tracking, we will need it went handling
+                        // backspace.
+                        self.buffer_length = self.buffer_length + 1;
+
+                        // Set modification index to -1 because we didn't modify any existing span.
+                        self.buffer_modification_index = -1;
+                    } else if ((self.buffer_effective[self.buffer_length - 1].base == std.ascii.toUpper(c) or self.buffer_effective[self.buffer_length - 1].base == std.ascii.toLower(c)) and self.buffer_effective[self.buffer_length - 1].diacritic == .empty) {
+                        // Circumflex.
+
+                        // Add circumflex to previous plan 'A' or 'a'.
+                        self.buffer_effective[self.buffer_length - 1].diacritic = .circumflex;
+                        // Mark modification index.
+                        self.buffer_modification_index = @intCast(self.buffer_length - 1);
+                    } else if ((self.buffer_effective[self.buffer_length - 1].base == std.ascii.toUpper(c) or self.buffer_effective[self.buffer_length - 1].base == std.ascii.toLower(c)) and self.buffer_effective[self.buffer_length - 1].diacritic == .circumflex) {
+                        // Cancel circumflex.
+
+                        // Reset diacritic to empty.
+                        self.buffer_effective[self.buffer_length - 1].diacritic = .empty;
+                        // Mark modification index.
+                        self.buffer_modification_index = @intCast(self.buffer_length - 1);
+
+                        // Add plan character to buffer_effective.
+                        // Check if we can add new span for input character.
+                        if (self.buffer_length < self.buffer_effective.len) {
+                            // Add character to span.
+                            self.buffer_effective[self.buffer_length] = Span.init(c);
+                        }
+                        // Mark the start of literal input because of the cancelling.
+                        self.literal_index = @intCast(self.buffer_length);
+
+                        // Increase the buffer length for tracking, we will need it went handling
+                        // backspace.
+                        self.buffer_length = self.buffer_length + 1;
+                    } else {
+                        unreachable;
+                    }
+                }
+            },
+            'C', 'c' => {}, // fill missing diacritic, e.g. cước.
+            'D', 'd' => {}, // bar.
+            'E', 'e' => {}, // circumflex.
+            'F', 'f' => {}, // falling.
+            'I', 'i' => {}, // fill missing diacritic, e.g. người.
+            'J', 'j' => {}, // falling_glottalized.
+            'M', 'm' => {}, // fill missing diacritic, e.g. cườm.
+            'N', 'n' => {}, // fill missing diacritic, e.g. cường.
+            'O', 'o' => {}, // circumflex.
+            'P', 'p' => {}, // fill missing diacritic, e.g. cướp.
+            'R', 'r' => {}, // dipping_rising.
+            'S', 's' => {}, // rising.
+            'T', 't' => {}, // fill missing diacritic, e.g. trượt.
+            'U', 'u' => {}, // fill missing diacritic, e.g. hươu.
+            'W', 'w' => {}, // breve.
+            'X', 'x' => {}, // rising_glottalized.
+            'Z', 'z' => {}, // level / reset.
+            else => { // literal.
+                // These characters will be added to state literally.
+
+                // Check if we can add new span for input character.
+                if (self.buffer_length < self.buffer_effective.len) {
+                    // Add character to span.
+                    self.buffer_effective[self.buffer_length] = Span.init(c);
+                }
+                // Increase the buffer length for tracking, we will need it went handling backspace.
+                self.buffer_length = self.buffer_length + 1;
+
+                // Set modification index to -1 because we didn't modify any existing span.
+                self.buffer_modification_index = -1;
+                // Set literal index if it's not set and the length exceed the buffer_effective.
+                if (self.literal_index == -1 and self.buffer_length > self.buffer_effective.len) {
+                    // Set literal mode since buffer index 16 (just after the last buffer_effective
+                    // item) because we don't have span for these position, we stop processing Telex
+                    // rules but we will continue processing if user use backspaces to move back to the
+                    // buffer_effective range, all existing spans must work as expected.
+                    self.literal_index = self.buffer_effective.len;
+                }
+            },
+        }
     }
 };
 
 // Simple ABI wrapper for initialize allocated memory.
-export fn lex_state_init(state_pointer: *State) void {
-    State.init(state_pointer);
+export fn lex_state_init(state: *State) void {
+    state.init();
 }
 
 // Needed for the caller to allocate memory for our State.
@@ -231,45 +365,8 @@ export const lex_state_alignment: usize = @alignOf(State);
 
 // Add operations to the given state based on Telex rules, operations are determined by the input
 // character.
-export fn lex_add(state_pointer: *State, c: u8) void {
-    // Only allow a-zA-Z.
-    assert(std.ascii.isAlphabetic(c));
-
-    switch (c) {
-        'A', 'a' => {}, // circumflex.
-        'D', 'd' => {}, // bar.
-        'E', 'e' => {}, // circumflex.
-        'F', 'f' => {}, // falling.
-        'J', 'j' => {}, // falling_glottalized.
-        'N', 'n' => {}, // fill missing diacritic.
-        'O', 'o' => {}, // circumflex.
-        'R', 'r' => {}, // dipping_rising.
-        'S', 's' => {}, // rising.
-        'W', 'w' => {}, // breve.
-        'X', 'x' => {}, // rising_glottalized.
-        'Z', 'z' => {}, // level / reset.
-        else => { // literal.
-            // These characters will be added to state literally.
-
-            // Check if we can add new span for input character.
-            if (state_pointer.buffer_length < state_pointer.buffer_effective.len) {
-                // Add character to span.
-                state_pointer.buffer_effective[state_pointer.buffer_length] = Span.init(c);
-            }
-            // Increase the buffer length for tracking, we will need it went handling backspace.
-            state_pointer.buffer_length = state_pointer.buffer_length + 1;
-            // Set modification index to -1 because we didn't modify any existing span.
-            state_pointer.buffer_modification_index = -1;
-            // Set literal index if it's not set and the length exceed the buffer_effective.
-            if (state_pointer.literal_index == -1 and state_pointer.buffer_length >= state_pointer.buffer_effective.len) {
-                // Set literal mode since buffer index 16 (just after the last buffer_effective
-                // item) because we don't have span for these position, we stop processing Telex
-                // rules but we will continue processing if user use backpsaces to move back to the
-                // buffer_effective range, all existing spans must work as expected.
-                state_pointer.literal_index = state_pointer.buffer_effective.len;
-            }
-        },
-    }
+export fn lex_add(state: *State, c: u8) void {
+    state.add(c);
 }
 
 test "expect lex_add handles non-Telex characters less than buffer_effective range" {
@@ -284,7 +381,7 @@ test "expect lex_add handles non-Telex characters less than buffer_effective ran
     lex_state_init(state);
     state.mode = .telex;
 
-    const input_sequence = "bbbbbccccc";
+    const input_sequence = "bbbbbqqqqq";
 
     // Act
     for (input_sequence) |c| {
@@ -315,7 +412,7 @@ test "expect lex_add handles non-Telex characters exceed the buffer_effective ra
     lex_state_init(&state);
     state.mode = .telex;
 
-    const input_sequence = "bbbbbbbbbbcccccccccc";
+    const input_sequence = "bbbbbbbbbbqqqqqqqqqq";
 
     // Act
     for (input_sequence) |c| {
@@ -338,4 +435,75 @@ test "expect lex_add handles non-Telex characters exceed the buffer_effective ra
         try expectEqual(.empty, sp.diacritic);
         try expectEqual(.level, sp.tone);
     }
+}
+
+test "expect lex_add adds a literally because it's the start of the buffer" {
+    // Arrange
+    var state: State = undefined;
+    lex_state_init(&state);
+    state.mode = .telex;
+
+    // Act
+    lex_add(&state, 'a');
+
+    // Assert
+    try expectEqual(1, state.buffer_length);
+    try expectEqual(-1, state.buffer_modification_index);
+    try expectEqual(-1, state.literal_index);
+    try expectEqual(.telex, state.mode);
+
+    const sp = state.buffer_effective[0];
+    try expectEqual('a', sp.base);
+    try expectEqual(.empty, sp.diacritic);
+    try expectEqual(.level, sp.tone);
+}
+
+test "expect lex_add results â when input aa" {
+    // Arrange
+    var state: State = undefined;
+    lex_state_init(&state);
+    state.mode = .telex;
+
+    // Act
+    lex_add(&state, 'a');
+    lex_add(&state, 'a');
+
+    // Assert
+    try expectEqual(1, state.buffer_length);
+    try expectEqual(0, state.buffer_modification_index);
+    try expectEqual(-1, state.literal_index);
+    try expectEqual(.telex, state.mode);
+
+    const sp = state.buffer_effective[0];
+    try expectEqual('a', sp.base);
+    try expectEqual(.circumflex, sp.diacritic);
+    try expectEqual(.level, sp.tone);
+}
+
+test "expect lex_add results aA when input aaA" {
+    // Arrange
+    var state: State = undefined;
+    lex_state_init(&state);
+    state.mode = .telex;
+
+    // Act
+    lex_add(&state, 'a');
+    lex_add(&state, 'a');
+    lex_add(&state, 'A');
+
+    // Assert
+    try expectEqual(2, state.buffer_length);
+    try expectEqual(0, state.buffer_modification_index);
+    try expectEqual(1, state.literal_index);
+    try expectEqual(.telex, state.mode);
+
+    const sp1 = state.buffer_effective[0];
+    try expectEqual('a', sp1.base);
+    try expectEqual(.empty, sp1.diacritic);
+    try expectEqual(.level, sp1.tone);
+
+    const sp2 = state.buffer_effective[1];
+    try expectEqual('A', sp2.base);
+    try expectEqual(.empty, sp2.diacritic);
+    try expectEqual(.level, sp2.tone);
 }

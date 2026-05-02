@@ -9,6 +9,8 @@
 
 - `*const State`: read-only pointer. Could not write to the memory.
 - `*State`: mutable pointer, could write to the memory. In case of `lex_add`, `*State` is correct.
+- Function inside struct will automatically take `self` parameter when called from instance, e.g.
+  `state.add('a')` will call `add(self: *State, c: u8)` in the struct `State`.
 
 ## Telex knowledge
 
