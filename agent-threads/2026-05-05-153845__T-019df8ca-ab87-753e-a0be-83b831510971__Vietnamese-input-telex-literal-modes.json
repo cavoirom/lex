@@ -1,0 +1,484 @@
+{
+  "v": 3340,
+  "id": "T-019df8ca-ab87-753e-a0be-83b831510971",
+  "env": {
+    "initial": {
+      "tags": [
+        "model:claude-opus-4-7"
+      ],
+      "trees": [
+        {
+          "uri": "file:///<redacted>/lex",
+          "displayName": "lex"
+        }
+      ],
+      "platform": {
+        "os": "darwin",
+        "client": "CLI",
+        "osVersion": "26.5",
+        "clientType": "cli",
+        "webBrowser": false,
+        "clientVersion": "0.0.1777988768-gebece7",
+        "installationID": "<redacted>",
+        "cpuArchitecture": "arm64",
+        "deviceFingerprint": "<redacted>"
+      }
+    }
+  },
+  "meta": {
+    "traces": [
+      {
+        "id": "WDGbK",
+        "name": "agent",
+        "context": {
+          "messageId": 0
+        },
+        "endTime": "2026-05-05T15:49:37.888Z",
+        "startTime": "2026-05-05T15:44:00.080Z"
+      },
+      {
+        "id": "3Vfv4",
+        "name": "inference",
+        "parent": "WDGbK",
+        "context": {
+          "messageId": 0
+        },
+        "endTime": "2026-05-05T15:44:03.516Z",
+        "startTime": "2026-05-05T15:44:00.081Z"
+      },
+      {
+        "id": "wLxGe",
+        "name": "tools",
+        "parent": "WDGbK",
+        "context": {
+          "messageId": 1
+        },
+        "endTime": "2026-05-05T15:44:03.522Z",
+        "startTime": "2026-05-05T15:44:03.516Z"
+      },
+      {
+        "id": "KH8cN",
+        "name": "inference",
+        "parent": "WDGbK",
+        "context": {
+          "messageId": 0
+        },
+        "endTime": "2026-05-05T15:45:31.937Z",
+        "startTime": "2026-05-05T15:44:03.523Z"
+      },
+      {
+        "id": "mwHT0",
+        "name": "tools",
+        "parent": "WDGbK",
+        "context": {
+          "messageId": 3
+        },
+        "endTime": "2026-05-05T15:48:51.729Z",
+        "startTime": "2026-05-05T15:45:31.937Z"
+      },
+      {
+        "id": "lgFMP",
+        "name": "inference",
+        "parent": "WDGbK",
+        "context": {
+          "messageId": 0
+        },
+        "endTime": "2026-05-05T15:49:37.888Z",
+        "startTime": "2026-05-05T15:48:51.729Z"
+      },
+      {
+        "id": "BEQpL",
+        "name": "agent",
+        "context": {
+          "messageId": 6
+        },
+        "endTime": "2026-05-05T15:58:59.669Z",
+        "startTime": "2026-05-05T15:58:08.032Z"
+      },
+      {
+        "id": "R7JPb",
+        "name": "inference",
+        "parent": "BEQpL",
+        "context": {
+          "messageId": 6
+        },
+        "endTime": "2026-05-05T15:58:59.669Z",
+        "startTime": "2026-05-05T15:58:08.032Z"
+      }
+    ],
+    "deleted": false,
+    "createdOnServer": false,
+    "lastUserMessageAt": "2026-05-05T15:58:08.031Z",
+    "workspaceID": null,
+    "projectID": null,
+    "visibility": "private",
+    "sharedGroupIDs": [],
+    "agentMode": "smart",
+    "usesDtw": false
+  },
+  "title": "Vietnamese input telex literal modes",
+  "created": 1777995525915,
+  "messages": [
+    {
+      "meta": {
+        "sentAt": 1777995840072
+      },
+      "role": "user",
+      "content": [
+        {
+          "text": "In @src/liblex.zig I have `State.add` to handle Vietnamese input processing. I see that we have 2 separate mode: telex and literal, discuss with me to have good handling for these mode.\n\nCome up with the approach, then consult the Oracle for another perspective, but prevent the Oracle from producing any example code. You should not write any code. Present your information in the way that I could write the code myself.",
+          "type": "text"
+        }
+      ],
+      "agentMode": "smart",
+      "messageId": 0,
+      "userState": {
+        "currentlyVisibleFiles": []
+      },
+      "fileMentions": {
+        "files": [
+          {
+            "uri": "file:///<redacted>/lex/src/liblex.zig",
+            "content": "",
+            "isImage": false
+          }
+        ],
+        "mentions": [
+          {
+            "uri": "file:///<redacted>/lex/src/liblex.zig"
+          }
+        ]
+      }
+    },
+    {
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "tool_use"
+      },
+      "usage": {
+        "model": "claude-opus-4-7",
+        "timestamp": "2026-05-05T15:44:03.515Z",
+        "inputTokens": 6,
+        "outputTokens": 193,
+        "maxInputTokens": 300000,
+        "totalInputTokens": 26868,
+        "cacheReadInputTokens": 16365,
+        "cacheCreationInputTokens": 10497
+      },
+      "content": [
+        {
+          "type": "thinking",
+          "provider": "anthropic",
+          "thinking": " I need to look at the current implementation of `State.add` to understand how it's handling the two input modes—telex and literal—so I can figure out the best way to manage them.",
+          "finalTime": 1777995843400,
+          "signature": "<redacted>",
+          "startTime": 1777995841791
+        },
+        {
+          "id": "toolu_vrtx_011sfs2f7JbnwxdN9ALJ7T7s",
+          "name": "Read",
+          "type": "tool_use",
+          "input": {
+            "path": "/<redacted>/lex/src/liblex.zig",
+            "read_range": [
+              244,
+              365
+            ]
+          },
+          "complete": true,
+          "finalTime": 1777995843507,
+          "startTime": 1777995843404
+        }
+      ],
+      "messageId": 1
+    },
+    {
+      "role": "user",
+      "content": [
+        {
+          "run": {
+            "result": {
+              "content": "[... omitted lines 1 to 243 ...]\n244:         switch (c) {\n245:             'A', 'a' => { // circumflex.\n246:                 if (self.literal_index != null or self.mode == .literal) {\n247:                     // Enable literal input when literal_index is set or on literal mode. The\n248:                     // literal_index is also set when the word starts with non-Vietnamese onsets.\n249: \n250:                     // Check if we can add new span for input character.\n251:                     if (self.buffer_length < self.buffer_effective.len) {\n252:                         // Add character to span.\n253:                         self.buffer_effective[self.buffer_length] = Span.init(c);\n254:                     }\n255:                     // Increase the buffer length for tracking, we will need it went handling backspace.\n256:                     self.buffer_length = self.buffer_length + 1;\n257: \n258:                     // Set modification index to null because we didn't modify any existing span.\n259:                     self.buffer_modification_index = null;\n260:                 } else {\n261:                     // buffer_length must inbound of buffer_effective.\n262:                     assert(self.buffer_length < self.buffer_effective.len);\n263: \n264:                     // literal_index must not be set in order to process Vietnamese input.\n265:                     assert(self.literal_index == null);\n266: \n267:                     // Vietnamese input.\n268:                     // Possible cases:\n269:                     // - circumplex.\n270:                     // - cancel circumflex.\n271:                     // - plain append.\n272: \n273:                     if (self.buffer_length == 0 or (self.buffer_effective[self.buffer_length - 1].base != std.ascii.toUpper(c) and self.buffer_effective[self.buffer_length - 1].base != std.ascii.toLower(c))) {\n274:                         // Plain append when start of the buffer or the previous character don't match\n275:                         // circumflex rules.\n276: \n277:                         // Check if we can add new span for input character.\n278:                         if (self.buffer_length < self.buffer_effective.len) {\n279:                             // Add character to span.\n280:                             self.buffer_effective[self.buffer_length] = Span.init(c);\n281:                         }\n282:                         // Increase the buffer length for tracking, we will need it went handling\n283:                         // backspace.\n284:                         self.buffer_length = self.buffer_length + 1;\n285: \n286:                         // Set modification index to null because we didn't modify any existing span.\n287:                         self.buffer_modification_index = null;\n288:                     } else if ((self.buffer_effective[self.buffer_length - 1].base == std.ascii.toUpper(c) or self.buffer_effective[self.buffer_length - 1].base == std.ascii.toLower(c)) and self.buffer_effective[self.buffer_length - 1].diacritic == .empty) {\n289:                         // Circumflex.\n290: \n291:                         // Add circumflex to previous plan 'A' or 'a'.\n292:                         self.buffer_effective[self.buffer_length - 1].diacritic = .circumflex;\n293:                         // Mark modification index.\n294:                         self.buffer_modification_index = self.buffer_length - 1;\n295:                     } else if ((self.buffer_effective[self.buffer_length - 1].base == std.ascii.toUpper(c) or self.buffer_effective[self.buffer_length - 1].base == std.ascii.toLower(c)) and self.buffer_effective[self.buffer_length - 1].diacritic == .circumflex) {\n296:                         // Cancel circumflex.\n297: \n298:                         // Reset diacritic to empty.\n299:                         self.buffer_effective[self.buffer_length - 1].diacritic = .empty;\n300:                         // Mark modification index.\n301:                         self.buffer_modification_index = self.buffer_length - 1;\n302: \n303:                         // Add plan character to buffer_effective.\n304:                         // Check if we can add new span for input character.\n305:                         if (self.buffer_length < self.buffer_effective.len) {\n306:                             // Add character to span.\n307:                             self.buffer_effective[self.buffer_length] = Span.init(c);\n308:                         }\n309:                         // Mark the start of literal input because of the cancelling.\n310:                         self.literal_index = self.buffer_length;\n311: \n312:                         // Increase the buffer length for tracking, we will need it went handling\n313:                         // backspace.\n314:                         self.buffer_length = self.buffer_length + 1;\n315:                     } else {\n316:                         unreachable;\n317:                     }\n318:                 }\n319:             },\n320:             'C', 'c' => {}, // fill missing diacritic, e.g. cước.\n321:             'D', 'd' => {}, // bar.\n322:             'E', 'e' => {}, // circumflex.\n323:             'F', 'f' => {}, // falling.\n324:             'I', 'i' => {}, // fill missing diacritic, e.g. người.\n325:             'J', 'j' => {}, // falling_glottalized.\n326:             'M', 'm' => {}, // fill missing diacritic, e.g. cườm.\n327:             'N', 'n' => {}, // fill missing diacritic, e.g. cường.\n328:             'O', 'o' => {}, // circumflex.\n329:             'P', 'p' => {}, // fill missing diacritic, e.g. cướp.\n330:             'R', 'r' => {}, // dipping_rising.\n331:             'S', 's' => {}, // rising.\n332:             'T', 't' => {}, // fill missing diacritic, e.g. trượt.\n333:             'U', 'u' => {}, // fill missing diacritic, e.g. hươu.\n334:             'W', 'w' => {}, // breve.\n335:             'X', 'x' => {}, // rising_glottalized.\n336:             'Z', 'z' => {}, // level / reset.\n337:             else => { // literal.\n338:                 // These characters will be added to state literally.\n339: \n340:                 // Check if we can add new span for input character.\n341:                 if (self.buffer_length < self.buffer_effective.len) {\n342:                     // Add character to span.\n343:                     self.buffer_effective[self.buffer_length] = Span.init(c);\n344:                 }\n345:                 // Increase the buffer length for tracking, we will need it went handling backspace.\n346:                 self.buffer_length = self.buffer_length + 1;\n347: \n348:                 // Set modification index to null because we didn't modify any existing span.\n349:                 self.buffer_modification_index = null;\n350:                 // Set literal index if it's not set and the length exceed the buffer_effective.\n351:                 if (self.literal_index == null and self.buffer_length > self.buffer_effective.len) {\n352:                     // Set literal mode since buffer index 16 (just after the last buffer_effective\n353:                     // item) because we don't have span for these position, we stop processing Telex\n354:                     // rules but we will continue processing if user use backspaces to move back to the\n355:                     // buffer_effective range, all existing spans must work as expected.\n356:                     self.literal_index = self.buffer_effective.len;\n357:                 }\n358:             },\n359:         }\n360: \n361:         // Ensure the literal_index in valid state.\n362:         if (self.mode == .literal) {\n363:             assert(self.literal_index == null);\n364:         }\n365:     }\n[... omitted lines 366 to 613 ...]",
+              "absolutePath": "/<redacted>/lex/src/liblex.zig"
+            },
+            "status": "done",
+            "progress": {},
+            "trackFiles": [
+              "file:///<redacted>/lex/src/liblex.zig"
+            ]
+          },
+          "type": "tool_result",
+          "toolUseID": "toolu_vrtx_011sfs2f7JbnwxdN9ALJ7T7s"
+        }
+      ],
+      "messageId": 2
+    },
+    {
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "tool_use"
+      },
+      "usage": {
+        "model": "claude-opus-4-7",
+        "timestamp": "2026-05-05T15:45:31.937Z",
+        "inputTokens": 6,
+        "outputTokens": 5905,
+        "maxInputTokens": 300000,
+        "totalInputTokens": 29662,
+        "cacheReadInputTokens": 26862,
+        "cacheCreationInputTokens": 2794
+      },
+      "content": [
+        {
+          "type": "thinking",
+          "provider": "anthropic",
+          "thinking": " I'm thinking through how to handle the two distinct modes in `State.add` — the literal pass-through mode and the telex Vietnamese processing mode — and I'm noticing there are actually two separate conditions that trigger literal behavior, which I need to untangle before proposing an approach to the user. The issue with the `else` branch is that non-Telex letters are inherently literal in `.telex` mode, so they bypass Telex processing entirely. When they overflow the effective buffer, `literal_index` gets set to mark where literal input began. I'm considering two refactoring approaches: either extract a shared `append_literal` helper that handles the common literal logic and return early when in literal mode or global literal state, or redesign the state machine to make mode and position-based literal handling more explicit and less intertwined. I need to define an `append_literal_span` helper that handles the common path of writing characters to the buffer, managing bounds, and setting `literal_index` when overflow occurs. Then at the top of `add`, I branch: if we're in literal mode now, call the helper and return; otherwise enter the Telex switch where each character handles its own diacritics and tone logic, with cancellation cases calling back to the helper to append the literal character and update `literal_index`. For non-Telex consonants in Telex mode, they should pass through without setting `literal_index` unless we overflow the buffer — once we exceed index 16, we can't track retroactive modifications anymore, so that's when `literal_index` gets set. error-prone because it's easy to forget to check. I'm also thinking about whether \"double a cancels â\" should be its own code path or shared with the normal append logic — it's similar to literal append but additionally manages the literal_index. For the structural separation, I'm considering extracting helper functions like `add_to_buffer` for writing spans, `append_literal` for handling non-Telex characters, `apply_diacritic_to_last` for modifications, and `cancel_diacritic_and_append` for the cancellation case, which would let the main `add` dispatcher stay cleaner by checking the literal context upfront before branching on character type.\n\nBuilding the dispatcher...",
+          "finalTime": 1777995902409,
+          "signature": "<redacted>",
+          "startTime": 1777995845110
+        },
+        {
+          "text": "I've read the full file. Before consulting the Oracle, let me crystallize my approach so I can compare perspectives.\n\n**My approach in summary:**\n\n1. **Unify the two literal triggers.** `mode == .literal` and `literal_index != null` both cause identical execution behavior in `add`. Compute one boolean (`is_literal_now`) at the top of `add` rather than re-checking both in every character branch.\n\n2. **Split `add` into a dispatcher + small helpers.** Today, the `'A'/'a'` branch alone has four inlined behaviors (literal append, plain Telex append, apply circumflex, cancel circumflex+append). Each pattern repeats per character class. Extract:\n   - `append_literal(c)` — write span at `buffer_length` if in bounds, increment length, clear modification index, set `literal_index = buffer_effective.len` on overflow.\n   - `apply_diacritic_to_last(d)` — mutate last span, set modification index.\n   - `cancel_diacritic_and_append(c)` — clear last span's diacritic, set modification index, append literal, set `literal_index` to that new position.\n   - `try_telex_<group>(c)` — one per Telex behavior class (circumflex group `a/e/o`, breve `w`, bar `d`, tone marks `s/f/r/x/j`, fill consonants `c/i/m/n/p/t/u`, reset `z`).\n\n3. **Dispatcher shape:** if `is_literal_now`, call `append_literal` and return. Otherwise switch on `c` to the appropriate `try_telex_*` helper. The \"default\" arm (non-Telex letters in `.telex` mode) is just `append_literal`.\n\n4. **Clarify the role of each state field.** Document explicitly: `mode` = user intent (sticky, set externally); `literal_index` = engine-derived positional bypass (set on overflow or after cancellation); `buffer_modification_index` = output-side hint for caller to compute backspace count.\n\n5. **Consider collapsing `mode` into `literal_index`.** `.literal` mode is observationally equivalent to `literal_index == 0`. Only reason to keep both is if the public ABI exposes \"is the user in literal mode\" distinctly from \"engine fell back to literal\".\n\n6. **Add an internal `assert_invariants()` called at entry/exit** of `add` and `backspace` so every branch is checked uniformly instead of re-asserting in each.\n\nNow consulting the Oracle for an outside view.",
+          "type": "text",
+          "finalTime": 1777995913961,
+          "startTime": 1777995902409
+        },
+        {
+          "id": "toolu_vrtx_01H47Uh3iHwRYvfctzMUHArA",
+          "name": "oracle",
+          "type": "tool_use",
+          "input": {
+            "task": "Critique my design approach for handling two input modes in a Vietnamese Telex input engine. Do NOT produce any example code, code blocks, or pseudo-code in your response — prose only. I need conceptual critique and alternative design perspectives.\n\nThe engine is a small library (`liblex.zig`) that processes one ASCII character at a time and maintains a `State` containing:\n- `buffer_effective: [16]Span` — sliding effective window of typed spans (a span is base char + diacritic + tone).\n- `buffer_length: u8` — total typed length (may exceed 16; once past 16 we no longer have storage for new spans but we still count for backspace bookkeeping).\n- `buffer_modification_index: ?u8` — the earliest index modified during the most recent `add`, used by caller to compute how many backspaces + replacement chars to emit downstream.\n- `literal_index: ?u8` — engine-derived: the position from which input must be treated literally (set on buffer overflow at index 16, or after a Telex cancellation like `aa` then `a` → `aA`).\n- `mode: InputMode` — user-facing toggle, either `.literal` (pure pass-through) or `.telex` (Vietnamese processing).\n\nTwo operations: `add(c)` and `backspace()`.\n\nCurrently `add` has a giant switch over the input character; inside several Telex character branches, the same literal-pass-through preamble is duplicated. Cancellation (e.g. `aa` made `â`, third `a` undoes it back to `aa` and forces literal mode for the rest of the word) sets `literal_index` to the new position.\n\nMy proposed redesign:\n1. Compute one boolean `is_literal_now = (mode == .literal) or (literal_index != null)` at the top of `add`. If true, dispatch to a single `append_literal` helper and return early.\n2. Extract small helpers: `append_literal(c)`, `apply_diacritic_to_last(d)`, `cancel_diacritic_and_append(c)`, plus per-Telex-behavior helpers (`try_telex_circumflex`, `try_telex_breve`, `try_telex_bar`, `try_telex_tone`, `try_telex_reset`, `try_telex_fill_consonant`).\n3. The dispatcher's default arm (non-Telex letters in `.telex` mode) just calls `append_literal`.\n4. Possibly collapse `mode` into `literal_index` since `.literal` mode is observationally equivalent to `literal_index == 0`. Keep both only if the public ABI needs to distinguish user intent from engine fallback.\n5. Centralize invariant asserts in an `assert_invariants()` called at function entry/exit.\n\nPlease critique:\n- Is the unified `is_literal_now` check correct, or are there edge cases where mode-literal and positional-literal must behave differently?\n- Is the helper decomposition sensible, or is there a better partitioning (e.g. table-driven dispatch, separate `add_literal` vs `add_telex` functions selected by mode)?\n- Is collapsing `mode` into `literal_index` a good simplification or a loss of useful semantics?\n- Are there state fields or transitions I'm missing for a robust Telex engine (e.g. how to handle word boundaries, multi-vowel diphthongs, tone-on-correct-vowel placement)?\n- Any concerns about the current `buffer_modification_index` semantics — does it adequately let the caller render edits when multiple positions could change?\n- Is the current backspace behavior sufficient (decrement length, unset literal_index when crossing back to ≤16) or are there subtle bugs (e.g., backspace after a cancellation that left the last span with a now-stale diacritic)?\n\nReminder: prose only, no code.",
+            "files": [
+              "/<redacted>/lex/src/liblex.zig"
+            ]
+          },
+          "complete": true,
+          "finalTime": 1777995931936,
+          "startTime": 1777995913962
+        }
+      ],
+      "messageId": 3
+    },
+    {
+      "role": "user",
+      "content": [
+        {
+          "run": {
+            "result": "1) TL;DR\n\nYour refactor is directionally right: a single local “should this keystroke be handled literally” check and smaller helpers will make the current design much clearer. The main caution is that user-selected literal mode and engine-forced literal behavior are only equivalent for the immediate append decision, not as state semantics, so I would not collapse them. The bigger long-term risk is backspace and retroactive vowel/tone placement once you add more real Telex rules.\n\n2) Recommended approach (simple path)\n\n1. Keep `mode` and `literal_index` conceptually separate, but use one local branch for dispatch.\n   - Using one local “literal now” decision at the top of `add` is correct for the current append-only model.\n   - The reason it works is simple: when `literal_index` is set, every future append is necessarily at or beyond that boundary until backspace moves back across it.\n   - So yes, it is a good refactor for control flow.\n   - But treat it as a dispatch shortcut, not as proof that the two states are semantically identical.\n\n2. Split the logic into two layers, not just many per-letter helpers.\n   - First layer: decide between user-literal, Telex-active, and Telex-locked-by-engine.\n   - Second layer: within Telex-active, classify the keystroke into rule categories.\n   - Then use a small set of semantic rewrite operations underneath.\n   - This is better than a giant character switch with duplicated preambles, and usually better than dozens of tiny helpers named after specific letters.\n\n3. Prefer semantic helper boundaries over trigger-letter boundaries.\n   - Your proposed helpers like literal append, apply diacritic, cancel-and-append, tone application, reset, and inferred-fill are the right kind of decomposition.\n   - I would be slightly cautious about helpers like “fill consonant” if the actual meaning is “later context causes reinterpretation of an earlier vowel cluster.” That is a syllable-rewrite rule, not really a consonant rule.\n   - In other words, name helpers around what they do to the word, not which key happened to trigger them.\n\n4. Keep the dispatcher explicit; use tables only for static mappings.\n   - A full table-driven engine is probably unnecessary now.\n   - Vietnamese Telex behavior is not just “key X means action Y”; many actions depend on syllable context and previous spans.\n   - Tables are still useful for simple maps like tone-key to tone kind or repeated-letter to diacritic kind, but I would keep the control flow readable and rule-oriented.\n\n5. Tighten the contract of `buffer_modification_index`.\n   - As designed, it is adequate only if the caller interprets it as “rerender the entire suffix starting here.”\n   - That is an important contract to state explicitly.\n   - If the caller thinks it means “only this position changed,” you will paint yourself into a corner once tone placement or cancellation affects more than one nearby span.\n\n6. Add an explicit boundary/reset story before expanding the rule set.\n   - Right now the engine only accepts alphabetic input, which means word boundaries are external to the engine.\n   - That is fine, but the contract must be explicit: either this state is per-word, or the caller must notify the engine when a word/syllable boundary happens.\n   - Without that, literal locks and tone-placement context will leak across words.\n\n7. Keep `assert_invariants()`; it is a good move.\n   - Entry/exit invariant checks are especially valuable while the rule set is still growing.\n   - I would include invariants about empty state, literal-state consistency, and the meaning of “stored spans vs logical length.”\n\nEffort: M, roughly 1–3 hours for the structural refactor, excluding new Telex rules.\n\n3) Rationale and trade-offs\n\nOn the unified literal check:\n- For the immediate question “should this new character bypass Telex logic,” your unified check is correct in the current model.\n- The key assumption is append-only input at the logical end.\n- If you later support cursor movement, mid-buffer insertion, or editing an earlier position, that assumption breaks and `literal_index != null` would no longer mean “the current position is literal.”\n\nOn helper decomposition:\n- The current problem is not just duplication; it is that the function mixes three different concerns: mode gating, keystroke classification, and word rewriting.\n- Your decomposition improves that substantially.\n- I would slightly refine it so the top-level split is “literal path vs Telex path,” and only the Telex path contains rule dispatch.\n\nOn collapsing `mode` into `literal_index`:\n- I would not do that.\n- `mode` is user intent or configuration.\n- `literal_index` is a derived parsing/runtime state.\n- Those are different categories of information, even if some runtime behavior overlaps.\n\nWhy that distinction matters:\n- User literal mode should usually persist across backspace, empty-buffer state, and new words until the user toggles it off.\n- Engine-forced literal mode from cancellation or overflow is typically recoverable by backspacing or by crossing a word boundary.\n- The caller may need to display or preserve the user’s selected input mode independently of what the engine is doing internally.\n- If you collapse them, you lose the ability to distinguish “user wants literal typing” from “engine temporarily gave up on Telex for this word.”\n\nSo the simplification is tempting, but it loses useful semantics. If you want a stronger model later, use a richer processing-state enum rather than overloading one nullable index.\n\n4) Risks and guardrails\n\n1. Backspace is currently only safe for a narrow class of rules.\n   - For the features shown so far, decrementing length and clearing `literal_index` when crossing the boundary is mostly fine.\n   - Stale spans beyond the logical length are not inherently a bug as long as they are ignored and overwritten on reuse.\n   - But the moment you add context-sensitive rules where later letters retroactively change earlier vowels or tone placement, simple decrement-only backspace becomes suspect.\n\n2. The cancellation policy is a UX policy, not just an implementation detail.\n   - Your design says that after a cancellation, the rest of the word becomes literal.\n   - That is defensible because it makes behavior predictable.\n   - But it is stricter than “just emit this cancelling key literally and continue normal Telex afterward.”\n   - Decide that intentionally, because it affects whether `literal_index` is the right abstraction.\n\n3. `buffer_modification_index` should be documented as a suffix-rewrite marker.\n   - Earliest modified index is enough only if every edit can be expressed as rewriting one contiguous suffix of the rendered word.\n   - That is probably still workable for a Vietnamese syllable engine, but only if you hold that line.\n\n4. Your naming may mislead future you.\n   - `buffer_length` appears to be logical rendered-span count, not raw keystroke count.\n   - `buffer_effective` is not really sliding in the code you showed; it is a fixed retained prefix of the current word.\n   - These are small naming issues, but they matter because this engine is all about careful mental models.\n\n5. Boundary handling is underspecified.\n   - If the engine never sees spaces or punctuation, then either the caller must reset on boundaries or this object is only valid for one word at a time.\n   - Make that explicit now, before you encode more orthographic assumptions.\n\n6. Watch the length type.\n   - A `u8` logical length is easy to reason about, but only if you truly have a word-local lifecycle or explicit reset points.\n   - Otherwise you are one forgotten boundary reset away from undefined behavior or awkward wraparound handling.\n\n7. Case behavior should stay intentional.\n   - Your tests suggest Telex matching is case-insensitive, but the emitted literal character after cancellation preserves the case of the cancelling key.\n   - That is reasonable, just make it a documented rule.\n\n5) When to consider the advanced path\n\nMove to a more structural redesign if any of these become true:\n- You start implementing real tone-target selection for multi-vowel clusters.\n- Later consonants or vowels can retroactively change where tone or diacritics belong.\n- Backspace begins needing special-case undo logic for more than one or two rules.\n- Your tests become dominated by stateful corner cases rather than simple rule cases.\n- You find yourself adding many “try_X” helpers that all have to inspect broad syllable context anyway.\n\nThose are signs that the engine is no longer a simple incremental mutator of the rendered buffer.\n\n6) Optional advanced path\n\nIf you want the most robust conceptual model for a small library, the stronger design is to store the raw ASCII keystrokes for the current word and recompute the rendered spans on every `add` and `backspace`, then diff old vs new to tell the caller what suffix to replace.\n\nWhy this is attractive here:\n- Your maximum interesting word length is tiny.\n- Vietnamese syllable logic is context-sensitive.\n- Recompute-on-edit often ends up simpler and safer than maintaining a large incremental state machine with many undo paths.\n\nWhat it buys you:\n- Backspace becomes naturally correct.\n- Cancellation, tone retargeting, and inferred diacritics are easier to reason about.\n- `literal_index` becomes a derived property of the parse, not a delicate mutable flag.\n- Invariant checking gets simpler because there is one source of truth.\n\nTrade-off:\n- Slightly more implementation work up front, and you need a clean way to compute the replacement suffix after recomputation.\n- For your current scope, I would treat this as the next step only if the rule set grows and the incremental approach starts fighting you.\n\nMy bottom line: your refactor is good, but keep `mode` and `literal_index` separate, make `buffer_modification_index` explicitly mean “rerender suffix from here,” add a clear boundary/reset contract, and be very cautious about the current backspace model once you introduce context-sensitive Telex behavior.",
+            "status": "done",
+            "~debug": {
+              "inferences": [
+                {
+                  "usage": {
+                    "model": "gpt-5.4",
+                    "inputTokens": 11027,
+                    "outputTokens": 100,
+                    "maxInputTokens": 272000,
+                    "totalInputTokens": 11027,
+                    "cacheReadInputTokens": 0,
+                    "cacheCreationInputTokens": null
+                  },
+                  "inferenceTimeMs": 4136.160999999847
+                },
+                {
+                  "usage": {
+                    "model": "gpt-5.4",
+                    "inputTokens": 11103,
+                    "outputTokens": 48,
+                    "maxInputTokens": 272000,
+                    "totalInputTokens": 11103,
+                    "cacheReadInputTokens": 10880,
+                    "cacheCreationInputTokens": null
+                  },
+                  "inferenceTimeMs": 3294.3044159999117
+                },
+                {
+                  "usage": {
+                    "model": "gpt-5.4",
+                    "inputTokens": 11212,
+                    "outputTokens": 53,
+                    "maxInputTokens": 272000,
+                    "totalInputTokens": 11212,
+                    "cacheReadInputTokens": 11008,
+                    "cacheCreationInputTokens": null
+                  },
+                  "inferenceTimeMs": 1807.0295830001123
+                },
+                {
+                  "usage": {
+                    "model": "gpt-5.4",
+                    "inputTokens": 14063,
+                    "outputTokens": 10262,
+                    "maxInputTokens": 272000,
+                    "totalInputTokens": 14063,
+                    "cacheReadInputTokens": 11136,
+                    "cacheCreationInputTokens": null
+                  },
+                  "inferenceTimeMs": 190457.11770899966
+                }
+              ],
+              "reasoningEffort": "high"
+            },
+            "progress": [
+              {
+                "reasoning": "**Evaluating the critique process**\n\nI need to conduct a conceptual critique and inspect the omitted lines from liblex. The user has included a file with some omitted parts, so I want to read those lines around the \"add\" function for a better understanding, particularly looking into edge cases. To do this, I’ll need to ensure I use Read to access the relevant parts of the file efficiently and have the absolute path ready for the task.\n\n",
+                "tool_uses": [
+                  {
+                    "id": "call_2771xMwPPtwfOZkeeOEu9DYt",
+                    "input": {
+                      "path": "/<redacted>/lex/liblex.zig",
+                      "read_range": [
+                        219,
+                        440
+                      ]
+                    },
+                    "result": {
+                      "message": "File not found: file:///<redacted>/lex/liblex.zig",
+                      "absolutePath": "/<redacted>/lex/liblex.zig"
+                    },
+                    "status": "error",
+                    "tool_name": "Read"
+                  }
+                ],
+                "isThinking": false
+              },
+              {
+                "reasoning": "**Looking for a file**\n\nI'm thinking about how to locate a file. Maybe it's attached somewhere, but not on the disk. I could use a glob pattern to help find it. It seems like a practical solution, but I want to make sure I'm applying it correctly. I'll need to check the details of the glob and see if it can pinpoint what I'm searching for. So let's see how that goes!\n\n",
+                "tool_uses": [
+                  {
+                    "id": "call_P7yEgQQMjrxNG48OmrC5UAqo",
+                    "input": {
+                      "limit": 20,
+                      "filePattern": "**/liblex.zig"
+                    },
+                    "result": [
+                      "/<redacted>/lex/src/liblex.zig",
+                      "/<redacted>/lex/playground/structure-app/src/liblex.zig",
+                      "/<redacted>/lex/playground/prototype-app/src/liblex.zig"
+                    ],
+                    "status": "done",
+                    "tool_name": "glob"
+                  }
+                ],
+                "isThinking": false
+              },
+              {
+                "tool_uses": [
+                  {
+                    "id": "call_1pTMGNU9ST5bRvs8zVAVcp5J",
+                    "input": {
+                      "path": "/<redacted>/lex/src/liblex.zig",
+                      "read_range": [
+                        219,
+                        440
+                      ]
+                    },
+                    "result": {
+                      "content": "[... omitted lines 1 to 218 ...]\n219:     pub fn add(self: *State, c: u8) void {\n220:         // Only allow a-zA-Z.\n221:         assert(std.ascii.isAlphabetic(c));\n222: \n223:         // The buffer_modification index must be inbound of the buffer_effective.\n224:         assert(self.buffer_modification_index == null or self.buffer_modification_index.? < self.buffer_effective.len);\n225: \n226:         // Input mode must be either .literal or .telex.\n227:         assert(self.mode == .literal or self.mode == .telex);\n228: \n229:         // Should never set literal_index in .literal mode.\n230:         if (self.mode == .literal) {\n231:             assert(self.literal_index == null);\n232:         }\n233: \n234:         if (self.literal_index) |literal_index| {\n235:             // When literal_index is set, mode must be .telex.\n236:             assert(self.mode == .telex);\n237:             // The literal_index value must be in range null or 0 -> 16 (buffer_effective length)\n238:             // because we won't process Vietnamese input outside the buffer_effective.\n239:             assert(literal_index <= self.buffer_effective.len);\n240:             // The literal_index value must be less than buffer length.\n241:             assert(literal_index < self.buffer_length);\n242:         }\n243: \n244:         switch (c) {\n245:             'A', 'a' => { // circumflex.\n246:                 if (self.literal_index != null or self.mode == .literal) {\n247:                     // Enable literal input when literal_index is set or on literal mode. The\n248:                     // literal_index is also set when the word starts with non-Vietnamese onsets.\n249: \n250:                     // Check if we can add new span for input character.\n251:                     if (self.buffer_length < self.buffer_effective.len) {\n252:                         // Add character to span.\n253:                         self.buffer_effective[self.buffer_length] = Span.init(c);\n254:                     }\n255:                     // Increase the buffer length for tracking, we will need it went handling backspace.\n256:                     self.buffer_length = self.buffer_length + 1;\n257: \n258:                     // Set modification index to null because we didn't modify any existing span.\n259:                     self.buffer_modification_index = null;\n260:                 } else {\n261:                     // buffer_length must inbound of buffer_effective.\n262:                     assert(self.buffer_length < self.buffer_effective.len);\n263: \n264:                     // literal_index must not be set in order to process Vietnamese input.\n265:                     assert(self.literal_index == null);\n266: \n267:                     // Vietnamese input.\n268:                     // Possible cases:\n269:                     // - circumplex.\n270:                     // - cancel circumflex.\n271:                     // - plain append.\n272: \n273:                     if (self.buffer_length == 0 or (self.buffer_effective[self.buffer_length - 1].base != std.ascii.toUpper(c) and self.buffer_effective[self.buffer_length - 1].base != std.ascii.toLower(c))) {\n274:                         // Plain append when start of the buffer or the previous character don't match\n275:                         // circumflex rules.\n276: \n277:                         // Check if we can add new span for input character.\n278:                         if (self.buffer_length < self.buffer_effective.len) {\n279:                             // Add character to span.\n280:                             self.buffer_effective[self.buffer_length] = Span.init(c);\n281:                         }\n282:                         // Increase the buffer length for tracking, we will need it went handling\n283:                         // backspace.\n284:                         self.buffer_length = self.buffer_length + 1;\n285: \n286:                         // Set modification index to null because we didn't modify any existing span.\n287:                         self.buffer_modification_index = null;\n288:                     } else if ((self.buffer_effective[self.buffer_length - 1].base == std.ascii.toUpper(c) or self.buffer_effective[self.buffer_length - 1].base == std.ascii.toLower(c)) and self.buffer_effective[self.buffer_length - 1].diacritic == .empty) {\n289:                         // Circumflex.\n290: \n291:                         // Add circumflex to previous plan 'A' or 'a'.\n292:                         self.buffer_effective[self.buffer_length - 1].diacritic = .circumflex;\n293:                         // Mark modification index.\n294:                         self.buffer_modification_index = self.buffer_length - 1;\n295:                     } else if ((self.buffer_effective[self.buffer_length - 1].base == std.ascii.toUpper(c) or self.buffer_effective[self.buffer_length - 1].base == std.ascii.toLower(c)) and self.buffer_effective[self.buffer_length - 1].diacritic == .circumflex) {\n296:                         // Cancel circumflex.\n297: \n298:                         // Reset diacritic to empty.\n299:                         self.buffer_effective[self.buffer_length - 1].diacritic = .empty;\n300:                         // Mark modification index.\n301:                         self.buffer_modification_index = self.buffer_length - 1;\n302: \n303:                         // Add plan character to buffer_effective.\n304:                         // Check if we can add new span for input character.\n305:                         if (self.buffer_length < self.buffer_effective.len) {\n306:                             // Add character to span.\n307:                             self.buffer_effective[self.buffer_length] = Span.init(c);\n308:                         }\n309:                         // Mark the start of literal input because of the cancelling.\n310:                         self.literal_index = self.buffer_length;\n311: \n312:                         // Increase the buffer length for tracking, we will need it went handling\n313:                         // backspace.\n314:                         self.buffer_length = self.buffer_length + 1;\n315:                     } else {\n316:                         unreachable;\n317:                     }\n318:                 }\n319:             },\n320:             'C', 'c' => {}, // fill missing diacritic, e.g. cước.\n321:             'D', 'd' => {}, // bar.\n322:             'E', 'e' => {}, // circumflex.\n323:             'F', 'f' => {}, // falling.\n324:             'I', 'i' => {}, // fill missing diacritic, e.g. người.\n325:             'J', 'j' => {}, // falling_glottalized.\n326:             'M', 'm' => {}, // fill missing diacritic, e.g. cườm.\n327:             'N', 'n' => {}, // fill missing diacritic, e.g. cường.\n328:             'O', 'o' => {}, // circumflex.\n329:             'P', 'p' => {}, // fill missing diacritic, e.g. cướp.\n330:             'R', 'r' => {}, // dipping_rising.\n331:             'S', 's' => {}, // rising.\n332:             'T', 't' => {}, // fill missing diacritic, e.g. trượt.\n333:             'U', 'u' => {}, // fill missing diacritic, e.g. hươu.\n334:             'W', 'w' => {}, // breve.\n335:             'X', 'x' => {}, // rising_glottalized.\n336:             'Z', 'z' => {}, // level / reset.\n337:             else => { // literal.\n338:                 // These characters will be added to state literally.\n339: \n340:                 // Check if we can add new span for input character.\n341:                 if (self.buffer_length < self.buffer_effective.len) {\n342:                     // Add character to span.\n343:                     self.buffer_effective[self.buffer_length] = Span.init(c);\n344:                 }\n345:                 // Increase the buffer length for tracking, we will need it went handling backspace.\n346:                 self.buffer_length = self.buffer_length + 1;\n347: \n348:                 // Set modification index to null because we didn't modify any existing span.\n349:                 self.buffer_modification_index = null;\n350:                 // Set literal index if it's not set and the length exceed the buffer_effective.\n351:                 if (self.literal_index == null and self.buffer_length > self.buffer_effective.len) {\n352:                     // Set literal mode since buffer index 16 (just after the last buffer_effective\n353:                     // item) because we don't have span for these position, we stop processing Telex\n354:                     // rules but we will continue processing if user use backspaces to move back to the\n355:                     // buffer_effective range, all existing spans must work as expected.\n356:                     self.literal_index = self.buffer_effective.len;\n357:                 }\n358:             },\n359:         }\n360: \n361:         // Ensure the literal_index in valid state.\n362:         if (self.mode == .literal) {\n363:             assert(self.literal_index == null);\n364:         }\n365:     }\n366: \n367:     pub fn backspace(self: *State) void {\n368:         // buffer_length must be positive for backspace.\n369:         assert(self.buffer_length > 0);\n370: \n371:         // Input mode must be either .literal or .telex.\n372:         assert(self.mode == .literal or self.mode == .telex);\n373: \n374:         if (self.literal_index) |literal_index| {\n375:             // Input mode must be .telex when literal_index is set.\n376:             assert(self.mode == .telex);\n377:             // literal_index must be within buffer range when set.\n378:             assert(literal_index < self.buffer_length);\n379:         }\n380: \n381:         // decrease the buffer_length to match the backspace.\n382:         self.buffer_length -= 1;\n383:         // b cause backspace doesn't retro-modify the buffer, unset the buffer_modification_index.\n384:         self.buffer_modification_index = null;\n385:         // if the literal_index is out of buffer range, unset it.\n386:         if (self.literal_index != null and self.literal_index.? == self.buffer_length) {\n387:             self.literal_index = null;\n388:         }\n389:     }\n390: };\n391: \n392: // Simple ABI wrapper for initialize allocated memory.\n393: export fn lex_state_init(state: *State) void {\n394:     state.init();\n395: }\n396: \n397: // Needed for the caller to allocate memory for our State.\n398: export const lex_state_size: usize = @sizeOf(State);\n399: \n400: // Needed for the caller to allocate memory for our State.\n401: export const lex_state_alignment: usize = @alignOf(State);\n402: \n403: // Add operations to the given state based on Telex rules, operations are determined by the input\n404: // character.\n405: export fn lex_add(state: *State, c: u8) void {\n406:     state.add(c);\n407: }\n408: \n409: test \"expect lex_add handles non-Telex characters less than buffer_effective range\" {\n410:     // Arrange\n411: \n412:     // Allocate memory, only specify on this test to simulate runtime allocation.\n413:     const raw_pointer = std.testing.allocator.rawAlloc(lex_state_size, .fromByteUnits(lex_state_alignment), @returnAddress()) orelse return error.OutOfMemory;\n414:     defer std.testing.allocator.rawFree(raw_pointer[0..lex_state_size], .fromByteUnits(lex_state_alignment), @returnAddress());\n415:     const state: *align(lex_state_alignment) State = @ptrCast(@alignCast(raw_pointer));\n416: \n417:     // Initialize state.\n418:     lex_state_init(state);\n419:     state.mode = .telex;\n420: \n421:     const input_sequence = \"bbbbbqqqqq\";\n422: \n423:     // Act\n424:     for (input_sequence) |c| {\n425:         lex_add(state, c);\n426:     }\n427: \n428:     // Assert\n429:     // We only fill and increase the buffer_length based on input.\n430:     try expectEqual(10, state.buffer_length);\n431:     // Because we don't modify any existing character since the last input, expect null.\n432:     try expectEqual(null, state.buffer_modification_index);\n433:     // Because we didn't exceed the buffer_affective, don't set literal_index.\n434:     try expectEqual(null, state.literal_index);\n435:     // Don't touch on input mode.\n436:     try expectEqual(.telex, state.mode);\n437:     // Verify every the spans, must exactly the same with the input.\n438:     for (input_sequence, 0..) |c, i| {\n439:         const sp = state.buffer_effective[i];\n440:         try expectEqual(c, sp.base);\n[... omitted lines 441 to 613 ...]",
+                      "absolutePath": "/<redacted>/lex/src/liblex.zig"
+                    },
+                    "status": "done",
+                    "tool_name": "Read"
+                  }
+                ],
+                "isThinking": false
+              },
+              {
+                "message": "1) TL;DR\n\nYour refactor is directionally right: a single local “should this keystroke be handled literally” check and smaller helpers will make the current design much clearer. The main caution is that user-selected literal mode and engine-forced literal behavior are only equivalent for the immediate append decision, not as state semantics, so I would not collapse them. The bigger long-term risk is backspace and retroactive vowel/tone placement once you add more real Telex rules.\n\n2) Recommended approach (simple path)\n\n1. Keep `mode` and `literal_index` conceptually separate, but use one local branch for dispatch.\n   - Using one local “literal now” decision at the top of `add` is correct for the current append-only model.\n   - The reason it works is simple: when `literal_index` is set, every future append is necessarily at or beyond that boundary until backspace moves back across it.\n   - So yes, it is a good refactor for control flow.\n   - But treat it as a dispatch shortcut, not as proof that the two states are semantically identical.\n\n2. Split the logic into two layers, not just many per-letter helpers.\n   - First layer: decide between user-literal, Telex-active, and Telex-locked-by-engine.\n   - Second layer: within Telex-active, classify the keystroke into rule categories.\n   - Then use a small set of semantic rewrite operations underneath.\n   - This is better than a giant character switch with duplicated preambles, and usually better than dozens of tiny helpers named after specific letters.\n\n3. Prefer semantic helper boundaries over trigger-letter boundaries.\n   - Your proposed helpers like literal append, apply diacritic, cancel-and-append, tone application, reset, and inferred-fill are the right kind of decomposition.\n   - I would be slightly cautious about helpers like “fill consonant” if the actual meaning is “later context causes reinterpretation of an earlier vowel cluster.” That is a syllable-rewrite rule, not really a consonant rule.\n   - In other words, name helpers around what they do to the word, not which key happened to trigger them.\n\n4. Keep the dispatcher explicit; use tables only for static mappings.\n   - A full table-driven engine is probably unnecessary now.\n   - Vietnamese Telex behavior is not just “key X means action Y”; many actions depend on syllable context and previous spans.\n   - Tables are still useful for simple maps like tone-key to tone kind or repeated-letter to diacritic kind, but I would keep the control flow readable and rule-oriented.\n\n5. Tighten the contract of `buffer_modification_index`.\n   - As designed, it is adequate only if the caller interprets it as “rerender the entire suffix starting here.”\n   - That is an important contract to state explicitly.\n   - If the caller thinks it means “only this position changed,” you will paint yourself into a corner once tone placement or cancellation affects more than one nearby span.\n\n6. Add an explicit boundary/reset story before expanding the rule set.\n   - Right now the engine only accepts alphabetic input, which means word boundaries are external to the engine.\n   - That is fine, but the contract must be explicit: either this state is per-word, or the caller must notify the engine when a word/syllable boundary happens.\n   - Without that, literal locks and tone-placement context will leak across words.\n\n7. Keep `assert_invariants()`; it is a good move.\n   - Entry/exit invariant checks are especially valuable while the rule set is still growing.\n   - I would include invariants about empty state, literal-state consistency, and the meaning of “stored spans vs logical length.”\n\nEffort: M, roughly 1–3 hours for the structural refactor, excluding new Telex rules.\n\n3) Rationale and trade-offs\n\nOn the unified literal check:\n- For the immediate question “should this new character bypass Telex logic,” your unified check is correct in the current model.\n- The key assumption is append-only input at the logical end.\n- If you later support cursor movement, mid-buffer insertion, or editing an earlier position, that assumption breaks and `literal_index != null` would no longer mean “the current position is literal.”\n\nOn helper decomposition:\n- The current problem is not just duplication; it is that the function mixes three different concerns: mode gating, keystroke classification, and word rewriting.\n- Your decomposition improves that substantially.\n- I would slightly refine it so the top-level split is “literal path vs Telex path,” and only the Telex path contains rule dispatch.\n\nOn collapsing `mode` into `literal_index`:\n- I would not do that.\n- `mode` is user intent or configuration.\n- `literal_index` is a derived parsing/runtime state.\n- Those are different categories of information, even if some runtime behavior overlaps.\n\nWhy that distinction matters:\n- User literal mode should usually persist across backspace, empty-buffer state, and new words until the user toggles it off.\n- Engine-forced literal mode from cancellation or overflow is typically recoverable by backspacing or by crossing a word boundary.\n- The caller may need to display or preserve the user’s selected input mode independently of what the engine is doing internally.\n- If you collapse them, you lose the ability to distinguish “user wants literal typing” from “engine temporarily gave up on Telex for this word.”\n\nSo the simplification is tempting, but it loses useful semantics. If you want a stronger model later, use a richer processing-state enum rather than overloading one nullable index.\n\n4) Risks and guardrails\n\n1. Backspace is currently only safe for a narrow class of rules.\n   - For the features shown so far, decrementing length and clearing `literal_index` when crossing the boundary is mostly fine.\n   - Stale spans beyond the logical length are not inherently a bug as long as they are ignored and overwritten on reuse.\n   - But the moment you add context-sensitive rules where later letters retroactively change earlier vowels or tone placement, simple decrement-only backspace becomes suspect.\n\n2. The cancellation policy is a UX policy, not just an implementation detail.\n   - Your design says that after a cancellation, the rest of the word becomes literal.\n   - That is defensible because it makes behavior predictable.\n   - But it is stricter than “just emit this cancelling key literally and continue normal Telex afterward.”\n   - Decide that intentionally, because it affects whether `literal_index` is the right abstraction.\n\n3. `buffer_modification_index` should be documented as a suffix-rewrite marker.\n   - Earliest modified index is enough only if every edit can be expressed as rewriting one contiguous suffix of the rendered word.\n   - That is probably still workable for a Vietnamese syllable engine, but only if you hold that line.\n\n4. Your naming may mislead future you.\n   - `buffer_length` appears to be logical rendered-span count, not raw keystroke count.\n   - `buffer_effective` is not really sliding in the code you showed; it is a fixed retained prefix of the current word.\n   - These are small naming issues, but they matter because this engine is all about careful mental models.\n\n5. Boundary handling is underspecified.\n   - If the engine never sees spaces or punctuation, then either the caller must reset on boundaries or this object is only valid for one word at a time.\n   - Make that explicit now, before you encode more orthographic assumptions.\n\n6. Watch the length type.\n   - A `u8` logical length is easy to reason about, but only if you truly have a word-local lifecycle or explicit reset points.\n   - Otherwise you are one forgotten boundary reset away from undefined behavior or awkward wraparound handling.\n\n7. Case behavior should stay intentional.\n   - Your tests suggest Telex matching is case-insensitive, but the emitted literal character after cancellation preserves the case of the cancelling key.\n   - That is reasonable, just make it a documented rule.\n\n5) When to consider the advanced path\n\nMove to a more structural redesign if any of these become true:\n- You start implementing real tone-target selection for multi-vowel clusters.\n- Later consonants or vowels can retroactively change where tone or diacritics belong.\n- Backspace begins needing special-case undo logic for more than one or two rules.\n- Your tests become dominated by stateful corner cases rather than simple rule cases.\n- You find yourself adding many “try_X” helpers that all have to inspect broad syllable context anyway.\n\nThose are signs that the engine is no longer a simple incremental mutator of the rendered buffer.\n\n6) Optional advanced path\n\nIf you want the most robust conceptual model for a small library, the stronger design is to store the raw ASCII keystrokes for the current word and recompute the rendered spans on every `add` and `backspace`, then diff old vs new to tell the caller what suffix to replace.\n\nWhy this is attractive here:\n- Your maximum interesting word length is tiny.\n- Vietnamese syllable logic is context-sensitive.\n- Recompute-on-edit often ends up simpler and safer than maintaining a large incremental state machine with many undo paths.\n\nWhat it buys you:\n- Backspace becomes naturally correct.\n- Cancellation, tone retargeting, and inferred diacritics are easier to reason about.\n- `literal_index` becomes a derived property of the parse, not a delicate mutable flag.\n- Invariant checking gets simpler because there is one source of truth.\n\nTrade-off:\n- Slightly more implementation work up front, and you need a clean way to compute the replacement suffix after recomputation.\n- For your current scope, I would treat this as the next step only if the rule set grows and the incremental approach starts fighting you.\n\nMy bottom line: your refactor is good, but keep `mode` and `literal_index` separate, make `buffer_modification_index` explicitly mean “rerender suffix from here,” add a clear boundary/reset contract, and be very cautious about the current backspace model once you introduce context-sensitive Telex behavior.",
+                "reasoning": "**Considering design alternatives**\n\nI’m thinking about using data tables to map trigger keys to actions, but it’s tricky since Vietnamese tone placement depends on context. A primary recommendation might be to split the add function into add_literal and add_telex, and then use category helpers within telex. Since the user asked for alternative design perspectives, I could suggest that per-Telex-behavior helpers make sense if the names reflect the semantic operations rather than just the trigger letters.\n\n**Evaluating input boundaries**\n\nI’m considering how the current API only accepts alphabetic input, which presents challenges. It seems I need an explicit reset or a segmentation event when non-alphabetic input is encountered. Otherwise, the engine might mistakenly carry tone logic across words. Since the library processes only letters, it raises the question of whether the caller should reset the state upon encountering a boundary. Hmm, but that leaves me wondering how to handle non-alpha input.\n\n**Evaluating buffer modification semantics**\n\nI’m considering whether the naming could be misleading. For the buffer modification index, I wonder if the earliest index is sufficient. Since the caller calculates backspaces and replacement characters, I think that mutating a contiguous suffix from a specific index to the end may work. If each operation rewrites that section, then the output after that index should be derivable from the current state. Most transformations seem to only affect the last part of the string.\n\n**Analyzing vowel and consonant changes**\n\nI’m considering how changing vowels affects syllables, especially when later letters are involved. If I adjust a vowel or consonant, I may need to balance tones. Even if the earliest index still holds, the library has to manage suffix rewrites effectively. However, if there are any disjointed changes, that can disrupt everything. It seems Vietnamese Telex can be seen as a continuous suffix rewrite, but I'll clarify by naming it \"rerender_from_index\" to stress the importance of updating the whole suffix.\n\n**Reviewing overflow and processing limits**\n\nI'm considering what happens when there's an overflow greater than 16 characters. If a backspace causes changes within the first 16 characters, the earliest index should still work since the caller can only re-render the visible suffix. However, if the buffer length exceeds 16 characters, the situation becomes tricky. I need to ensure that we're not trying to reconstruct spans that go beyond 16 if changes occur. Backspaces only decrease length and unset the literal_index when crossing back but don't clear older span data, which might be manageable if we allow overwrites.\n\n**Investigating subtle bugs with state management**\n\nI’m observing a subtle bug that appears after cancellation. For example, if I go from aaA to a state holding [a empty, A empty] with literal_index at 1, and then after one backspace, the length becomes 1, clearing the literal_index while state[0] stays as a and state[1] remains A and stale. Adding a new character seems fine, but I need to simulate scenarios where I backspace after an overflow, especially as it drops from 17 to 16 while still holding the initial 16 characters correctly.\n\n**Evaluating backspace logic**\n\nI’m considering how the current backspace function operates. It works if every forward transformation is independently valid, except for undoing previously created states. However, it seems like the helpers like try_telex_fill_consonant introduce future rules that could affect earlier vowels by adding diacritics, which poses a problem when using backspace. If the mechanism only shortens the string, it could leave diacritics in place incorrectly. I really need to expand on examples of missing diacritics in various contexts!\n\n**Reassessing backspace functionality**\n\nI’m realizing that the current backspace model might not work well with context-sensitive inference. The simplest fix seems to either recompute the current word from the raw key history with every change or store enough information to undo any transformations. Since the maximum length is small, recomputation from raw keys often makes more sense. I need to figure out whether to recommend separating raw input history from the derived spans, as using just the derived outputs might not be enough for an effective backspace function!\n\n**Evaluating design complexity**\n\nI'm considering a simple and robust design that keeps a raw ASCII word buffer and derived spans. When adding or using backspace, I could simply recompute the derived state from the raw buffer. The user asked for a critique of the current design, which involves modes. The developer favors simplicity. For a small library with a max of 16, a recompute-from-word approach might actually be easier than the current complex system with incremental mutations and undo. Let's evaluate this further.\n\n**Considering unlock behavior and tone placement**\n\nI'm thinking about the behavior for unlocking, where I might want to differentiate how certain parameters are handled. I realize that mentioning a reasoning enumeration might be useful later if there are more literal locks involved. I also need to check the tone placement on the correct vowel, potentially scanning the current word each time a tone input is received. \n\nThere are special cases to consider, like \"qu\" and \"gi\", where certain letters function more like consonants. Plus, I need to ensure case consistency in handling character cases.\n\n**Clarifying typed length and buffer effectiveness**\n\nI think \"typed length\" might actually refer to the effective output that users see. It could be worth renaming this to something clearer, like \"rendered_length\" or \"span_count,\" since it impacts how I reason about the literal index and backspace functionality. The term \"buffer_effective\" isn't currently accurate either. \n\nSince the user has asked about design considerations, names should capture the display-oriented state instead of just raw keystroke history. I should also explore any concerns about the semantics of the buffer modification index and consider inspecting tests around cancellation and backspace, though they might not be necessary.\n\n**Recommendations for mode and index handling**\n\nMy primary recommendation is to separate the mode from the literal index. I think using a boolean should be local to each branch instead. It might be helpful to divide the add function into three phases and set a clear syllable reset boundary. I should also reconsider how backspace works if I'm adding context-sensitive fill or tone rules. \n\nFor the advanced path, I envision a raw-key buffer where rendering is recomputed with each edit. I need to include that as an optional advanced path in my response format for the developer. I'll outline a brief TL;DR and recommend a simple, numbered checklist to follow for implementation.\n\n**Considering future edit rules**\n\nI'm thinking about future rules that could lead to non-contiguous edits. In that case, we might require a richer edit script. However, if we keep these rules confined to the current syllable, a simple suffix-only method might do. I see that the current backspace implementation seems okay, especially with the tiny feature set. Still, it could get tricky if later context influences earlier tone placements. Then we might have to rethink the backspace approach!\n\n**Assessing indexing and state management**\n\nI'm thinking about how after cancellation, the literal index sets to the new position and the unified is_literal_now should be correct since every subsequent append happens at or beyond the literal boundary until a backspace crosses it. Then, I wonder if we need to allow for in-place edits or cursor movements, which could complicate things. Additionally, there might be a need for a \"word start index\" if one state spans the entire stream. Using a per-word library might simplify things. I should clarify my model choice too.\n\n**Evaluating keyboard design choices**\n\nI'm working through the mechanics of a keyboard's input system, considering a 16-character cap and how to process syllables on relevant keys. The algorithmic helper is crucial, but performance isn't my main concern yet. There’s a lot of UX design to critique, especially around how characters are treated. For instance, should the rest of the word remain literal? Some IMEs handle this differently. I'll have to think more about the impact on typing behaviors. Is the locking mechanism too aggressive?\n\n**Considering input design choices**\n\nIf a user wants to input a word that mixes literal and Telex, it might not be possible. Freezing the rest of the word after cancellation could prevent confusing reinterpretations later. Typically, for Vietnamese input engines, cancellation only modifies the immediate sequence, not the entire word. For instance, typing \"baa\" often results in \"bâ,\" and if I enter another \"a,\" I might expect either \"baa\" or \"bâa.\" It's essential to clarify whether cancellation indicates a literal change or if Telex remains active. This is a crucial design choice affecting user experience!\n\n**Analyzing keystroke choices**\n\nIf I opt for a per-keystroke literal escape instead of locking the rest of the word, I’ll need to account for how literal modes and positions differ. The user’s design indicates that after a Telex cancellation, the system defaults to literal mode for the entire word, which is an important design choice to note. I should also mention that `buffer_modification_index` tracks the earliest change made, which helps compute backspaces and replacement characters. This works as long as the current buffer details are accessible.\n\n**Considering buffer modification logic**\n\nI'm thinking about the buffer modification index and how to handle append operations effectively. If the index is null or equal to the old length, that’s fine, but special cases are needed. It seems simpler to use the old length for appending, creating a single edit model. The user asked about the adequacy of the semantics, so I might mention an alternative: using a null index for append and an index for rewriting. This could lead to a cleaner integration overall.\n\n**Evaluating design improvements**\n\nI see this as a useful design improvement because it avoids awkward null semantics. The user asked for any concerns, and I think the current semantics are adequate but slightly underspecified. If they stay, documentation should clarify that null indicates an append/no-rewrite scenario. An alternative option is to always return a replace-from index. It's also important to ensure \"assert_invariants entry/exit\" logic is included, but care is needed not to duplicate expensive checks during hot path operations.\n\n**Exploring function decomposition**\n\nI think it might be good to mention separate functions for `add_literal` and `add_telex`, depending on the mode, versus using a helper decomposition. It seems better to choose between a literal path and a telex path at a top level, since literal operations have little key-specific behavior. If the literal lock is tied to the literal index and both share the same appending behavior, they should call the same `append_literal` primitive while maintaining a state distinction. Let's make sure to avoid code blocks and consider a clear structure for our critique.\n\n**Evaluating design critiques**\n\nI’m considering improvements to the backspace and cancellation rules to make them clearer and more manageable. It might be a good idea to focus on simplifying the current design first, while potentially offering an advanced path as an option. I should critique the \"table-driven dispatch\" method more directly, since many rules rely on prior context rather than just the current key. Use tables for static maps when necessary, but keep the flow of behavior clear. I wonder if I should rename \"fill_consonant\" to something like \"infer_vowel_cluster_on_coda.\"\n\n**Refining helper naming**\n\nI’m considering that if a helper’s trigger is a coda consonant, it’s better to name the helper based on the vowel mutation instead. That makes sense. The proposed helper list is overall solid, but “fill_consonant” seems more about basic letter mechanics instead of orthographic rules. I should think about organizing helpers by types of rewrites, like appending, decorating vowels, canceling previous decorations, repositioning tones, inferring missing diacritics, and resetting markings. This could streamline things and align tests with rules instead of key letters.\n\n**Clarifying case handling in design**\n\nI'm considering how case handling interacts with different functions. I need to be explicit about the case policy: repeated letters for Telex triggers should compare case-insensitively, but the canceled key's case must be preserved. This is an essential guardrail. I should also clarify the terminology; \"sliding window\" could create confusion since it doesn't truly slide. Instead, I'll refer to it as a fixed retained prefix. It’s vital to clearly distinguish between behaviors to avoid future misunderstandings.\n\n**Outlining implementation considerations**\n\nI need to clarify the concept of \"non-Vietnamese onsets\" locking. If I set the literal_index based on an invalid onset, it might indicate a literal boundary of 0. This should behave differently than user mode, as it needs clearing on boundary or backspace, not an external toggle. I'll assess if more file reading is necessary; current code may only implement A. \n\nWhen preparing the final document, I'll avoid pseudo-code, and suggest an advanced path involving tone retargeting and clusters, recommending a model change to simplify processes for backspace and correctness. I should note effort sizes for refactoring.\n\n",
+                "tool_uses": [],
+                "isThinking": false
+              }
+            ]
+          },
+          "type": "tool_result",
+          "toolUseID": "toolu_vrtx_01H47Uh3iHwRYvfctzMUHArA"
+        }
+      ],
+      "messageId": 4
+    },
+    {
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "end_turn"
+      },
+      "usage": {
+        "model": "claude-opus-4-7",
+        "timestamp": "2026-05-05T15:49:37.887Z",
+        "inputTokens": 6,
+        "outputTokens": 2490,
+        "maxInputTokens": 300000,
+        "totalInputTokens": 38823,
+        "cacheReadInputTokens": 29656,
+        "cacheCreationInputTokens": 9161
+      },
+      "content": [
+        {
+          "text": "# Combined Design Notes for `State.add` Mode Handling\n\n## 1. Where my approach and the Oracle agree\n\n- **One literal-dispatch decision at the top of `add`** is correct *for the current append-only model*. Compute it once, branch once, eliminate the duplicated literal preamble in every Telex character branch.\n- **Helper decomposition is the right direction.** A monolithic switch mixes three concerns: mode gating, keystroke classification, word rewriting. Split them.\n- **Centralized invariant assertions** (one `assert_invariants()` called at entry/exit of public methods) are worthwhile while the rule set is still growing.\n\n## 2. Where the Oracle pushed back on my approach\n\n### 2.1 Do **not** collapse `mode` into `literal_index`\n- `mode` = user intent / configuration (sticky across words, backspace, empty buffer).\n- `literal_index` = engine-derived parsing fallback (recoverable by backspace or word boundary).\n- They overlap behaviorally only for the *current keystroke*. Conflating them loses the ability to distinguish \"user wants literal typing\" from \"engine gave up on Telex for this word\".\n- If you ever need a richer state model, prefer a small enum (e.g. `processing_state ∈ {user_literal, telex_active, telex_locked}`) over overloading one nullable index.\n\n### 2.2 Treat the unified `is_literal_now` as a **dispatch shortcut, not state equivalence**\n- The equivalence holds only because input is append-only at the logical end.\n- If you ever add cursor movement or mid-buffer edits, `literal_index != null` will no longer mean \"current position is literal\" — you would need to compare `buffer_length` against `literal_index`.\n\n### 2.3 Name helpers by **what they do to the word**, not by which key triggered them\n- My proposed `try_telex_fill_consonant` is misleading: the actual operation is \"later context reinterprets an earlier vowel cluster\" — a syllable rewrite, not a consonant rule.\n- Prefer semantic names: `apply_diacritic`, `cancel_last_diacritic`, `apply_tone_to_syllable_nucleus`, `clear_tone`, `append_literal`, etc.\n\n### 2.4 Two-layer split (better than flat helper list)\n- **Layer 1 — gating**: user-literal vs Telex-active vs Telex-locked-by-engine.\n- **Layer 2 — rule dispatch (only inside Telex-active)**: classify keystroke, then call a semantic rewrite operation.\n- Keep tables only for purely static maps (tone-key → tone kind, repeated-letter → diacritic kind). Do not table-drive the control flow; Telex is context-sensitive.\n\n## 3. New concerns the Oracle raised that I had not considered\n\n### 3.1 `buffer_modification_index` is a **suffix-rewrite marker**, not a single-cell delta\n- Document it explicitly: \"rerender everything from this index to the logical end\".\n- This contract holds only as long as every edit can be expressed as rewriting one contiguous suffix. That is workable for a syllable engine if you commit to it.\n\n### 3.2 Word boundary contract is currently **implicit and unsafe**\n- The engine accepts only alphabetic input, so word boundaries live entirely in the caller. State will leak across words unless either:\n  - This `State` is documented as per-word lifetime, or\n  - The caller is required to call a reset on space/punctuation/etc.\n- Pick one and write it into the type's doc comment now, before more rules encode orthographic assumptions.\n\n### 3.3 Cancellation policy is a **UX decision**, not just an implementation detail\n- Your current rule \"after cancellation, the rest of the word goes literal\" is defensible (predictable) but stricter than alternatives like \"emit cancelling key literally, resume Telex\".\n- Decide explicitly, because it determines whether `literal_index` is even the right abstraction.\n\n### 3.4 Backspace is currently safe **only for the rule set you have today**\n- Decrement-only backspace is fine for plain append, circumflex apply, and circumflex cancel.\n- It becomes suspect once you add rules where later letters retroactively change earlier vowels or tone placement (e.g., tone target migration in diphthongs). Stale spans past `buffer_length` are OK if always overwritten before reuse, but that becomes a load-bearing invariant.\n\n### 3.5 Naming risks misleading future-you\n- `buffer_length` reads as \"keystroke count\" but is actually \"logical rendered-span count\" (since cancellation increments it without writing a new span at that index, and overflow increments it without storage).\n- `buffer_effective` is *not* sliding — it is a fixed retained prefix of the current word.\n- Rename or document precisely.\n\n### 3.6 `u8` length is fine **only with a defined word-local lifecycle**\n- Otherwise wraparound at 255 needs explicit handling. Tying length to word lifetime + reset on boundary makes this a non-issue.\n\n### 3.7 Case-preservation rule should be documented\n- Tests show case-insensitive Telex matching but the literal char emitted on cancellation preserves the case of the cancelling key. Make this an explicit documented rule.\n\n## 4. The \"advanced path\" worth knowing about (not for now)\n\nIf the rule set grows enough that incremental mutation fights back, the cleaner model is:\n\n- Store the **raw ASCII keystrokes** of the current word (not the rendered spans).\n- On every `add` / `backspace`, **recompute** the rendered spans from scratch.\n- **Diff** old vs new rendered output to derive the replacement suffix.\n\nWhy it scales:\n- Backspace becomes trivially correct (no undo logic per rule).\n- `literal_index` becomes derived, not stored.\n- One source of truth for invariants.\n- Vietnamese words are tiny, so recomputation cost is negligible.\n\nDefer this until you find yourself writing many context-aware `try_X` helpers that all need broad syllable context anyway.\n\n## 5. Concrete plan you can implement\n\n1. Add a private method that returns the current dispatch decision (literal vs Telex). Use it at the top of `add` only — do not store the result.\n2. Extract semantic helpers named for their effect on the word: `append_literal`, `apply_diacritic_to_last`, `cancel_last_diacritic_and_append`, plus rule-classifier helpers grouped by Telex behavior (circumflex, breve, bar, tone-mark, tone-clear). Avoid letter-named helpers.\n3. Document on the `State` struct:\n   - Word-local lifetime (or define a `reset()` and require the caller to call it on word boundary).\n   - `buffer_modification_index` means \"rerender suffix from here\".\n   - `mode` is user intent; `literal_index` is engine fallback. Keep both.\n   - Cancellation policy: locks the rest of the word into literal until backspace crosses back.\n   - Case-preservation rule for cancelled output.\n4. Add `assert_invariants()` and call it at entry and exit of `add` and `backspace`. Move per-branch asserts into it.\n5. Rename / re-comment `buffer_length` as \"logical rendered-span count\" and `buffer_effective` as \"retained prefix of current word, capped at 16\".\n6. Leave the recompute-from-keystrokes design as a documented future option in a comment, not implemented yet.",
+          "type": "text",
+          "finalTime": 1777996177870,
+          "startTime": 1777996133073
+        }
+      ],
+      "messageId": 5,
+      "turnElapsedMs": 337807
+    },
+    {
+      "meta": {
+        "sentAt": 1777996688031
+      },
+      "role": "user",
+      "content": [
+        {
+          "text": "My decision:\n\n- I will keep the switch, but in each case, I will detect the intend and use the reusable function for each intend, e.g. append_literal.\n\nFocus on my question: I'm choosing between braching the logic on mode before the switch of character or let switch first, then branch the mode. Let discuss with me about this.",
+          "type": "text"
+        }
+      ],
+      "agentMode": "smart",
+      "messageId": 6
+    },
+    {
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "end_turn"
+      },
+      "usage": {
+        "model": "claude-opus-4-7",
+        "timestamp": "2026-05-05T15:58:59.669Z",
+        "inputTokens": 6,
+        "outputTokens": 3184,
+        "maxInputTokens": 300000,
+        "totalInputTokens": 41418,
+        "cacheReadInputTokens": 16365,
+        "cacheCreationInputTokens": 25047
+      },
+      "content": [
+        {
+          "type": "thinking",
+          "provider": "anthropic",
+          "thinking": " I'm weighing whether to check the mode (literal versus telex) before entering the switch statement on characters, or to handle that branching inside each case. The key constraint is that they want to keep the switch and use reusable functions like `append_literal` within each case, so really it's about whether the mode check wraps the entire switch or lives within it.\n\nOption A puts the mode check first—if we're in literal mode, append and return immediately, otherwise proceed to the character switch. This is cleaner at runtime and prevents accidentally forgetting to handle literal mode in a new case, but it assumes all characters behave identically in literal mode, which might not hold if some characters need special literal handling. It also obscures the literal-versus-telex distinction from the per-character logic, making debugging trickier.\n\nOption B checks the mode inside each case, so every character case explicitly decides what to do in literal versus telex mode. This makes each case self-contained and easier to reason about locally, though it risks duplicating the literal-mode logic across multiple cases.\n\nGiven the stated preference for detecting intent within each case, Option B aligns better with that philosophy—the mode check becomes just another input to deciding what the character should do. But Option A's guard-clause approach does match the two-layer separation the Oracle suggested. The real trade-off is separation of concerns versus locality of behavior.\n\nI'm leaning toward Option A because it enforces a single literal-handling path, prevents accidental regressions when adding new Telex characters, and fits the guard-clause style well. The non-Telex `else` branch stays clean either way, and cancellation works the same in both approaches.\n\nThat said, I should lay out both options fairly so the user can decide based on their priorities — whether they value uniformity and simplicity or prefer each case to be fully self-contained.",
+          "finalTime": 1777996718490,
+          "signature": "<redacted>",
+          "startTime": 1777996690004
+        },
+        {
+          "text": "# Mode-First vs Switch-First — Trade-offs\n\n## Option A — Mode branch **before** the switch\n\nShape: top-of-`add` guard `if (is_literal_now) { append_literal(c); return; }` then `switch (c)` containing only Telex logic.\n\n**Pros**\n- **One literal path, enforced structurally.** Cannot forget to handle literal mode when adding a new Telex character.\n- **Each switch arm only has to think about Telex semantics.** Cleaner mental load when reading or extending one case.\n- **Maps cleanly onto the Oracle's two-layer split** (gating layer → rule dispatch layer).\n- **Idiomatic guard-clause style** that fits TigerStyle.\n- The non-Telex `else =>` arm of the switch becomes symmetric with the top guard — both call `append_literal`. The whole function reads \"literal goes through one chute, Telex goes through another.\"\n\n**Cons**\n- **Hides the per-key literal behavior from the per-key code.** When debugging, you must remember \"this arm only runs when not literal.\"\n- **Assumes literal behavior is uniform across all keys.** If `'z'` (reset) or `'w'` (breve) ever needs a slightly different literal behavior, the abstraction leaks and you'll need an exception above the switch.\n- **Cancellation still flips into literal mid-case** (e.g., `aaa` → `aA`). The top guard doesn't capture *all* literal transitions, only the dispatch decision for the current keystroke. So the top guard is not the single source of truth for \"literal happens here.\"\n\n## Option B — Switch first, mode branch **inside** each case\n\nShape: `switch (c)` at the top; inside each Telex arm, `if (is_literal_now) append_literal(c) else try_telex_<rule>(c)`.\n\n**Pros**\n- **Locality.** Reading a single case shows the *entire* behavior for that key in both modes. Good for keys whose literal/telex behavior diverges or might diverge.\n- **Symmetric with cancellation.** Cancellation already lives inside a case and flips to literal mid-flow; per-case mode checks match that pattern.\n- **Easy to special-case one key** without disturbing the rest.\n- The non-Telex `else =>` arm needs no mode check at all (it's literal regardless), which is honest about the asymmetry between Telex-meaningful and Telex-meaningless characters.\n\n**Cons**\n- **Duplicated `if (is_literal_now) append_literal else …` preamble in every Telex arm.** This is exactly the duplication the refactor was meant to remove.\n- **Regression risk.** Easy to forget the mode check when adding a new Telex character — you get a silent bug where literal mode processes Telex.\n- **Reads bottom-up.** The reader must scan many arms to discover that they all do the same thing in literal mode.\n\n## Decision rubric\n\nPick Option A if:\n- Literal behavior is and will remain **uniform** across all Telex keys.\n- You value **cannot-forget** structural enforcement over per-case locality.\n- You want the function to read as a clean two-layer pipeline.\n\nPick Option B if:\n- You expect literal behavior to **diverge per key** in the future (e.g., some keys might still emit something different in literal mode).\n- You value **one-stop reading per character** more than removing duplication.\n- You want the `mode` check to feel like one input among many to \"intent detection,\" not a privileged top-level gate.\n\n## My recommendation\n\n**Option A**, with one caveat documented in a comment: \"Telex helpers may themselves transition the engine into literal-locked state (e.g., cancellation); the top-level guard only governs dispatch for the *current* keystroke, not the engine's full literal-state lifecycle.\"\n\nReasoning, briefly:\n1. Your stated style — \"detect intent and call a reusable function\" — applies cleanly inside the Telex branch; the literal branch is just *one* such intent that happens to be detectable before the switch.\n2. The duplication cost in Option B is real and grows linearly with new keys; the locality benefit is largely theoretical until a key actually needs divergent literal behavior.\n3. If divergence ever appears, you can demote the top guard to \"default-literal-unless-overridden\" by letting specific cases re-check mode — a one-line escape hatch — without rewriting the structure.",
+          "type": "text",
+          "finalTime": 1777996739650,
+          "startTime": 1777996718491
+        }
+      ],
+      "messageId": 7,
+      "turnElapsedMs": 51637
+    }
+  ],
+  "agentMode": "smart",
+  "nextMessageId": 8,
+  "creatorUserID": "<redacted>",
+  "updatedAt": "2026-05-05T15:58:08.031Z"
+}

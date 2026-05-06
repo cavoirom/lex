@@ -1,0 +1,846 @@
+{
+  "v": 3477,
+  "id": "T-019df8a6-e184-7269-b893-8e7d20e7b2bb",
+  "env": {
+    "initial": {
+      "tags": [
+        "model:gpt-5.5-2026-04-23"
+      ],
+      "trees": [
+        {
+          "uri": "file:///<redacted>/lex",
+          "displayName": "lex"
+        }
+      ],
+      "platform": {
+        "os": "darwin",
+        "client": "CLI",
+        "osVersion": "26.5",
+        "clientType": "cli",
+        "webBrowser": false,
+        "clientVersion": "0.0.1777988768-gebece7",
+        "installationID": "<redacted>",
+        "cpuArchitecture": "arm64",
+        "deviceFingerprint": "<redacted>"
+      }
+    }
+  },
+  "meta": {
+    "traces": [
+      {
+        "id": "WaPmM",
+        "name": "agent",
+        "context": {
+          "messageId": 0
+        },
+        "endTime": "2026-05-05T15:02:09.435Z",
+        "startTime": "2026-05-05T15:01:49.572Z"
+      },
+      {
+        "id": "yL889",
+        "name": "inference",
+        "parent": "WaPmM",
+        "context": {
+          "messageId": 0
+        },
+        "endTime": "2026-05-05T15:02:09.435Z",
+        "startTime": "2026-05-05T15:01:49.573Z"
+      },
+      {
+        "id": "d2BCY",
+        "name": "agent",
+        "context": {
+          "messageId": 2
+        },
+        "endTime": "2026-05-05T15:17:35.996Z",
+        "startTime": "2026-05-05T15:14:16.012Z"
+      },
+      {
+        "id": "7q2Xq",
+        "name": "inference",
+        "parent": "d2BCY",
+        "context": {
+          "messageId": 2
+        },
+        "endTime": "2026-05-05T15:14:21.924Z",
+        "startTime": "2026-05-05T15:14:16.013Z"
+      },
+      {
+        "id": "UxAOr",
+        "name": "tools",
+        "parent": "d2BCY",
+        "context": {
+          "messageId": 3
+        },
+        "endTime": "2026-05-05T15:17:03.399Z",
+        "startTime": "2026-05-05T15:14:21.924Z"
+      },
+      {
+        "id": "DCIhl",
+        "name": "inference",
+        "parent": "d2BCY",
+        "context": {
+          "messageId": 2
+        },
+        "endTime": "2026-05-05T15:17:06.369Z",
+        "startTime": "2026-05-05T15:17:03.400Z"
+      },
+      {
+        "id": "sMTv5",
+        "name": "tools",
+        "parent": "d2BCY",
+        "context": {
+          "messageId": 5
+        },
+        "endTime": "2026-05-05T15:17:06.425Z",
+        "startTime": "2026-05-05T15:17:06.368Z"
+      },
+      {
+        "id": "Nxjyl",
+        "name": "inference",
+        "parent": "d2BCY",
+        "context": {
+          "messageId": 2
+        },
+        "endTime": "2026-05-05T15:17:08.829Z",
+        "startTime": "2026-05-05T15:17:06.425Z"
+      },
+      {
+        "id": "ovlEb",
+        "name": "tools",
+        "parent": "d2BCY",
+        "context": {
+          "messageId": 7
+        },
+        "endTime": "2026-05-05T15:17:08.879Z",
+        "startTime": "2026-05-05T15:17:08.829Z"
+      },
+      {
+        "id": "np4PC",
+        "name": "inference",
+        "parent": "d2BCY",
+        "context": {
+          "messageId": 2
+        },
+        "endTime": "2026-05-05T15:17:11.314Z",
+        "startTime": "2026-05-05T15:17:08.880Z"
+      },
+      {
+        "id": "EyyD3",
+        "name": "tools",
+        "parent": "d2BCY",
+        "context": {
+          "messageId": 9
+        },
+        "endTime": "2026-05-05T15:17:11.362Z",
+        "startTime": "2026-05-05T15:17:11.314Z"
+      },
+      {
+        "id": "Ygx1O",
+        "name": "inference",
+        "parent": "d2BCY",
+        "context": {
+          "messageId": 2
+        },
+        "endTime": "2026-05-05T15:17:18.178Z",
+        "startTime": "2026-05-05T15:17:11.364Z"
+      },
+      {
+        "id": "Far2j",
+        "name": "tools",
+        "parent": "d2BCY",
+        "context": {
+          "messageId": 11
+        },
+        "endTime": "2026-05-05T15:17:18.234Z",
+        "startTime": "2026-05-05T15:17:18.177Z"
+      },
+      {
+        "id": "UQyfu",
+        "name": "inference",
+        "parent": "d2BCY",
+        "context": {
+          "messageId": 2
+        },
+        "endTime": "2026-05-05T15:17:35.996Z",
+        "startTime": "2026-05-05T15:17:18.236Z"
+      },
+      {
+        "id": "PsAbu",
+        "name": "agent",
+        "context": {
+          "messageId": 14
+        },
+        "endTime": "2026-05-05T15:18:40.380Z",
+        "startTime": "2026-05-05T15:18:28.004Z"
+      },
+      {
+        "id": "yZe8t",
+        "name": "inference",
+        "parent": "PsAbu",
+        "context": {
+          "messageId": 14
+        },
+        "endTime": "2026-05-05T15:18:40.380Z",
+        "startTime": "2026-05-05T15:18:28.005Z"
+      },
+      {
+        "id": "FBaWc",
+        "name": "agent",
+        "context": {
+          "messageId": 16
+        },
+        "endTime": "2026-05-05T15:24:33.268Z",
+        "startTime": "2026-05-05T15:24:06.391Z"
+      },
+      {
+        "id": "cLIVY",
+        "name": "inference",
+        "parent": "FBaWc",
+        "context": {
+          "messageId": 16
+        },
+        "endTime": "2026-05-05T15:24:13.357Z",
+        "startTime": "2026-05-05T15:24:06.391Z"
+      },
+      {
+        "id": "QyrqA",
+        "name": "tools",
+        "parent": "FBaWc",
+        "context": {
+          "messageId": 17
+        },
+        "endTime": "2026-05-05T15:24:13.417Z",
+        "startTime": "2026-05-05T15:24:13.356Z"
+      },
+      {
+        "id": "NdU9m",
+        "name": "inference",
+        "parent": "FBaWc",
+        "context": {
+          "messageId": 16
+        },
+        "endTime": "2026-05-05T15:24:33.269Z",
+        "startTime": "2026-05-05T15:24:13.419Z"
+      }
+    ],
+    "deleted": false,
+    "createdOnServer": false,
+    "lastUserMessageAt": "2026-05-05T15:24:06.390Z",
+    "workspaceID": null,
+    "projectID": null,
+    "visibility": "private",
+    "sharedGroupIDs": [],
+    "agentMode": "deep",
+    "usesDtw": false
+  },
+  "title": "Literal index semantic restriction",
+  "created": 1777993180533,
+  "messages": [
+    {
+      "meta": {
+        "sentAt": 1777993309564
+      },
+      "role": "user",
+      "content": [
+        {
+          "text": "In @src/liblex.zig I changed the literal_index semantic. Previously it's available on both literal and telex mode. Now I restrict it only valid in telex mode. This mean we must not set it when in literal mode.\n\nDiscuss with me what kind of assert I must set on State.add and State.backspace for this change. Don't provide example code. Don't change any code.",
+          "type": "text"
+        }
+      ],
+      "agentMode": "deep",
+      "messageId": 0,
+      "userState": {
+        "currentlyVisibleFiles": []
+      },
+      "fileMentions": {
+        "files": [
+          {
+            "uri": "file:///<redacted>/lex/src/liblex.zig",
+            "content": "",
+            "isImage": false
+          }
+        ],
+        "mentions": [
+          {
+            "uri": "file:///<redacted>/lex/src/liblex.zig"
+          }
+        ]
+      }
+    },
+    {
+      "meta": {
+        "openAIResponsePhase": "final_answer"
+      },
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "end_turn"
+      },
+      "usage": {
+        "model": "gpt-5.5-2026-04-23",
+        "timestamp": "2026-05-05T15:02:09.433Z",
+        "inputTokens": 0,
+        "outputTokens": 1105,
+        "maxInputTokens": 272000,
+        "totalInputTokens": 15776,
+        "cacheReadInputTokens": 7680,
+        "cacheCreationInputTokens": 8096
+      },
+      "content": [
+        {
+          "type": "thinking",
+          "provider": "openai",
+          "thinking": "",
+          "finalTime": 1777993322267,
+          "signature": "<redacted>",
+          "startTime": 1777993311380,
+          "openAIReasoning": {
+            "id": "rs_07f04b6fd84d20390169fa065f4ab08196af51b11a09488629",
+            "encryptedContent": "gAAAAABp-gZx6cs5Jscdk7UaV3idVGdxz5H2qljIqHm5zVXaVUovDehsN4MnqXHTZzcbCkZktlN0gHYit-ILTOngABvBaiZp1obGJkRUgCiYrWwoDHLNM7CD10InWBzpM1c_wGHHk9jGLN-nrOcIMCfejodJGevDiipIzCEMl00FRdQQe3Jun8LnJ_t5iGBp-2MKb3nO88YCDCaV3x9rR4aV8Jo-M07l-Ha8aeDADGAKTM0Mi918ZDFEks1MYSVdhA35d67c8zRYbjqVLsFu6cRMWljtHQQDj20QYpSqDzSxqyW3eWXTftA_LY_A5mN1mQfZe-FpJTZzViJKGZkZ8U3qm-nPkkZneik_d1I20iOhm5uR5LZ2i0ncODUw9Iau4SdNUN7YYs4Hh-mViHecnwbKrINtVRj40bkuXdEZuA2okekIQHKVWxCScsT7LMYItLXsRFBftuK8Hn-b5C2iPudMAgWMG9kZ385K8KYB7Drx-vLeg4Ej7el-m0ZMHJCqXBK8sXeAM-PTUP9Otcc9oVYoC9g0GALuxMy_CyyUlDdLMbYjnoLIwM_bY6ZS2WSHEg6Sr0rQvSAEaP4Aor6qifbxqISGek5XBH0lXHcubC7Kizw28chQcTtTUFVNfG9GyAoWA5HJ71vI47w71OQHTlICZ20-vYzJxtY3zMgE9NaC2IYP5NVZSZREIqAi_tkJcK1aAyhVixL-Y5xaTcuoEale58gYF0Ak2_XKhAsHbrZmTx5TarDOiSmMIdVPC0l2XZkBoKyEw9Zz48sLxFMZeAdtmM4NEPKOoas3mLrkHdyhQ4d2Qo5lF2pmYos4YUcVJkq0D8Q0LFBfONO1wUOD7qRQJdA6ZfaijkHVMLJcUjJAUHz5SXmoludXlJR8qu1UhP1zC0L5dDvjKwg53rXdcOk46CrkPoKXlO1WLnAOAhlhyrdSzQuug_1szzAo5xKIiJT95WHumkoLRzuLA2J_sAGFwV8s3qpOW7pmAkkz1-Hrxxh7m2t3srzweHkbDPVpFtgjZYSLVUQTdXjMASGEXPZ8NLfuGsW8ivfCbvXeO7HIRbPFNDPKnUc-pYg9hsEBD-6pC36NwHn1_rqD8daSep-YpmCHQOf19mXxI_wwh8oQXtxDqP0Hajqt3DphlOHnB_LXmY2pJy26Xadk5dKgHTFh340KdjlabN33akucYLC0uwF9bIq6-8RrXzprAkff_M6LHMMTlF7spjJFa9t50AicSsK7mKJFwELy953x-DLIuthKm6RPsiW0oML8k_KGVZ7NF7UXh00hRRDd78A8UEA0ONUSFyTJt2c6zCZj_sDcyJF2o2D8mZQyJUEcguzpyQWB-wBwXLJ0rlEWyLIgg8G4qgZmsWJvMoaZjOwYA-Yr21VZvA5f1hsLxWj0UCvz84Eour0pYsuMV6HSbvur1n169-ywskzs-QVwBqC0ZJ6byuoL0XuixWIF8j10cVC2rCeRzsDIeX4a8IxGiZEAnEM3pgwYn8d3r_d8hwjSQvn63MMHo079nomA4tKllVXS-UrwHda885TILfpQSy5Kxv40jSa_SFFMfbAdIqariCCIfQnc3_-NPRlU-9mLsl0GmQSCD6H4padWVQ7NArPvrsaUGsFDxM3TcQGoHLFJpM51Ck-j7NHQQF0ZbHZ7CriQ3Qj4m5ECTvEqataPiNsptjo5jw4uEuAkcMPocK8lOrGD1Ik7qXAlq5GHT-JyYCtlxnxSmbjgCDM3IXBhItsu_iT_emW6mzhUs639rSU7IpyD5lCYVd5FVZYjpQrqrAH7pxrXUuHPGa5Fvidec9eRktnfi_SNDY0ep3td8qI7NFHrXzznOx1892AHjymlxwoK-xCFxqnfLUg2ZaAwpQi0m_bM-YXSqlgLnSGKxjqcxbDEFFmw1Dsx4PWgBk17j1-Q24TeFNUOnuosv7JCYfOdLymFhCfIxPdZjnhYhbWr3_ifA2UrrdXt72qs1txCM21Rsvrh9mgKl-fjIcY93NbWCM-jc3YkClQ5WB9-T7U8lxZfv1HWpYiUXzsFH9n5A8rryM4fHch9_V9R0g4HL6XiVe7XCzordRwzqo9ZHlhN3nU7VEHVEDycKCCOyOsD1cuZAsautwzYoJUSevkNkY3IXjwl_HTYE3_8QKOusqULG33mMV_qZs2jY61Xc6f0kvgpQfWSJH5ZhpyW8uOtM8rtLYM7YV29slRYGXYJGedprJvPCluNiE7M3Myp8gnzJ_5VsWksWMOj7rm02WCh3JyjC6jRy2V5I0mXCvgBy1DzlzSsAmh9SdsLtPsGRayRyJChT9y61vBpaepyWSu8CftZ8GpN6rh6nlcrALGb7JhwZTnXbH2VTPBIn5ncueQfYY2gfsZU7y5VtlTv54PRIQ7QBn3D1sjdl2JACnUpDnuNbdTlGhsWgsUgYc1iTVnGesqEgC6NVnb-rbr9RGYsJlYv4SRkKP4-RpHCT1GTblB9L-MTc0Bh8uMHUI8iOfOPl9ihB2bA8kThMe_ir9Qf9vRrYCLq8LSW5dKl2llU1KM_Yoey8tq3bsuVIN0Hv-ofuyaE3kezRCzjnRdsPVbXdMUsvvN84wSChjq9t0Z46iUwglH0psT_y0eBOrWzEQVhugw6DI0Ymv7VI0os6T1oFbE1MziPFBxOXScOh9KqwNlg_i0g_6SaUvb81HJinzrbWYizDaDrL93Nfx8EvAHBa4LHaRe5Cf8dYijoAOZG59Eg96dBUXQ4oO9GhkJhnohMoFugv3kVpe9gDiZs1vTqKFkVHRjeXLRx8aZmo80ndjmQuOffefnRgc7hl8z3V73MHc7Z6nuBYIjitDkEhfhBeAZFnyS5u2ctch2a0TQRsfWnkVJCXY4btkCj-a-JVHE0WOr0Fas3Sr2vl4iYs8AxpEulFOYuGl9eizSLDLJaDJafuwHpttIML20A_Y-kX6IMIxDOTrsZ3Ns0IXPs2pNrpeRjqCXDEb_BET_wp5zmDcTZrbqgpVfz2axgk_zYt-HQhMxcx3LFDlE6OE_AdRVzEiUyXxcJCFda4J0gfO_bAgwe_wriJzFbNl4Zus9A21mmmjm_Zl5fGTghKCUGYYNFVlZGr9J0WERnJhjhTuspUTyPOhTK9_IU-EG01AMOXZ5nDY3kgcuT_4i7jYnRYc9K6J5BqKqjis4bDxwSzwHXXccGBc14HVEjR0u2JiQTNTn2UZnELBQpol63niNdKhLOoPwYl22uMXh23AaLVi5WAWLBUb64rg18FoHn7q-TBl90T1Kx7sBFxTRyM9fhvlBfFCcp_tRN-XCte584pbRRMsAHW5oRch7or6VRKvIUMej4JB04zfgWBxWkjAfvQtUWzo_BOokH3CTpieeuzkWTbiwzbX9z0-OM7Qq1FTwcddwnyrHDgMXldjowBnfM2SXJuY_UwooQuLhEz7Ak8dMkcxPCVbB869H1UoNtNTfWqXv4yL_3Re6xMEyjwuv7wIBKP9bQNHtIa86dljCjHQBvHnCngk-FRx-QTh5naTpPPSatmod0wORaN95z4F4VhUD63rYW9aRJVhlWfXghgjd33NRzhJlR8VWCbb3ZeICYWpOsXa3fjZHpCqR2cj_1UTmuAUeu-1W5M_f9RkeltzMf4pk2byPDqqXJ58dF6Gx-RmKasahaR-80S-wNr06SCdrMPgTuAo3h4Wmhy8AnLbcqFWMQOeBdmEKU9XyIxKFkTPD4Q1tem3RG-dUCFifvAOOPugksdFXiw9jrMI52ERgdjt6rMoC-tuFuVUCQQqhigEw8HjbEhYYPoZ3M07aJiqNvXGIzzhpvM8eJIGVvboPhhhwr9at-s4E2G8Jd2A_ADRdLa_cH4HO0BJyZj_Yr5qgrS52EDs1otg6VZU0tifUY25TPowKxlMZCAbxYM5WtjI6NBPlWLoVUtum_77AygWDGbBJtJqK-MegplDNNQIo3TH87OBJH-am6a00Cs98-tX2_FXaCqMKnUXCAztMRAr0Yq-pFNz4jqYzjw7vDtnJXaFIDgT74Vduf_xQg3seL0k4nchF8-0kzSe9L8pP2GYOrfOACczdBTL5_k5mTfe_RBlA8kqDXRtEbYuVpVIPksXMOsOuFMrvfpD00Q3d_SC5KQCXPDgEN5j6cYCBZ_ZhYptBfjAMF-hkNJice4IrnIeApTE7aVzApF15h6lbTC_HVFoQ5paIXjusnXCexQy03xAMCX1EPYiEEV8QQbFvtvfLCp7fPA3H4rt5SGiUuIQOb1MT8oVbvKhSwjYZ6kJlMbqtWKiFod2oKjJpDxqA="
+          }
+        },
+        {
+          "text": "For the new semantic, the core invariant should be:\n\n> `literal_index` is meaningful only when `mode == .telex`; therefore if `mode == .literal`, `literal_index` must be `null`.\n\nI would structure the asserts around that invariant.\n\n## `State.add`\n\nAssert these at entry:\n\n1. `mode` is valid: either `.literal` or `.telex`.\n2. If `mode == .literal`, then `literal_index == null`.\n3. If `literal_index != null`, then `mode == .telex`.\n4. If `literal_index != null`, it must still be within the effective/literal boundary rules:\n   - `literal_index <= buffer_effective.len`\n   - `literal_index < buffer_length`\n\nThe important semantic assert is #2 / #3. The range asserts are still valid, but only after confirming that `literal_index` is allowed to exist.\n\nAlso add a postcondition-style assert near the end of `State.add`:\n\n- If `mode == .literal`, `literal_index` is still `null`.\n\nThat catches accidental code paths where literal mode appends past `buffer_effective.len` and wrongly sets `literal_index = buffer_effective.len`.\n\nSo the intended behavior becomes:\n\n- In `.literal` mode:\n  - append literally,\n  - never set `literal_index`,\n  - do not use `literal_index` to control processing.\n- In `.telex` mode:\n  - `literal_index` may be used to mark the point from which Telex processing is disabled.\n\n## `State.backspace`\n\nAssert these at entry:\n\n1. `buffer_length > 0`.\n2. `mode` is valid: either `.literal` or `.telex`.\n3. If `mode == .literal`, then `literal_index == null`.\n4. If `literal_index != null`, then `mode == .telex`.\n5. If `literal_index != null`, it must be within the current buffer:\n   - `literal_index < buffer_length`\n   - probably also `literal_index <= buffer_effective.len`\n\nThen after reducing `buffer_length` and possibly clearing `literal_index`, add the same invariant as a postcondition:\n\n- If `mode == .literal`, `literal_index == null`.\n- If `literal_index != null`, `mode == .telex`.\n- If `literal_index != null`, `literal_index < buffer_length`.\n\n## Key point\n\nDo not only assert the range of `literal_index`. The changed semantic requires asserting ownership:\n\n> `literal_index != null` implies `mode == .telex`.\n\nAnd for clarity/catchability, also assert the inverse practical form:\n\n> `mode == .literal` implies `literal_index == null`.\n\nThose two are equivalent for a nullable field with only two modes, but having both as local invariants makes bugs easier to diagnose.",
+          "type": "text",
+          "finalTime": 1777993329414,
+          "startTime": 1777993322269
+        }
+      ],
+      "messageId": 1,
+      "turnElapsedMs": 19862
+    },
+    {
+      "meta": {
+        "sentAt": 1777994056011
+      },
+      "role": "user",
+      "content": [
+        {
+          "text": "I update the asserts, please review them again.",
+          "type": "text"
+        }
+      ],
+      "agentMode": "deep",
+      "messageId": 2
+    },
+    {
+      "meta": {
+        "openAIResponsePhase": "commentary"
+      },
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "tool_use"
+      },
+      "usage": {
+        "model": "gpt-5.5-2026-04-23",
+        "timestamp": "2026-05-05T15:14:21.916Z",
+        "inputTokens": 0,
+        "outputTokens": 135,
+        "maxInputTokens": 272000,
+        "totalInputTokens": 16379,
+        "cacheReadInputTokens": 15360,
+        "cacheCreationInputTokens": 1019
+      },
+      "content": [
+        {
+          "type": "thinking",
+          "provider": "openai",
+          "thinking": "**Reviewing the file**\n\nI need to review the user's request more closely. They want me to inspect the file again, which suggests they’re looking for a discussion rather than just code changes. I should read through the current file carefully to understand what needs to be addressed. It’s important to ensure I capture all relevant details before moving forward with the discussion.",
+          "finalTime": 1777994060881,
+          "signature": "<redacted>",
+          "startTime": 1777994058206,
+          "openAIReasoning": {
+            "id": "rs_07f04b6fd84d20390169fa094a11e88196ad3f73a66c9e747b",
+            "encryptedContent": "gAAAAABp-glNGZTTTjJ-1eAGJXqbZo0doHNb24giZvGBmKUG2Gu7IXgjnaWLlumb7jVchAn4M-mJTx8WOdSVsVIeK74i7JKX4nUcMKjUx8orxunvf9yPcMIiO4VjC-VdEoza-3flkWxlRiRf-dASu-rfXfqRXDTk9x3UCaI9bILFytFAVoadFBkd4XHxg8kUyY-nHCemPxY0VtjjKpw9qsiB5PYN89sNSrw5lir5jtGoQRwJwX6t5sJb1RZW_27Az_npfOdv8o3KbQZ_eC_So7GpZrYVGBYQ7oLKwWHX0YWBMt7JR2B9KRMurtkrSVY54VFrLXxzrVWTRI3iuS58aBVGzKleItrn0ZFpvQT0sm2pkXCEiFC2uq8AUqeE16F6W_7y1_Oz3qam2wQMM_wswGMAXqPfECFmnXD6wKMvgObsvYS6xLSjGB0m6kwlsehgr5xv7B1kXfjzfFN85-SJ-7aOjx9wr2OUSpb7GK2Cfrdc90DyUSIK4DOzI0HdU6CKJX-tB2mgNe41Y7Ub9GnPo6WniZ3BtrLvybqHbBFNZbBWedOaDEftg6QiHFWB0TtYp9qPyByRHbJIoETSyfCqYBpkG7ifULbsjErdXDznrRbarkFaXDCcTqrHmwROm9FrBOuyJyM4XrIrq_rUBNT5soYnIx1zyc9CRqDWZ88PA7uSC_r4HOzETztk2Pm1QJZFwc5CQlOi1btP-kHj-07w3JG1J-t1m78SOTj0pg7LfW9vXKLie9JPQWhoxLdEe5iD7EC-6Q7Pka8zhqHWueDmcMtA8bOhfFCDzMabfkCATbOD8JCQmfl2nx6ylYi-O3ChmL4YKFE5XOtJgctAb_vsHXEWj5MTtvLL9z34qcfFP47U8mzNon_Xvh2dAKcoyhv0wNfngIWxLP36jm4mx-pY8BnLOGSfH1tgGkInKTofnL840wrHxopBekNblbLFloSV4sMHF0vqcrJsDTuF9thvLk7TdScZiTM6uvhFs2pVP63Hc7W-FsMPCh8q5_L68qTxVLps9aErl_cbeo3keUj3rrPMJupJ7-_h7nnX-NmzOnF7EKn6TzMZs7kYCRJROs13BL3BW5iehf4QbxD9lOv-aeAOkPPcwjMBc-epkM32OiHCth9AZenWbW0="
+          }
+        },
+        {
+          "text": "I’ll inspect the updated assertions in `src/liblex.zig` and focus only on whether they match the new `literal_index` invariant.",
+          "type": "text",
+          "finalTime": 1777994061077,
+          "startTime": 1777994060881
+        },
+        {
+          "id": "call_BfRicWn7ZEV4OjoeIpx1De86",
+          "name": "shell_command",
+          "type": "tool_use",
+          "input": {
+            "command": "sed -n '187,285p' src/liblex.zig && sed -n '435,520p' src/liblex.zig",
+            "workdir": "/<redacted>/lex"
+          },
+          "complete": true,
+          "finalTime": 1777994061814,
+          "startTime": 1777994061077
+        }
+      ],
+      "messageId": 3
+    },
+    {
+      "role": "user",
+      "content": [
+        {
+          "run": {
+            "result": {
+              "output": "const InputMode = enum(u8) {\n    // By pass Vietnamese input processing and append the character as is.\n    literal,\n    // Process Vietnamese input in Telex input method.\n    telex,\n};\n\nconst State = struct {\n    // The effective buffer to process Vietnamese input. we will skip processing if the buffer\n    // longer than 16.\n    buffer_effective: [16]Span,\n    // The maximum buffer length that the engine still keeps the effective buffer, after the maximum\n    // value (255), we will reset the effective buffer and this value.\n    buffer_length: u8 = 0,\n    // Mark the earliest position (inclusive) in buffer where we modified the span, will be used to\n    // calculate backspaces and replacement characters.\n    buffer_modification_index: ?u8 = null,\n    // Mark the position (inclusive) in buffer where we will switch to literal mode (due to manually\n    // switch, input cancellation, exceed effective buffer). This value is only used in .telex mode\n    // and the engine is working on position on or after literal index, the engine will skip\n    // Vietnamese input processing (we only count valid numbers, null mean no literal index).\n    literal_index: ?u8 = null,\n    // Determine if we will process input in the specified mode (Telex) or append the character as is.\n    mode: InputMode = .literal,\n\n    // Initialize the State on allocated memory.\n    pub fn init(self: *State) void {\n        self.* = .{\n            .buffer_effective = undefined,\n        };\n    }\n\n    pub fn add(self: *State, c: u8) void {\n        // Only allow a-zA-Z.\n        assert(std.ascii.isAlphabetic(c));\n\n        // The buffer_modification index must be inbound of the buffer_effective.\n        assert(self.buffer_modification_index == null or self.buffer_modification_index.? < self.buffer_effective.len);\n\n        // Input mode must be either .literal or .telex.\n        assert(self.mode == .literal or self.mode == .telex);\n\n        // Should never set literal_index in .literal mode.\n        assert(self.mode == .literal and self.literal_index == null);\n\n        if (self.literal_index) |literal_index| {\n            // When literal_index is set, mode must be .telex.\n            assert(self.mode == .telex);\n            // The literal_index value must be in range null or 0 -> 16 (buffer_effective length)\n            // because we won't process Vietnamese input outside the buffer_effective.\n            assert(literal_index <= self.buffer_effective.len);\n            // The literal_index value must be less than buffer length.\n            assert(literal_index < self.buffer_length);\n        }\n\n        switch (c) {\n            'A', 'a' => { // circumflex.\n                if (self.literal_index != null or self.mode == .literal) {\n                    // Enable literal input when literal_index is set or on literal mode. The\n                    // literal_index is also set when the word starts with non-Vietnamese onsets.\n\n                    // Check if we can add new span for input character.\n                    if (self.buffer_length < self.buffer_effective.len) {\n                        // Add character to span.\n                        self.buffer_effective[self.buffer_length] = Span.init(c);\n                    }\n                    // Increase the buffer length for tracking, we will need it went handling backspace.\n                    self.buffer_length = self.buffer_length + 1;\n\n                    // Set modification index to null because we didn't modify any existing span.\n                    self.buffer_modification_index = null;\n                } else {\n                    // buffer_length must inbound of buffer_effective.\n                    assert(self.buffer_length < self.buffer_effective.len);\n\n                    // literal_index must not be set in order to process Vietnamese input.\n                    assert(self.literal_index == null);\n\n                    // Vietnamese input.\n                    // Possible cases:\n                    // - circumplex.\n                    // - cancel circumflex.\n                    // - plain append.\n\n                    if (self.buffer_length == 0 or (self.buffer_effective[self.buffer_length - 1].base != std.ascii.toUpper(c) and self.buffer_effective[self.buffer_length - 1].base != std.ascii.toLower(c))) {\n                        // Plain append when start of the buffer or the previous character don't match\n                        // circumflex rules.\n\n                        // Check if we can add new span for input character.\n                        if (self.buffer_length < self.buffer_effective.len) {\n                            // Add character to span.\n                            self.buffer_effective[self.buffer_length] = Span.init(c);\n                        }\n                        // Increase the buffer length for tracking, we will need it went handling\n                        // backspace.\n                        self.buffer_length = self.buffer_length + 1;\n\n                        // Set modification index to null because we didn't modify any existing span.\n                        self.buffer_modification_index = null;\n}\n\ntest \"expect lex_add handles non-Telex characters exceed the buffer_effective range\" {\n    // Arrange\n    var state: State = undefined;\n    lex_state_init(&state);\n    state.mode = .telex;\n\n    const input_sequence = \"bbbbbbbbbbqqqqqqqqqq\";\n\n    // Act\n    for (input_sequence) |c| {\n        lex_add(&state, c);\n    }\n\n    // Assert\n    // We only fill and increase the buffer_length based on input.\n    try expectEqual(20, state.buffer_length);\n    // Because we don't modify any existing character since the last input, expect null.\n    try expectEqual(null, state.buffer_modification_index);\n    // Because the input exceed the buffer_effective, we set literal_index after the last effective spans (16).\n    try expectEqual(16, state.literal_index);\n    // Don't touch on input mode.\n    try expectEqual(.telex, state.mode);\n    // Verify every the spans, must exactly the same with the input.\n    for (input_sequence[0..16], 0..) |c, i| {\n        const sp = state.buffer_effective[i];\n        try expectEqual(c, sp.base);\n        try expectEqual(.empty, sp.diacritic);\n        try expectEqual(.level, sp.tone);\n    }\n}\n\ntest \"expect lex_add adds a literally because it's the start of the buffer\" {\n    // Arrange\n    var state: State = undefined;\n    lex_state_init(&state);\n    state.mode = .telex;\n\n    // Act\n    lex_add(&state, 'a');\n\n    // Assert\n    try expectEqual(1, state.buffer_length);\n    try expectEqual(null, state.buffer_modification_index);\n    try expectEqual(null, state.literal_index);\n    try expectEqual(.telex, state.mode);\n\n    const sp = state.buffer_effective[0];\n    try expectEqual('a', sp.base);\n    try expectEqual(.empty, sp.diacritic);\n    try expectEqual(.level, sp.tone);\n}\n\ntest \"expect lex_add results â when input aa\" {\n    // Arrange\n    var state: State = undefined;\n    lex_state_init(&state);\n    state.mode = .telex;\n\n    // Act\n    lex_add(&state, 'a');\n    lex_add(&state, 'a');\n\n    // Assert\n    try expectEqual(1, state.buffer_length);\n    try expectEqual(0, state.buffer_modification_index);\n    try expectEqual(null, state.literal_index);\n    try expectEqual(.telex, state.mode);\n\n    const sp = state.buffer_effective[0];\n    try expectEqual('a', sp.base);\n    try expectEqual(.circumflex, sp.diacritic);\n    try expectEqual(.level, sp.tone);\n}\n\ntest \"expect lex_add results aA when input aaA\" {\n    // Arrange\n    var state: State = undefined;\n    lex_state_init(&state);\n    state.mode = .telex;\n\n    // Act\n    lex_add(&state, 'a');\n    lex_add(&state, 'a');\n    lex_add(&state, 'A');\n",
+              "exitCode": 0
+            },
+            "status": "done"
+          },
+          "type": "tool_result",
+          "toolUseID": "call_BfRicWn7ZEV4OjoeIpx1De86"
+        }
+      ],
+      "messageId": 4
+    },
+    {
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "tool_use"
+      },
+      "usage": {
+        "model": "gpt-5.5-2026-04-23",
+        "timestamp": "2026-05-05T15:17:06.367Z",
+        "inputTokens": 0,
+        "outputTokens": 79,
+        "maxInputTokens": 272000,
+        "totalInputTokens": 18378,
+        "cacheReadInputTokens": 15872,
+        "cacheCreationInputTokens": 2506
+      },
+      "content": [
+        {
+          "type": "thinking",
+          "provider": "openai",
+          "thinking": "",
+          "finalTime": 1777994225939,
+          "signature": "<redacted>",
+          "startTime": 1777994224919,
+          "openAIReasoning": {
+            "id": "rs_07f04b6fd84d20390169fa09f0de388196be4155c82c6502f0",
+            "encryptedContent": "gAAAAABp-gnyFNhkfU8aseq0U14zEDs0OiTAi9DMxUcK9eGOQTb0-rwt3bkIazFVmhHLKWmAaNdBdkzNtpIGdPGC2IaT_Qf0DnOS7QUXwQ4rzlRnRQ8XLwrUIRTBg8EsjQ1fAKpJehj_dSmS-biR95whYzYNpXOaKggpAoMNzghLsQ_39A4uqqcaKNJ41tuwsJVSOv94gfugRKx5xfe0Pvd4BHlHI7UU9AO95FhfIeoC3flLLIbfH-XH2WOg1x503sSskKsnOx7HQyUYlBtNNiaTcEr7n3MWrZIBW4gC7fzXkrbJHT4iXhoxm_0iFWfx9WRythmBsW3jb0TjQLAMvJNuJ-HlZaMMngur9Zpg8tPjvV4DVBikPa49585IaAUjWkIPWnYQLfqR4rcImzqGVc1gyuyhkIMxaucHlt9pYYD7qcrqODB5vS6XrOoV7W5tAGLzu1bPdr_lepsgW-HwITRHW3E3InuRXDbGjtkpzRcvftPjCt77jIQuOnS7GAyGY3JeA9iTeMkfXVeOeFjzJCWQRgZBsV8W2me9zweq-2jsKqNno1IjjZPVbyV3sx7iIjp8KXLD4J6cSjOuwjRdhIBJsZ_M_sDSAQ_G9h-TQjH8a1nyb4o4Rk2WuOTvNd2cGIpgLdxgLJXqLWvRRmSdy32ilvjIYxD5FxPj0vmaEfhGPD2MRS6jGufiOVkRvNioTYzmjyWmJzy8nZRQJ1YL0gbLM3_DuSjyGciTjheVTpJzmkWw0glJh5Wan07eb6_PGgeWLEXhIvQADy1_8pzpRaxRUzKWQ-ktNgh4yBZhqrS9eEdcqdE9JzI3S3ARET2A4aVZyQLKB8Pnjbn8MbB-vLbS25gGYeOqIxchSMLybTYgwNh6G0sZml1U79ysp9XCFutmNyaxMrDGkl9abFxJNxwK08xkve81UAsNpAwOxSLZ9imQi1ZGRzNx2k5Zw4n9MPKTM17TvNPG7gg00YgHBCHMIDUQ_mwgEL9ZyfGV0jZP0QRKfCEOzMp13g4F_7WLpuvY6e-vWaJoYbH9st6-Jw6_oANHiHPrfA=="
+          }
+        },
+        {
+          "id": "call_67QiD2cdrFbGEEvLh9FHP0Xx",
+          "name": "shell_command",
+          "type": "tool_use",
+          "input": {
+            "command": "rg -n \"pub fn backspace|Should never|literal_index|Input mode\" src/liblex.zig",
+            "workdir": "/<redacted>/lex"
+          },
+          "complete": true,
+          "finalTime": 1777994226359,
+          "startTime": 1777994225941
+        }
+      ],
+      "messageId": 5
+    },
+    {
+      "role": "user",
+      "content": [
+        {
+          "run": {
+            "result": {
+              "output": "/bin/bash: rg: command not found\n",
+              "exitCode": 127
+            },
+            "status": "done"
+          },
+          "type": "tool_result",
+          "toolUseID": "call_67QiD2cdrFbGEEvLh9FHP0Xx"
+        }
+      ],
+      "messageId": 6
+    },
+    {
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "tool_use"
+      },
+      "usage": {
+        "model": "gpt-5.5-2026-04-23",
+        "timestamp": "2026-05-05T15:17:08.828Z",
+        "inputTokens": 0,
+        "outputTokens": 73,
+        "maxInputTokens": 272000,
+        "totalInputTokens": 18487,
+        "cacheReadInputTokens": 17920,
+        "cacheCreationInputTokens": 567
+      },
+      "content": [
+        {
+          "type": "thinking",
+          "provider": "openai",
+          "thinking": "",
+          "finalTime": 1777994228268,
+          "signature": "<redacted>",
+          "startTime": 1777994227764,
+          "openAIReasoning": {
+            "id": "rs_07f04b6fd84d20390169fa09f3add8819681da10cf69ce41d4",
+            "encryptedContent": "gAAAAABp-gn0__8ZqncEM_ZFg_Yvgf7hSini3EuYpdCRRsPapp_XGjJt3jOFXTyiN1cjfOvY1ikGrSWKvmDpvNLZ7_zZQLp2Zrhs3zC2qUdrSnb9L0aIe8LNzESkl-o8p8e4-eFQTePQB-SuUc_QqXblzAu-aMfrnfFSEq79ZPPgTOWAC1U8DdpODhHvWEHtu48PMuvbFrsImKEwXJC9ez7cV6w2Ei_9CeRoYzymO5O3JfbErSB1uYXoAMMtmA6aBQIsOrD6szSP1bwVvUJYKgzOs3kkJNrnQrRSEWKzHpBi162T2Q7eS7wJBB-SMDJhZzqLNdc1DXAH2u9Axzm2S2_HZt2wYJLrzUrU8hEac5I8NJVrZYf081p27NOMqCUPVv1EIlO3HCXsqdAX3c00jtVEFrXBHyWEuWcqTi_d_JAaQWiHg17Bbt3dE-c4OGprxGR2DmTnjbZTszLJ94-xjkO0GmqxwR7rPi5OhehiAq8q_mhZXM2YGumEPXZXrP2-f16yKKm28eqKtcJo4R5pDBZxE6NBdB9bzsoOxJJnRmR4-KqMlCZW-0VpnDVADPAMrXDDeQfgR-_9_rpjdbx-5E2XbNf7VXw6mqBFhRl4qcL8JodeU7Jq66uG1GmcXeokUNHTwZXIxGhd-Fbb7Ot7vTEVf6vhyU85TwV9l3RPMOi712hTpui4H0C1onf60dTYlbhQ-_OmwU7HJrHIHutHssEVwtSUj8XdTyDB6p7GIAE9DGsTIrzeZ32L8Ki4LOZGSbPT07o6Mvk-sJARyFM5iegkr588YRTqLX5VTdUWEIEB6MxmjjUItd_p9FRLRJ9oKTvGkjdgca8d9_ldQAKXeQQqo8Ugqo1-dYbvXo9MIw5b0MzqE0IwP1ZeiOQpfZvaqP6WQeN6qpWNp8FSZXqcpCuCpE9LWh4QntYrncX9EKV-bZFapkcdQcCHhPdGOdUPimxaIP3GigRZ"
+          }
+        },
+        {
+          "id": "call_M01RzNjbmEXGLfQIHcTXvS4T",
+          "name": "shell_command",
+          "type": "tool_use",
+          "input": {
+            "command": "grep -n \"pub fn backspace\\|Should never\\|literal_index\\|Input mode\" src/liblex.zig",
+            "workdir": "/<redacted>/lex"
+          },
+          "complete": true,
+          "finalTime": 1777994228666,
+          "startTime": 1777994228270
+        }
+      ],
+      "messageId": 7
+    },
+    {
+      "role": "user",
+      "content": [
+        {
+          "run": {
+            "result": {
+              "output": "208:    literal_index: ?u8 = null,\n226:        // Input mode must be either .literal or .telex.\n229:        // Should never set literal_index in .literal mode.\n230:        assert(self.mode == .literal and self.literal_index == null);\n232:        if (self.literal_index) |literal_index| {\n233:            // When literal_index is set, mode must be .telex.\n235:            // The literal_index value must be in range null or 0 -> 16 (buffer_effective length)\n237:            assert(literal_index <= self.buffer_effective.len);\n238:            // The literal_index value must be less than buffer length.\n239:            assert(literal_index < self.buffer_length);\n244:                if (self.literal_index != null or self.mode == .literal) {\n245:                    // Enable literal input when literal_index is set or on literal mode. The\n246:                    // literal_index is also set when the word starts with non-Vietnamese onsets.\n262:                    // literal_index must not be set in order to process Vietnamese input.\n263:                    assert(self.literal_index == null);\n308:                        self.literal_index = self.buffer_length;\n349:                if (self.literal_index == null and self.buffer_length > self.buffer_effective.len) {\n354:                    self.literal_index = self.buffer_effective.len;\n360:    pub fn backspace(self: *State) void {\n363:        // Input mode must be either .literal or .telex.\n365:        if (self.literal_index) |literal_index| {\n366:            // Input mode must be .telex when literal_index is set.\n368:            // literal_index must be within buffer range when set.\n369:            assert(literal_index < self.buffer_length);\n376:        // if the literal_index is out of buffer range, unset it.\n377:        if (self.literal_index != null and self.literal_index.? == self.buffer_length) {\n378:            self.literal_index = null;\n424:    // Because we didn't exceed the buffer_affective, don't set literal_index.\n425:    try expectEqual(null, state.literal_index);\n455:    // Because the input exceed the buffer_effective, we set literal_index after the last effective spans (16).\n456:    try expectEqual(16, state.literal_index);\n480:    try expectEqual(null, state.literal_index);\n502:    try expectEqual(null, state.literal_index);\n525:    try expectEqual(1, state.literal_index);\n543:test \"expect lex_backspace will reduce buffer_length by 1 and won't touch literal_index\" {\n560:    try expectEqual(16, state.literal_index);\n564:test \"expect lex_backspace will reduce buffer_length by 1 and unset literal_index\" {\n570:    // input 17 characters so that the literal_index is set at the 17th character.\n581:    try expectEqual(null, state.literal_index);\n585:test \"expect lex_backspace will reduce buffer_length by 1 when literal_index is not set\" {\n591:    // input 17 characters so that the literal_index is set at the 17th character.\n602:    try expectEqual(null, state.literal_index);\n",
+              "exitCode": 0
+            },
+            "status": "done"
+          },
+          "type": "tool_result",
+          "toolUseID": "call_M01RzNjbmEXGLfQIHcTXvS4T"
+        }
+      ],
+      "messageId": 8
+    },
+    {
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "tool_use"
+      },
+      "usage": {
+        "model": "gpt-5.5-2026-04-23",
+        "timestamp": "2026-05-05T15:17:11.313Z",
+        "inputTokens": 0,
+        "outputTokens": 49,
+        "maxInputTokens": 272000,
+        "totalInputTokens": 19290,
+        "cacheReadInputTokens": 17920,
+        "cacheCreationInputTokens": 1370
+      },
+      "content": [
+        {
+          "id": "call_HPbPSKTbwzBaQ5GJfacEFXJW",
+          "name": "shell_command",
+          "type": "tool_use",
+          "input": {
+            "command": "sed -n '219,382p' src/liblex.zig",
+            "workdir": "/<redacted>/lex"
+          },
+          "complete": true,
+          "finalTime": 1777994231267,
+          "startTime": 1777994230531
+        }
+      ],
+      "messageId": 9
+    },
+    {
+      "role": "user",
+      "content": [
+        {
+          "run": {
+            "result": {
+              "output": "    pub fn add(self: *State, c: u8) void {\n        // Only allow a-zA-Z.\n        assert(std.ascii.isAlphabetic(c));\n\n        // The buffer_modification index must be inbound of the buffer_effective.\n        assert(self.buffer_modification_index == null or self.buffer_modification_index.? < self.buffer_effective.len);\n\n        // Input mode must be either .literal or .telex.\n        assert(self.mode == .literal or self.mode == .telex);\n\n        // Should never set literal_index in .literal mode.\n        assert(self.mode == .literal and self.literal_index == null);\n\n        if (self.literal_index) |literal_index| {\n            // When literal_index is set, mode must be .telex.\n            assert(self.mode == .telex);\n            // The literal_index value must be in range null or 0 -> 16 (buffer_effective length)\n            // because we won't process Vietnamese input outside the buffer_effective.\n            assert(literal_index <= self.buffer_effective.len);\n            // The literal_index value must be less than buffer length.\n            assert(literal_index < self.buffer_length);\n        }\n\n        switch (c) {\n            'A', 'a' => { // circumflex.\n                if (self.literal_index != null or self.mode == .literal) {\n                    // Enable literal input when literal_index is set or on literal mode. The\n                    // literal_index is also set when the word starts with non-Vietnamese onsets.\n\n                    // Check if we can add new span for input character.\n                    if (self.buffer_length < self.buffer_effective.len) {\n                        // Add character to span.\n                        self.buffer_effective[self.buffer_length] = Span.init(c);\n                    }\n                    // Increase the buffer length for tracking, we will need it went handling backspace.\n                    self.buffer_length = self.buffer_length + 1;\n\n                    // Set modification index to null because we didn't modify any existing span.\n                    self.buffer_modification_index = null;\n                } else {\n                    // buffer_length must inbound of buffer_effective.\n                    assert(self.buffer_length < self.buffer_effective.len);\n\n                    // literal_index must not be set in order to process Vietnamese input.\n                    assert(self.literal_index == null);\n\n                    // Vietnamese input.\n                    // Possible cases:\n                    // - circumplex.\n                    // - cancel circumflex.\n                    // - plain append.\n\n                    if (self.buffer_length == 0 or (self.buffer_effective[self.buffer_length - 1].base != std.ascii.toUpper(c) and self.buffer_effective[self.buffer_length - 1].base != std.ascii.toLower(c))) {\n                        // Plain append when start of the buffer or the previous character don't match\n                        // circumflex rules.\n\n                        // Check if we can add new span for input character.\n                        if (self.buffer_length < self.buffer_effective.len) {\n                            // Add character to span.\n                            self.buffer_effective[self.buffer_length] = Span.init(c);\n                        }\n                        // Increase the buffer length for tracking, we will need it went handling\n                        // backspace.\n                        self.buffer_length = self.buffer_length + 1;\n\n                        // Set modification index to null because we didn't modify any existing span.\n                        self.buffer_modification_index = null;\n                    } else if ((self.buffer_effective[self.buffer_length - 1].base == std.ascii.toUpper(c) or self.buffer_effective[self.buffer_length - 1].base == std.ascii.toLower(c)) and self.buffer_effective[self.buffer_length - 1].diacritic == .empty) {\n                        // Circumflex.\n\n                        // Add circumflex to previous plan 'A' or 'a'.\n                        self.buffer_effective[self.buffer_length - 1].diacritic = .circumflex;\n                        // Mark modification index.\n                        self.buffer_modification_index = self.buffer_length - 1;\n                    } else if ((self.buffer_effective[self.buffer_length - 1].base == std.ascii.toUpper(c) or self.buffer_effective[self.buffer_length - 1].base == std.ascii.toLower(c)) and self.buffer_effective[self.buffer_length - 1].diacritic == .circumflex) {\n                        // Cancel circumflex.\n\n                        // Reset diacritic to empty.\n                        self.buffer_effective[self.buffer_length - 1].diacritic = .empty;\n                        // Mark modification index.\n                        self.buffer_modification_index = self.buffer_length - 1;\n\n                        // Add plan character to buffer_effective.\n                        // Check if we can add new span for input character.\n                        if (self.buffer_length < self.buffer_effective.len) {\n                            // Add character to span.\n                            self.buffer_effective[self.buffer_length] = Span.init(c);\n                        }\n                        // Mark the start of literal input because of the cancelling.\n                        self.literal_index = self.buffer_length;\n\n                        // Increase the buffer length for tracking, we will need it went handling\n                        // backspace.\n                        self.buffer_length = self.buffer_length + 1;\n                    } else {\n                        unreachable;\n                    }\n                }\n            },\n            'C', 'c' => {}, // fill missing diacritic, e.g. cước.\n            'D', 'd' => {}, // bar.\n            'E', 'e' => {}, // circumflex.\n            'F', 'f' => {}, // falling.\n            'I', 'i' => {}, // fill missing diacritic, e.g. người.\n            'J', 'j' => {}, // falling_glottalized.\n            'M', 'm' => {}, // fill missing diacritic, e.g. cườm.\n            'N', 'n' => {}, // fill missing diacritic, e.g. cường.\n            'O', 'o' => {}, // circumflex.\n            'P', 'p' => {}, // fill missing diacritic, e.g. cướp.\n            'R', 'r' => {}, // dipping_rising.\n            'S', 's' => {}, // rising.\n            'T', 't' => {}, // fill missing diacritic, e.g. trượt.\n            'U', 'u' => {}, // fill missing diacritic, e.g. hươu.\n            'W', 'w' => {}, // breve.\n            'X', 'x' => {}, // rising_glottalized.\n            'Z', 'z' => {}, // level / reset.\n            else => { // literal.\n                // These characters will be added to state literally.\n\n                // Check if we can add new span for input character.\n                if (self.buffer_length < self.buffer_effective.len) {\n                    // Add character to span.\n                    self.buffer_effective[self.buffer_length] = Span.init(c);\n                }\n                // Increase the buffer length for tracking, we will need it went handling backspace.\n                self.buffer_length = self.buffer_length + 1;\n\n                // Set modification index to null because we didn't modify any existing span.\n                self.buffer_modification_index = null;\n                // Set literal index if it's not set and the length exceed the buffer_effective.\n                if (self.literal_index == null and self.buffer_length > self.buffer_effective.len) {\n                    // Set literal mode since buffer index 16 (just after the last buffer_effective\n                    // item) because we don't have span for these position, we stop processing Telex\n                    // rules but we will continue processing if user use backspaces to move back to the\n                    // buffer_effective range, all existing spans must work as expected.\n                    self.literal_index = self.buffer_effective.len;\n                }\n            },\n        }\n    }\n\n    pub fn backspace(self: *State) void {\n        // buffer_length must be positive for backspace.\n        assert(self.buffer_length > 0);\n        // Input mode must be either .literal or .telex.\n        assert(self.mode == .literal or self.mode == .telex);\n        if (self.literal_index) |literal_index| {\n            // Input mode must be .telex when literal_index is set.\n            assert(self.mode == .telex);\n            // literal_index must be within buffer range when set.\n            assert(literal_index < self.buffer_length);\n        }\n\n        // decrease the buffer_length to match the backspace.\n        self.buffer_length -= 1;\n        // b cause backspace doesn't retro-modify the buffer, unset the buffer_modification_index.\n        self.buffer_modification_index = null;\n        // if the literal_index is out of buffer range, unset it.\n        if (self.literal_index != null and self.literal_index.? == self.buffer_length) {\n            self.literal_index = null;\n        }\n    }\n};\n\n",
+              "exitCode": 0
+            },
+            "status": "done"
+          },
+          "type": "tool_result",
+          "toolUseID": "call_HPbPSKTbwzBaQ5GJfacEFXJW"
+        }
+      ],
+      "messageId": 10
+    },
+    {
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "tool_use"
+      },
+      "usage": {
+        "model": "gpt-5.5-2026-04-23",
+        "timestamp": "2026-05-05T15:17:18.175Z",
+        "inputTokens": 0,
+        "outputTokens": 109,
+        "maxInputTokens": 272000,
+        "totalInputTokens": 21331,
+        "cacheReadInputTokens": 18944,
+        "cacheCreationInputTokens": 2387
+      },
+      "content": [
+        {
+          "type": "thinking",
+          "provider": "openai",
+          "thinking": "**Reviewing assertion issues**\n\nI need to review a specific issue: it seems the assertion `self.mode == .literal and self.literal_index == null` is incorrect; it should involve implications instead. This consistently fails in telex. I shouldn't discuss code details here, but I should also consider adding path references. It might be beneficial to include the exact lines with absolute line numbers. A newline could help in making this clearer.",
+          "finalTime": 1777994237777,
+          "signature": "<redacted>",
+          "startTime": 1777994233004,
+          "openAIReasoning": {
+            "id": "rs_07f04b6fd84d20390169fa09f8e2c4819698e76a306676160e",
+            "encryptedContent": "gAAAAABp-gn9C97GZG2fMYxtaJRVSR6BB4GQju_m7MI8yl-QG3x6iAMJyXOQ7DX5O0LJQtZJOdCkOCS-TjQeZVkcxgOdLuTOLryMA1qqWs4qe5Co-HxmAHRCfjbbdWzV_oYB_YG6axYacYLARoFdC7plul_AUwrXklxJhE0GZP5wQsVF-kUFTSdYbaZGfFndBU1035z3uh7vDvOcXMF7wpg6jXth1_nc4sRvLWxVOYDuxeFyHcRbvExlMPK5J3yO5Ijrzua0vo6QCxhWBZkT9NsO84rEcJpC2FOJG3xF1JbnP6t00ERF4XHh2YgInGCTZh2XElWyXmBPYgJzLm-yUwnrc4A8hAqqHjFdm6zvpD5GzZHYWTctNNeXjGDVZGQnPJbjKEoO0aJGkpWxbDHDurIVSy8v8yddP6OV1j145hXKHbkY5zl-rhA9sl9ZAlmbf9jjc6Hp9fSHy_SZrkuucRtrcvSbnOiIeSaruRRexFwZOOPFQ1EFA14aTr8PDSzqODn8FCGSaeRN0Iagp-W_bFISTWCUK27iZ3rz5lJM6nlU-jU6yRTak621qX7SHyqbGlPDPwVD0e2SqRRaOKHDtS3Ue63n23_Z6PzB2-Vh6YjECT8kuOy14TXduacJcKLSVhI9qetvGCFCvoh48Q3UW2vKuawVTj_FllMa_kEhstlUzZS1TPiFLFyBwTDhqPbY-JFm5A-zHTDu_dSO0iMmS2-91au_6jPmazQp5xfQ3YU_iWTbn5kCMX0JpRhXRdJ07AKdbHDKYq3gkmsuxkkOJqZXGDwl7Wxrm-OpAJLFekKvnUU-humDePhLjtruNodxbMXL_Qn3b0ZwTBlDhaoVk-i5a8sP5LIYw93k0zwYZ02xhppreDKJIZfVOY1YUYblfvF-V8Vfgr2y4yWL6tWN_y5ya-LCvVsx0gQMZo43M9iOBXNAUCq7Qg829o_VXPG_L8oJbVKsML11MQ9-ARYIiA7Vh55HvnG82OAbHA9QR2gkOL-voH3-aaAsnnP5MeFTWoFzHzPYyb5OxbE10xxEX7bwS0gHyHw4HA85JhNeNLvqzPTaMT7kmo-imRPptVmG5V_mYkPhBCTKLl0cKGCot9FVWXCAbSdAQPgankNQb4Odk74Yr1iRizGUpGrXe2uPDS3X46LIw0Ww4JYzXru2YlOWUD_O9hFhG9jPmNbMwtsnvu-i-dfFor1DugqmKzMKvRVAQhTWbBQr04uIBmk02lT0wUHi_8kIyaiEyUHIqQVJa00zZbHCtS0="
+          }
+        },
+        {
+          "id": "call_XjHMfvJUwQwdN8I1qjUi2m8u",
+          "name": "shell_command",
+          "type": "tool_use",
+          "input": {
+            "command": "nl -ba src/liblex.zig | sed -n '219,382p'",
+            "workdir": "/<redacted>/lex"
+          },
+          "complete": true,
+          "finalTime": 1777994238009,
+          "startTime": 1777994237777
+        }
+      ],
+      "messageId": 11
+    },
+    {
+      "role": "user",
+      "content": [
+        {
+          "run": {
+            "result": {
+              "output": "   219\t    pub fn add(self: *State, c: u8) void {\n   220\t        // Only allow a-zA-Z.\n   221\t        assert(std.ascii.isAlphabetic(c));\n   222\t\n   223\t        // The buffer_modification index must be inbound of the buffer_effective.\n   224\t        assert(self.buffer_modification_index == null or self.buffer_modification_index.? < self.buffer_effective.len);\n   225\t\n   226\t        // Input mode must be either .literal or .telex.\n   227\t        assert(self.mode == .literal or self.mode == .telex);\n   228\t\n   229\t        // Should never set literal_index in .literal mode.\n   230\t        assert(self.mode == .literal and self.literal_index == null);\n   231\t\n   232\t        if (self.literal_index) |literal_index| {\n   233\t            // When literal_index is set, mode must be .telex.\n   234\t            assert(self.mode == .telex);\n   235\t            // The literal_index value must be in range null or 0 -> 16 (buffer_effective length)\n   236\t            // because we won't process Vietnamese input outside the buffer_effective.\n   237\t            assert(literal_index <= self.buffer_effective.len);\n   238\t            // The literal_index value must be less than buffer length.\n   239\t            assert(literal_index < self.buffer_length);\n   240\t        }\n   241\t\n   242\t        switch (c) {\n   243\t            'A', 'a' => { // circumflex.\n   244\t                if (self.literal_index != null or self.mode == .literal) {\n   245\t                    // Enable literal input when literal_index is set or on literal mode. The\n   246\t                    // literal_index is also set when the word starts with non-Vietnamese onsets.\n   247\t\n   248\t                    // Check if we can add new span for input character.\n   249\t                    if (self.buffer_length < self.buffer_effective.len) {\n   250\t                        // Add character to span.\n   251\t                        self.buffer_effective[self.buffer_length] = Span.init(c);\n   252\t                    }\n   253\t                    // Increase the buffer length for tracking, we will need it went handling backspace.\n   254\t                    self.buffer_length = self.buffer_length + 1;\n   255\t\n   256\t                    // Set modification index to null because we didn't modify any existing span.\n   257\t                    self.buffer_modification_index = null;\n   258\t                } else {\n   259\t                    // buffer_length must inbound of buffer_effective.\n   260\t                    assert(self.buffer_length < self.buffer_effective.len);\n   261\t\n   262\t                    // literal_index must not be set in order to process Vietnamese input.\n   263\t                    assert(self.literal_index == null);\n   264\t\n   265\t                    // Vietnamese input.\n   266\t                    // Possible cases:\n   267\t                    // - circumplex.\n   268\t                    // - cancel circumflex.\n   269\t                    // - plain append.\n   270\t\n   271\t                    if (self.buffer_length == 0 or (self.buffer_effective[self.buffer_length - 1].base != std.ascii.toUpper(c) and self.buffer_effective[self.buffer_length - 1].base != std.ascii.toLower(c))) {\n   272\t                        // Plain append when start of the buffer or the previous character don't match\n   273\t                        // circumflex rules.\n   274\t\n   275\t                        // Check if we can add new span for input character.\n   276\t                        if (self.buffer_length < self.buffer_effective.len) {\n   277\t                            // Add character to span.\n   278\t                            self.buffer_effective[self.buffer_length] = Span.init(c);\n   279\t                        }\n   280\t                        // Increase the buffer length for tracking, we will need it went handling\n   281\t                        // backspace.\n   282\t                        self.buffer_length = self.buffer_length + 1;\n   283\t\n   284\t                        // Set modification index to null because we didn't modify any existing span.\n   285\t                        self.buffer_modification_index = null;\n   286\t                    } else if ((self.buffer_effective[self.buffer_length - 1].base == std.ascii.toUpper(c) or self.buffer_effective[self.buffer_length - 1].base == std.ascii.toLower(c)) and self.buffer_effective[self.buffer_length - 1].diacritic == .empty) {\n   287\t                        // Circumflex.\n   288\t\n   289\t                        // Add circumflex to previous plan 'A' or 'a'.\n   290\t                        self.buffer_effective[self.buffer_length - 1].diacritic = .circumflex;\n   291\t                        // Mark modification index.\n   292\t                        self.buffer_modification_index = self.buffer_length - 1;\n   293\t                    } else if ((self.buffer_effective[self.buffer_length - 1].base == std.ascii.toUpper(c) or self.buffer_effective[self.buffer_length - 1].base == std.ascii.toLower(c)) and self.buffer_effective[self.buffer_length - 1].diacritic == .circumflex) {\n   294\t                        // Cancel circumflex.\n   295\t\n   296\t                        // Reset diacritic to empty.\n   297\t                        self.buffer_effective[self.buffer_length - 1].diacritic = .empty;\n   298\t                        // Mark modification index.\n   299\t                        self.buffer_modification_index = self.buffer_length - 1;\n   300\t\n   301\t                        // Add plan character to buffer_effective.\n   302\t                        // Check if we can add new span for input character.\n   303\t                        if (self.buffer_length < self.buffer_effective.len) {\n   304\t                            // Add character to span.\n   305\t                            self.buffer_effective[self.buffer_length] = Span.init(c);\n   306\t                        }\n   307\t                        // Mark the start of literal input because of the cancelling.\n   308\t                        self.literal_index = self.buffer_length;\n   309\t\n   310\t                        // Increase the buffer length for tracking, we will need it went handling\n   311\t                        // backspace.\n   312\t                        self.buffer_length = self.buffer_length + 1;\n   313\t                    } else {\n   314\t                        unreachable;\n   315\t                    }\n   316\t                }\n   317\t            },\n   318\t            'C', 'c' => {}, // fill missing diacritic, e.g. cước.\n   319\t            'D', 'd' => {}, // bar.\n   320\t            'E', 'e' => {}, // circumflex.\n   321\t            'F', 'f' => {}, // falling.\n   322\t            'I', 'i' => {}, // fill missing diacritic, e.g. người.\n   323\t            'J', 'j' => {}, // falling_glottalized.\n   324\t            'M', 'm' => {}, // fill missing diacritic, e.g. cườm.\n   325\t            'N', 'n' => {}, // fill missing diacritic, e.g. cường.\n   326\t            'O', 'o' => {}, // circumflex.\n   327\t            'P', 'p' => {}, // fill missing diacritic, e.g. cướp.\n   328\t            'R', 'r' => {}, // dipping_rising.\n   329\t            'S', 's' => {}, // rising.\n   330\t            'T', 't' => {}, // fill missing diacritic, e.g. trượt.\n   331\t            'U', 'u' => {}, // fill missing diacritic, e.g. hươu.\n   332\t            'W', 'w' => {}, // breve.\n   333\t            'X', 'x' => {}, // rising_glottalized.\n   334\t            'Z', 'z' => {}, // level / reset.\n   335\t            else => { // literal.\n   336\t                // These characters will be added to state literally.\n   337\t\n   338\t                // Check if we can add new span for input character.\n   339\t                if (self.buffer_length < self.buffer_effective.len) {\n   340\t                    // Add character to span.\n   341\t                    self.buffer_effective[self.buffer_length] = Span.init(c);\n   342\t                }\n   343\t                // Increase the buffer length for tracking, we will need it went handling backspace.\n   344\t                self.buffer_length = self.buffer_length + 1;\n   345\t\n   346\t                // Set modification index to null because we didn't modify any existing span.\n   347\t                self.buffer_modification_index = null;\n   348\t                // Set literal index if it's not set and the length exceed the buffer_effective.\n   349\t                if (self.literal_index == null and self.buffer_length > self.buffer_effective.len) {\n   350\t                    // Set literal mode since buffer index 16 (just after the last buffer_effective\n   351\t                    // item) because we don't have span for these position, we stop processing Telex\n   352\t                    // rules but we will continue processing if user use backspaces to move back to the\n   353\t                    // buffer_effective range, all existing spans must work as expected.\n   354\t                    self.literal_index = self.buffer_effective.len;\n   355\t                }\n   356\t            },\n   357\t        }\n   358\t    }\n   359\t\n   360\t    pub fn backspace(self: *State) void {\n   361\t        // buffer_length must be positive for backspace.\n   362\t        assert(self.buffer_length > 0);\n   363\t        // Input mode must be either .literal or .telex.\n   364\t        assert(self.mode == .literal or self.mode == .telex);\n   365\t        if (self.literal_index) |literal_index| {\n   366\t            // Input mode must be .telex when literal_index is set.\n   367\t            assert(self.mode == .telex);\n   368\t            // literal_index must be within buffer range when set.\n   369\t            assert(literal_index < self.buffer_length);\n   370\t        }\n   371\t\n   372\t        // decrease the buffer_length to match the backspace.\n   373\t        self.buffer_length -= 1;\n   374\t        // b cause backspace doesn't retro-modify the buffer, unset the buffer_modification_index.\n   375\t        self.buffer_modification_index = null;\n   376\t        // if the literal_index is out of buffer range, unset it.\n   377\t        if (self.literal_index != null and self.literal_index.? == self.buffer_length) {\n   378\t            self.literal_index = null;\n   379\t        }\n   380\t    }\n   381\t};\n   382\t\n",
+              "exitCode": 0
+            },
+            "status": "done"
+          },
+          "type": "tool_result",
+          "toolUseID": "call_XjHMfvJUwQwdN8I1qjUi2m8u"
+        }
+      ],
+      "messageId": 12
+    },
+    {
+      "meta": {
+        "openAIResponsePhase": "final_answer"
+      },
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "end_turn"
+      },
+      "usage": {
+        "model": "gpt-5.5-2026-04-23",
+        "timestamp": "2026-05-05T15:17:35.994Z",
+        "inputTokens": 0,
+        "outputTokens": 1009,
+        "maxInputTokens": 272000,
+        "totalInputTokens": 24088,
+        "cacheReadInputTokens": 20992,
+        "cacheCreationInputTokens": 3096
+      },
+      "content": [
+        {
+          "type": "thinking",
+          "provider": "openai",
+          "thinking": "**Clarifying control flow adjustments**\n\nI'm noticing some control flow adjustments needed in the code. For example, line 244 uses an if statement with a null check, which seems good. However, I need to ensure that the else branch on line 349 properly guards the mode telex before setting the literal_index to accommodate the new semantics. Since the user asks about asserts, I might want to clarify that asserts can't replace the correct branch guard. I also need to remember to include absolute file links in the final version.",
+          "finalTime": 1777994248546,
+          "signature": "<redacted>",
+          "startTime": 1777994240481,
+          "openAIReasoning": {
+            "id": "rs_07f04b6fd84d20390169fa0a0052248196a268b0e4b1a18784",
+            "encryptedContent": "gAAAAABp-goPo3ofagrGGLwVV9nUHgBJXebxu5Lg3s1acIp0UhaQhk8NB_GY7rFQXlMBrBHu5smD0Fz9XLBIBH5xlIXLWs5wzLfK1niLlGfixxAtupWA-N2BwNJBO9mezdxj-YvJBCR8yBFmokXJIgIs7gBaLD4HOU8_grKFjvW-3eqmeI0lZ_aHzUxLktgkTvOcuKFs6_0DGSs2STJXdpz-lhSoQci6M3Xy8yIKndlr_El0kaEpDvZoY3hbgwM5_zYzOa9Rr6qVwpT6mBMhjzmq2KQ-82wliFAGJwHP3YMRfOj8j0sCSMmTg7KD32KPN3ezhegb2EZM7XakPBsTN3kwhXOaIZbKuuqG7uAlDTUbAayh4xq96oP1c4NNo4uxmdX5dhPDzwVE-t88QCPO3eSUAavfjX6SEoo4QTxRMZYSdeMixfIjTxoY47VnErXHPGhdCwKC_w4QqTeFRDJc4h2PXw8XFPcwMmBWFrMXwa8l0hiFcMgOfuZR_X-fN-Sy1jLQ0Kv47ady8JMBmMYwq8IfSnu4iwxyllJetL-oHKS9b9e9iVgjb0XSCpRUsxYJ6lQPlUkIkcjOBwaY4YI5y2y_-bEFhJwhTMwMdksH0zOxb14wzO0zrXkH2eJ-Dm7I58Z5KCBw-E2W_GuYiGVncO_pLhVQ9nXwnjjDiKuiUyPAcmjSj5tfyus-KXcWLcw4rQVjr6l39Yt-znXvKmiWN47iimXX2e8CHqjdBk1D8qWVUCev-h7dV-qkUUf8N_byEkEiBYC9ehdlhUnAM-yYa7_uiEaMa_OISEVzW-YCeUE9J8mxq5uShc7K45t6EZt8DHCW4S7ypj3S4VnXTTgU8w-A0m3T5vyBUgWcZwsWO7fXAQTSdQrTqL-SsUwKoNmixJoJTG3Wmox-HsjBMWzQ-0NE_tswM5ZcUkpNMBnMAQrhJyouVUw2V8Vm9ymxcwAnRYPaZ1hPHMAIwkWrGaogb2_EbSsCWpVUM-KcPABWXnIhoak_l5hsyRKStfTFtVbY-i0Fpcum1bbnom0uPJU22RI8FP626IJ_Z6Uw2ZFlQ2wXQdIKfC1kiif7pdVvAWWlw0T9Yqx0iLHrZF9SHWMviEbAhQD-OYzVH7j33AOj_KMkgcqnisW9fL1TclKuWEZWIarRJ0m2DpaGY5L2ASOt3QxdaTWKFvwIJ8gPjHnlMt4fq2qAIHVZoNmuIrhYAVpa0OFe7X6WgvxVkiXq4COkIBdHhYtYckDurFn7EftxbCU-zYSRRnaJ5nERaihSp-ho-snbUJEDVWkjg9PSGAPuu8lYfYT1sgTxjGXc-crut1hxrSivx7quDcvBRHZ9kHDkMD2UKIHroBrSik64k7lVq2qbRRuKjPKmi_iXCoCEu-pSJRfRjPZGxZHYVHyXMlb2E1X3mVCzmMDNhrwG-dl1LIDBOqkcJ2E1R_kw-JZknHqJGszq6pKos2-mouj8VRIJFl3cuf1xP0N8pzThWxErgXNpghKAoxBwVitDasufNEVFjeJX7shx15XnWv3HOWjnoDgR1qehOVCxecRI4P5xY79ZFxnmwtbtyIolvObRj5i706Jd-444lFUW3azNCtaO7HqfuY8OHBreLq6JK4s1ZCbkuWgXlg9MWxX9TjIydvFmECrRYOCRssm6_iZBU9gAQsgstb9rbb0qdwlgbo_lzWlCpBFuHdzxl4QeWQMPqs3glvZki4mqfXoDbPBjq8zU3ytPS8bgroi875nIq1zlLHFPC_hoQyx8mJvrivZNGhB-m37gEy-U0KO4YACGLOuDwjdKeskxfsfrcHm7W-M2CI7mkBPAQ93qgzl0V8n93vyDQa7S14jEdGy_b7l4XPDwSCuiYdiBNghaiHBh6zJc3bauZLbMmWxcaPs3WDLP6vTPQCZknsDelzPzbWOYYza8OqXAfjPd-tC1edi7D6r96RRDJ0wzLzygtEUO9SrUdtHoQQvzQJ6_qKpwxBnPUJLiHsC88kMboyvg5fDuCFljM03NdolALjmXH_50ZDfetmxMQ1V3VbSnoY8Rnz4vSop2-Udvlt5X71VJ2PGH44TNFiF8ixNwnwRxvLQ9B6E0Anpc3KiwvJtGLOaeX4lQEFfZhwmcVRq42VwPJMUiAxEFCUvsAxO12yNmQd2tgbowqNuKd-CSaKEbhB7EvTafYYS-YWtG0DXDne7IEMHW0GEn956VPjpc4YtQyj-_PkUPZmajhx9Q22UzTxF9I9XT0faanME5-irxVJAFCYrfzSWT8jr_V7dKGimOTmNTFmUrU66hPZoiyfJX9tTFLXINcOfm0XAkz0sZ3IR47QtSqgGvEZcvMhQBbMJGtnoef-w8LA-VSAV7AVMmNy0Gs136_ogtobQK0gS57QjhFV91AtfTs2Hf-Ccws-hTGNy5amp_2ehXFkKnRGCbj4HH7qBHbdw7osp_2-fUpDl6sqlh5xnKNcJzjWlCB6KpEZPJV1rJyprXNLAYUhXJsaR2dKlzBngXjrs6oLFHdB3coxKWeMgbRo0b4EQqKold_7xxGcR5fPuZrPSCz1-IDEOHjXGlqf06xVjn_TcVgnr7LT-W-TOBs3XEtCSTo_FM6B7Zijhe_lyquY2sENLBdVzLbzESud6tl9JtADI5O-Vpwh7uHtY55BAErhaL4bWG4WfDCv80NzEyllhcpRuOcBvjxGplINi10YMqhLK-fE0Eu6QfYsti4nUok0LTEjOYJAZLo7l7U47qIPWFj7aUCYFgccD_pgo1AtDS_45rqTeola8rKsIbe2Ud_VRUFQVd3w=="
+          }
+        },
+        {
+          "text": "Review result: one assertion is incorrect, and `backspace` is mostly acceptable but incomplete.\n\n## Problem in `State.add`\n\nThis assertion is wrong:\n\n[`State.add` line 230](file:///<redacted>/lex/src/liblex.zig#L226-L234)\n\nIt currently means:\n\n> `mode` must be `.literal` and `literal_index` must be `null`.\n\nThat rejects every valid `.telex` call, including the normal Telex path. It does not express “`literal_index` must not exist in literal mode”; it expresses “the state must always be literal mode.”\n\nThe invariant you want is implication, not conjunction:\n\n> if mode is `.literal`, then `literal_index` must be `null`.\n\nEquivalent inverse:\n\n> if `literal_index` is set, mode must be `.telex`.\n\nYou already assert the inverse inside the `if (self.literal_index)` block at lines 232–234, so the bad line 230 should be conceptually changed to the implication form, not an `and`.\n\n## `State.add` still has a semantic risk\n\nThis block can still set `literal_index` while in `.literal` mode:\n\n[`else` literal branch lines 348–354](file:///<redacted>/lex/src/liblex.zig#L348-L354)\n\nBecause the condition only checks:\n\n> `literal_index == null` and `buffer_length > buffer_effective.len`\n\nIt does not check that `mode == .telex`.\n\nGiven your new semantic, setting `literal_index` due to exceeding `buffer_effective` should only happen in Telex mode. In literal mode, exceeding the effective buffer should not create `literal_index`.\n\nThis is not only an assert issue; the state transition itself needs to preserve the invariant. A postcondition assert at the end of `State.add` would catch this class of bug:\n\n> after `add`, if mode is `.literal`, `literal_index` must still be `null`.\n\n## `State.backspace`\n\nThe current `backspace` assertion is logically better:\n\n[`State.backspace` lines 360–370](file:///<redacted>/lex/src/liblex.zig#L360-L370)\n\nThis part is valid:\n\n> if `literal_index` is set, mode must be `.telex`.\n\nThat prevents `.literal` mode with a non-null `literal_index`.\n\nBut I would still add/check these invariants conceptually:\n\n1. `mode` is valid.\n2. `.literal` mode implies `literal_index == null`.\n3. `literal_index != null` implies `.telex`.\n4. `literal_index < buffer_length`.\n5. `literal_index <= buffer_effective.len`.\n\nYou currently have 1, 3, and 4. You do not explicitly have 2 or 5.\n\nBecause 2 is logically covered by 3 when `literal_index` is non-null, it is not strictly required, but it makes the new semantic more obvious and gives a clearer assertion point.\n\n## Summary\n\n- `State.add` line 230 is wrong: it should express implication, not require literal mode.\n- `State.add` should preserve the invariant after mutation; right now the overflow literal branch can still set `literal_index` in `.literal` mode.\n- `State.backspace` is directionally correct, but should also assert the `literal_index <= buffer_effective.len` bound and preferably state the `.literal => null` invariant explicitly.",
+          "type": "text",
+          "finalTime": 1777994255908,
+          "startTime": 1777994248546
+        }
+      ],
+      "messageId": 13,
+      "turnElapsedMs": 199983
+    },
+    {
+      "meta": {
+        "sentAt": 1777994308003
+      },
+      "role": "user",
+      "content": [
+        {
+          "text": "Now discuss with me about the Zig assert in general. Is it OK to put asserts in if branch?",
+          "type": "text"
+        }
+      ],
+      "agentMode": "deep",
+      "messageId": 14
+    },
+    {
+      "meta": {
+        "openAIResponsePhase": "final_answer"
+      },
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "end_turn"
+      },
+      "usage": {
+        "model": "gpt-5.5-2026-04-23",
+        "timestamp": "2026-05-05T15:18:40.377Z",
+        "inputTokens": 0,
+        "outputTokens": 583,
+        "maxInputTokens": 272000,
+        "totalInputTokens": 24727,
+        "cacheReadInputTokens": 7680,
+        "cacheCreationInputTokens": 17047
+      },
+      "content": [
+        {
+          "text": "Yes. In Zig, it is OK to put `assert` inside an `if` branch.\n\nAn `assert` should document and enforce an invariant that must be true whenever execution reaches that point. If the invariant only applies inside a specific branch, putting the assert inside that branch is appropriate.\n\nExample conceptually:\n\n- At function entry: assert global preconditions.\n- Inside a branch: assert branch-specific invariants.\n- After mutation: assert postconditions.\n\n## When branch-local asserts are good\n\nBranch-local asserts are useful when the condition has narrowed the valid state.\n\nFor example, conceptually:\n\n- If `literal_index` is non-null, assert that `mode == .telex`.\n- If you are about to process Vietnamese Telex rules, assert that `literal_index == null`.\n- If you are about to index `buffer_effective[buffer_length - 1]`, assert that `buffer_length > 0`.\n- If you are about to write into `buffer_effective[buffer_length]`, assert that `buffer_length < buffer_effective.len`.\n\nThese asserts are local: they protect assumptions needed only in that code path.\n\n## When branch-local asserts are bad\n\nThey are bad when the assert is trying to express a function-wide invariant but is hidden inside a branch that might not run.\n\nFor example, if your invariant is:\n\n> `literal_index` must be null in literal mode.\n\nThen placing the assert only inside:\n\n> `if (literal_index != null)`\n\ndoes not directly document the literal-mode case. It still catches the invalid state indirectly if `literal_index` is non-null, but it does not visibly state the `.literal` invariant.\n\nFor function-wide invariants, prefer asserting them near the function entry and/or exit.\n\n## Good rule\n\nUse asserts at the narrowest point where the fact matters:\n\n- **Function entry assert**: caller/state precondition.\n- **Branch assert**: assumption required only by this branch.\n- **Before indexing/casting/arithmetic**: safety precondition not already obvious.\n- **Function exit assert**: invariant the function promises to preserve.\n\n## Zig-specific note\n\n`std.debug.assert(condition)` is for programmer bugs, not runtime validation. It means:\n\n> If this is false, the program or caller has violated an internal contract.\n\nSo use `assert` for impossible states, not recoverable user input errors.\n\nIn your case, branch-local asserts are appropriate, because `literal_index` has conditional meaning:\n\n- If `literal_index` exists, it must be valid and only valid in `.telex`.\n- If mode is `.literal`, `literal_index` must not exist.\n- If Telex processing is happening, `literal_index` should be null.\n\nSome of those are global state invariants; some are branch-specific processing assumptions. Both can be asserted, but they belong at different locations.",
+          "type": "text",
+          "finalTime": 1777994320188,
+          "startTime": 1777994309806
+        }
+      ],
+      "messageId": 15,
+      "turnElapsedMs": 12375
+    },
+    {
+      "meta": {
+        "sentAt": 1777994646390
+      },
+      "role": "user",
+      "content": [
+        {
+          "text": "I updated the code. My intention is only do enough asserts, for the information I need to change. Let check it again.",
+          "type": "text"
+        }
+      ],
+      "agentMode": "deep",
+      "messageId": 16
+    },
+    {
+      "meta": {
+        "openAIResponsePhase": "commentary"
+      },
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "tool_use"
+      },
+      "usage": {
+        "model": "gpt-5.5-2026-04-23",
+        "timestamp": "2026-05-05T15:24:13.355Z",
+        "inputTokens": 0,
+        "outputTokens": 149,
+        "maxInputTokens": 272000,
+        "totalInputTokens": 25342,
+        "cacheReadInputTokens": 15872,
+        "cacheCreationInputTokens": 9470
+      },
+      "content": [
+        {
+          "type": "thinking",
+          "provider": "openai",
+          "thinking": "**Reviewing code request**\n\nI need to review the code as the user has requested an updated check. The AGENTS guidelines say to confirm before executing any plans or actions, but since the user explicitly asked to check, I think that's clear. I’ll proceed to inspect the file using the shell. It's important to ensure I’m following the user’s instructions while adhering to the established protocols. Let's see what needs to be checked!",
+          "finalTime": 1777994653009,
+          "signature": "<redacted>",
+          "startTime": 1777994649980,
+          "openAIReasoning": {
+            "id": "rs_07f04b6fd84d20390169fa0b99d4008196a63a3c68255ad8aa",
+            "encryptedContent": "gAAAAABp-gudhVDFRaookS8evY2kSylYaaIBJ2GeKx2uxQKfEd5uL2VjFqwqzTW7Iai2htxvJBCxEbJALr5L3JQaVskU4AOmErDp-wTuGL6-lFQ5TJw2iZVgPmC3OdrXjqhbotHOU4yWLZRetoyu8P0zE9CjCFwSb_ikl626sA06lUs4wGavTX9hhi9SePGuha44skHKsneu4utU5j9CgUgm2bRNM0gPm2j7so2SnFKq3lM5lw2tzCgvk-0u2Zu2M990pMtfnF0IPq9l7sX82eC9fzdKATq6-G--ya5_cUoMVvbONql5Gg-FgQyWSwzSQiSJcxKX_Ax7e5Ls6lqakFwj0Bd30-QMjuUGG-zRfB9XA6a0CEQQ0Broz4eETAcY7ZrYF_rYFkRWnl1xFbQENH79U7j9dSurUBbGIqhdhxR36WL4slIFAMqQtfUuCA2EPKc6Ii86M69vpoiQBVTZTiQCebg-j7N3CHxJxQyssbgtfqkcEA7IlwMOleTrWt9Plyq5P4w-zG2NcpYE94OQoUdcc9Fspb4BH3KNLqDBF_Pq9fEdFOZm7qScDnIlu4PuQsbb-4IbThyoIAUz_oRKjRkTaFCSInd4roLdrvIY6dRPpR8awZd3vkHaxI2q7Yrx2sp33kAXNPVX9gb_xAjQnh_Ca_K15JmFm7smnqhXfSXM-DlzxHxd4gkQHHERrRIueg4UDGh00HoyR3yqyJLYQuojn_aJ-FNfw6BQn8uyuA4oq6gF-_FYQjDMX6V8a28oxC0mTvZBZxzHOXHsnssFYUiDQpDoDxIMxxzbWSZ83CZOopXNO5-K9Cra1P8JiJkWLsUeFhKQizSemiD-YJwSnZAlJo5wH5QBcPMkya2vb6D0qD_P0FhMBo4JqQHCcHvfoCYy7OyQ3aNwsybkIgtfJVlM_h2ILiCWWHpJfXTK63km8HPWUtpIhgRdcRVabfVTPyxUvsuaKDp6xH1NzIkdvuu6SvxuLKkMPIyqZlZTY0GoHPwoGDzKr5vJzoNK9nQlZsZ5djihN0ngSuU9_BzdmQSp9R3DpwbtkSm7ptRUH_lQVAPdppdu029-qMA70gdNfINJ52Z2SMNpzTFJGf6ZKlyge34riO7uT23X8H5dRROdE50Q44tLEnwzCOl_as0KV1Mm-OxMb-fHYyi6myedX7IbSsnps498q2FACzRCxQCy0HEMeKzHguyOnCRC5Dh4KEpCY2WVwkvOk2NN43ggxdRjgGjJJpg_as2Gp8wO6pBWqtbbCFkMnDmuR2ZgkppZFl8gO0dvcvNS"
+          }
+        },
+        {
+          "text": "I’ll re-read the updated `State.add`/`State.backspace` assertions and evaluate only whether they’re sufficient for the changed `literal_index` semantic.",
+          "type": "text",
+          "finalTime": 1777994653118,
+          "startTime": 1777994653009
+        },
+        {
+          "id": "call_jHFSKELjFNUV0PloeqAYsYJf",
+          "name": "shell_command",
+          "type": "tool_use",
+          "input": {
+            "command": "nl -ba src/liblex.zig | sed -n '219,385p'",
+            "workdir": "/<redacted>/lex"
+          },
+          "complete": true,
+          "finalTime": 1777994653336,
+          "startTime": 1777994653118
+        }
+      ],
+      "messageId": 17
+    },
+    {
+      "role": "user",
+      "content": [
+        {
+          "run": {
+            "result": {
+              "output": "   219\t    pub fn add(self: *State, c: u8) void {\n   220\t        // Only allow a-zA-Z.\n   221\t        assert(std.ascii.isAlphabetic(c));\n   222\t\n   223\t        // The buffer_modification index must be inbound of the buffer_effective.\n   224\t        assert(self.buffer_modification_index == null or self.buffer_modification_index.? < self.buffer_effective.len);\n   225\t\n   226\t        // Input mode must be either .literal or .telex.\n   227\t        assert(self.mode == .literal or self.mode == .telex);\n   228\t\n   229\t        // Should never set literal_index in .literal mode.\n   230\t        if (self.mode == .literal) {\n   231\t            assert(self.literal_index == null);\n   232\t        }\n   233\t\n   234\t        if (self.literal_index) |literal_index| {\n   235\t            // When literal_index is set, mode must be .telex.\n   236\t            assert(self.mode == .telex);\n   237\t            // The literal_index value must be in range null or 0 -> 16 (buffer_effective length)\n   238\t            // because we won't process Vietnamese input outside the buffer_effective.\n   239\t            assert(literal_index <= self.buffer_effective.len);\n   240\t            // The literal_index value must be less than buffer length.\n   241\t            assert(literal_index < self.buffer_length);\n   242\t        }\n   243\t\n   244\t        switch (c) {\n   245\t            'A', 'a' => { // circumflex.\n   246\t                if (self.literal_index != null or self.mode == .literal) {\n   247\t                    // Enable literal input when literal_index is set or on literal mode. The\n   248\t                    // literal_index is also set when the word starts with non-Vietnamese onsets.\n   249\t\n   250\t                    // Check if we can add new span for input character.\n   251\t                    if (self.buffer_length < self.buffer_effective.len) {\n   252\t                        // Add character to span.\n   253\t                        self.buffer_effective[self.buffer_length] = Span.init(c);\n   254\t                    }\n   255\t                    // Increase the buffer length for tracking, we will need it went handling backspace.\n   256\t                    self.buffer_length = self.buffer_length + 1;\n   257\t\n   258\t                    // Set modification index to null because we didn't modify any existing span.\n   259\t                    self.buffer_modification_index = null;\n   260\t                } else {\n   261\t                    // buffer_length must inbound of buffer_effective.\n   262\t                    assert(self.buffer_length < self.buffer_effective.len);\n   263\t\n   264\t                    // literal_index must not be set in order to process Vietnamese input.\n   265\t                    assert(self.literal_index == null);\n   266\t\n   267\t                    // Vietnamese input.\n   268\t                    // Possible cases:\n   269\t                    // - circumplex.\n   270\t                    // - cancel circumflex.\n   271\t                    // - plain append.\n   272\t\n   273\t                    if (self.buffer_length == 0 or (self.buffer_effective[self.buffer_length - 1].base != std.ascii.toUpper(c) and self.buffer_effective[self.buffer_length - 1].base != std.ascii.toLower(c))) {\n   274\t                        // Plain append when start of the buffer or the previous character don't match\n   275\t                        // circumflex rules.\n   276\t\n   277\t                        // Check if we can add new span for input character.\n   278\t                        if (self.buffer_length < self.buffer_effective.len) {\n   279\t                            // Add character to span.\n   280\t                            self.buffer_effective[self.buffer_length] = Span.init(c);\n   281\t                        }\n   282\t                        // Increase the buffer length for tracking, we will need it went handling\n   283\t                        // backspace.\n   284\t                        self.buffer_length = self.buffer_length + 1;\n   285\t\n   286\t                        // Set modification index to null because we didn't modify any existing span.\n   287\t                        self.buffer_modification_index = null;\n   288\t                    } else if ((self.buffer_effective[self.buffer_length - 1].base == std.ascii.toUpper(c) or self.buffer_effective[self.buffer_length - 1].base == std.ascii.toLower(c)) and self.buffer_effective[self.buffer_length - 1].diacritic == .empty) {\n   289\t                        // Circumflex.\n   290\t\n   291\t                        // Add circumflex to previous plan 'A' or 'a'.\n   292\t                        self.buffer_effective[self.buffer_length - 1].diacritic = .circumflex;\n   293\t                        // Mark modification index.\n   294\t                        self.buffer_modification_index = self.buffer_length - 1;\n   295\t                    } else if ((self.buffer_effective[self.buffer_length - 1].base == std.ascii.toUpper(c) or self.buffer_effective[self.buffer_length - 1].base == std.ascii.toLower(c)) and self.buffer_effective[self.buffer_length - 1].diacritic == .circumflex) {\n   296\t                        // Cancel circumflex.\n   297\t\n   298\t                        // Reset diacritic to empty.\n   299\t                        self.buffer_effective[self.buffer_length - 1].diacritic = .empty;\n   300\t                        // Mark modification index.\n   301\t                        self.buffer_modification_index = self.buffer_length - 1;\n   302\t\n   303\t                        // Add plan character to buffer_effective.\n   304\t                        // Check if we can add new span for input character.\n   305\t                        if (self.buffer_length < self.buffer_effective.len) {\n   306\t                            // Add character to span.\n   307\t                            self.buffer_effective[self.buffer_length] = Span.init(c);\n   308\t                        }\n   309\t                        // Mark the start of literal input because of the cancelling.\n   310\t                        self.literal_index = self.buffer_length;\n   311\t\n   312\t                        // Increase the buffer length for tracking, we will need it went handling\n   313\t                        // backspace.\n   314\t                        self.buffer_length = self.buffer_length + 1;\n   315\t                    } else {\n   316\t                        unreachable;\n   317\t                    }\n   318\t                }\n   319\t            },\n   320\t            'C', 'c' => {}, // fill missing diacritic, e.g. cước.\n   321\t            'D', 'd' => {}, // bar.\n   322\t            'E', 'e' => {}, // circumflex.\n   323\t            'F', 'f' => {}, // falling.\n   324\t            'I', 'i' => {}, // fill missing diacritic, e.g. người.\n   325\t            'J', 'j' => {}, // falling_glottalized.\n   326\t            'M', 'm' => {}, // fill missing diacritic, e.g. cườm.\n   327\t            'N', 'n' => {}, // fill missing diacritic, e.g. cường.\n   328\t            'O', 'o' => {}, // circumflex.\n   329\t            'P', 'p' => {}, // fill missing diacritic, e.g. cướp.\n   330\t            'R', 'r' => {}, // dipping_rising.\n   331\t            'S', 's' => {}, // rising.\n   332\t            'T', 't' => {}, // fill missing diacritic, e.g. trượt.\n   333\t            'U', 'u' => {}, // fill missing diacritic, e.g. hươu.\n   334\t            'W', 'w' => {}, // breve.\n   335\t            'X', 'x' => {}, // rising_glottalized.\n   336\t            'Z', 'z' => {}, // level / reset.\n   337\t            else => { // literal.\n   338\t                // These characters will be added to state literally.\n   339\t\n   340\t                // Check if we can add new span for input character.\n   341\t                if (self.buffer_length < self.buffer_effective.len) {\n   342\t                    // Add character to span.\n   343\t                    self.buffer_effective[self.buffer_length] = Span.init(c);\n   344\t                }\n   345\t                // Increase the buffer length for tracking, we will need it went handling backspace.\n   346\t                self.buffer_length = self.buffer_length + 1;\n   347\t\n   348\t                // Set modification index to null because we didn't modify any existing span.\n   349\t                self.buffer_modification_index = null;\n   350\t                // Set literal index if it's not set and the length exceed the buffer_effective.\n   351\t                if (self.literal_index == null and self.buffer_length > self.buffer_effective.len) {\n   352\t                    // Set literal mode since buffer index 16 (just after the last buffer_effective\n   353\t                    // item) because we don't have span for these position, we stop processing Telex\n   354\t                    // rules but we will continue processing if user use backspaces to move back to the\n   355\t                    // buffer_effective range, all existing spans must work as expected.\n   356\t                    self.literal_index = self.buffer_effective.len;\n   357\t                }\n   358\t            },\n   359\t        }\n   360\t    }\n   361\t\n   362\t    pub fn backspace(self: *State) void {\n   363\t        // buffer_length must be positive for backspace.\n   364\t        assert(self.buffer_length > 0);\n   365\t\n   366\t        // Input mode must be either .literal or .telex.\n   367\t        assert(self.mode == .literal or self.mode == .telex);\n   368\t\n   369\t        if (self.literal_index) |literal_index| {\n   370\t            // Input mode must be .telex when literal_index is set.\n   371\t            assert(self.mode == .telex);\n   372\t            // literal_index must be within buffer range when set.\n   373\t            assert(literal_index < self.buffer_length);\n   374\t        }\n   375\t\n   376\t        // decrease the buffer_length to match the backspace.\n   377\t        self.buffer_length -= 1;\n   378\t        // b cause backspace doesn't retro-modify the buffer, unset the buffer_modification_index.\n   379\t        self.buffer_modification_index = null;\n   380\t        // if the literal_index is out of buffer range, unset it.\n   381\t        if (self.literal_index != null and self.literal_index.? == self.buffer_length) {\n   382\t            self.literal_index = null;\n   383\t        }\n   384\t    }\n   385\t};\n",
+              "exitCode": 0
+            },
+            "status": "done"
+          },
+          "type": "tool_result",
+          "toolUseID": "call_jHFSKELjFNUV0PloeqAYsYJf"
+        }
+      ],
+      "messageId": 18
+    },
+    {
+      "meta": {
+        "openAIResponsePhase": "final_answer"
+      },
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "end_turn"
+      },
+      "usage": {
+        "model": "gpt-5.5-2026-04-23",
+        "timestamp": "2026-05-05T15:24:33.266Z",
+        "inputTokens": 0,
+        "outputTokens": 1076,
+        "maxInputTokens": 272000,
+        "totalInputTokens": 28160,
+        "cacheReadInputTokens": 25088,
+        "cacheCreationInputTokens": 3072
+      },
+      "content": [
+        {
+          "type": "thinking",
+          "provider": "openai",
+          "thinking": "**Discussing the user's needs**\n\nThe user asked, \"let's check it again,\" which suggests they want to talk things over without diving into code. I think I should focus on having a clear and concise discussion. It seems important to gather any pertinent details or questions they might have, so I can address their concerns effectively. Let’s ensure that my responses are straightforward and easy to understand. I really want to get this right for them!",
+          "finalTime": 1777994666374,
+          "signature": "<redacted>",
+          "startTime": 1777994656411,
+          "openAIReasoning": {
+            "id": "rs_07f04b6fd84d20390169fa0ba04de48196b1f4b7f9b0c43a69",
+            "encryptedContent": "gAAAAABp-guwpipbArQztSmI4IwgaFrsy67O33PWjqCUgSlkDT3cD1zts5G_IctlBTPKEwZdOBXtVRYe6K7sJPB2sM4cfwthgeIOhFaeQN8yE3nlRFjrOT5dA0K1eeY0wExQ7smVvtUd41Y9XvJJb6y8kKBlRdQm7TUGlhBSNLY_UoXBbA7Bim6wXkRI5ozRWWITk3S3rPzKSuUgW_own6Pxky_47aSgis5wf_1TUyR1rCFW8tVMR7UQhF1YvT0AU1by7c7aoVCeAtmADAIRjAzqFfN_q1I1nfUvMCKOXwDff5B7O6g3fGqiXBRRe_BUCirvWSIZHRdvEpBGaIWX3QZUUIzP80mtP2gkWTpl34dOPr-b2ifFy3IBHH3gQPZV5sKrh6cqPgNFMrwQoQQLpcWXo7olZTwtrOIktY6lYhoqiOlqOuH0ftWH791j9Lc9gAZoQnoSI6c2eDdSK51s8Xa9pF47ni0GhICKsKeCA6pU5-Ym7vGMZ6ufCZC0YTu3lXkG04Qop9_z_UbOU7mhjtXAh3ZsNKrQwtQMq5G5dE7buDpA4sShbRgyyvLGlmwSFyu9Wg95mfsFO3XahJLjY7zH7xcLnp7Ec2Jz9SvsM8QxYpHF34P3mlMN9o79LDFOVBFIcabcUx1p7cHlGDqXG1WQeW5yKA1lcKcZlxVM5zytFtgOvUVmX0z1RuKT50INBQlbKXLFw-2rny7Zg0pV5-HpvZWRv1LZUJ1rPedjXUhFuQ5SDdCsdii-8hMfOQpLulXQMp70v154Ak_RR-n1Y2KUwqxPmnnl1KAHe6udK9d2Z_j8CKk1ife-_TWvtSSG8BUqLLLFKpZIZUxfuxXdycRh6SpmRrVG46633HDFivsqueWYOtayIIl7GLMYLV4sSPXI1FGJW8HWB6UIDmZnfsogxzE_Hh1JJylQIdB54kg13xJDV9PwfiiaLnZ_JgJISoI-leu1E4r-4KRdbkZ9ELVJnluQoy_WXX0Fm-4dk9EB8S8nYKOUM1t1MYBLgTzWNxOiFJFfvesyvbqTy2r40JdTJ7fJMps0ltYYijLea-ncWzWi0uoAUkTILTZQox0op9IN_vfO5rHAwzhArEYQusbiZPyMvrzWDxw85nFnHK2T1AsQbr7n_6ClgyMBQkrc2OG4-LY6x-ZrJdxCg06bNzHJ5HXkkKPHqSbv7GY2ExmNnVY3_nnNM5OOc2PJ49Iw57oFgjOOFQL5c2pp7Lya6rZ1ht8JpxxpbT3Tblq3GpuYT0yPxXxooE5Zaa5dPudvX112tyiQ7MXXdXhHcDFpKvQBEyDMtQxYglyVwWiCDZdLkQu73tUcO_dMdE7p2OCYQSsN4dOE-FlpAvVZmuKqdLn1TTqS2dFkTmegViIDbWtmbB2PF6d5gWIn8oxeTj-vYWszxwvzhjiEbnxwTiJcjDBqaguKLODGCJ4OyT2mEPhVQLg5bbXictA0GpP5WN3AALa0DBxQu1s8Y_1JHLgbjoXOjXihAhlKiBGplhvS7wO32mlobTNhuGUY4NZQU7wJFujGOLctc8IpMiGJAPmVB0yL1n-mVToncS0zSzy4wCoN5pXmbx-g7D1TwTykVjXKt384DsUTcZ4Y0LMrReuZEsopDGiLfZ4NuxLZpBx_4bYNTuKyBeiUs95VifKWU-GqGeexha9fXzsl4URYBX9S9sy4i9FWXZOIQyjF4O4Iml_Y6al7gp22UTyFCFZKLtOp-fL6-E4jGF4DTYWgJSEcgAzNb4e8kKY8xh_-BD4T-lPDYO8orudWRxp0y2ZLI_35h-h4VIXL5xK4sqwxCAs7_3DgP-W9p7jDv0laYl5qJkGR15OFTnEhC9J0yRdcfRHiFSh5aTyR65GYMPIDhyE_IIEekc5pqR40Zul-K_m2hNaSuOAajITYJSc9Zo7eK3m5Yuese5B25YKgb-UzahdrkCPhYfdONvdERy9mBTYE79IjZXTLYDdR64eKHyj_u6ZF38sKD4Jp9Oij64mzxdJOrNkt2n66b7YIDglODm4GFDDkFX5HK6nNWqAFFXX84Pep3AbZL362udolLI7jU7qSywQsFRlj224pfdRRgHdMphxsCL2Z3jqKaJKAVOoojvzipEle7wfFWEM5eCqeUZnvH_4V3_NpL1xjXRFnU7zpby8ZX8OTWsv2InJAbCCmL8HlvA-O_r6yBXWaHJFr3J2eGzZjTPPHDfqy1JBFkRT1km1bj_6IEFHbTqF9k2wg8lnhart57riNy9FS_SbHvnbvp2e87KepzVbs9gCAGz9Wanakw4_Ud-ZE3ziJJ5KCeOrH6y84SQxPLjeTbk5juZBsXVPlSuP1ypz0ChM_F94ouNOiSUYugOwpxfcXA2o5cEBOkqUzc2xiXY9COXLlKZR0RVncBzpTkzhMXZFQn60i4p20wAOwc99Zf91fg2NnHz3HwFYIMMJw-oLy6AvLKLBavb-7cqJsWp55-6QlQjyl1cHrL1ABpJPNHCGTuobME9oAq7n4NMLRwnLmlYs4BCpEJxTlngV43c1yYAIaZIVy4A1hfHlSehjo6x9KWk9qmtM8E9QTKP6wC5SlmU6LinjQVk-Vb6uT4_Jjr1DbJJ2U2SNJU4_MAL31f0wj2QSBg0S7f0f15Wm9w4IlKtNvvcBMwH8TLmf9IZ0qvGDIdIz-3b9JRknc5JsZualb5m7rDL2o1HDsahAX2vnR9PZVV_ppM7c9Pdgq2MW6tynxG9ZZJPheFCMQ0Eciicvf9YNah1T7FNBYNvJP0S7euVYn1Xxl3SbaxG0_R2XRSzSFBX4i_UtOADLzjE7MqmHgiVA3eWf-FY_DzlFyEUQaHkCkopSgFARtdDfDBEugBiy4zuniY15s9njSbyv7zUfpdsnVUpOBBNXCPbIh6KbMYp8qS73SK88DPUXrYeLRljQ4YxOqqF3cCU_S2jb-W_8le2MWA6k4EEzJ-Pe8ItWWRZmcHQoBDCoTaJnFmJbH1lrq1fxXcRlKKyoAGOoYRV8l9eOOXOfOsDsYoUMo4PCfu5d_7fVFf_mkC5f2-gEhaKlxRnYijmxFoJDS8jEU-7Sum1UjZ6PoCya_1fzh_5qAOMdBSGOi6XTAU77JGbGMCLZyx66coQ-n1M8XSvGXxUX5OdP2yg-ma6U_g5uhTJVF63JZeRp4Wl46NUOYEd8ekNDTRmUTQpP7SX5zk1GhvfYNivTSa_-D7pABXcHVoAHCUlyMDDyPjNjRSpt0Sx9_fm03-RhYWD1XsWF1U0_IreoFLxvC4YB4p_iai0Whw9uZWuGtYUGmbq8AN69vEOe-w47Mlk2TkLobSrRNyRxohoBKA2qOiKsPhljpm-snYEtlpTpjFle8iA4L0PsviIt4O9qTLHqS8S0E5qes712AyuTWR1TOFRdRmKXGMvQCu3I3lQQbWZfmRT4zRfCkkdp-IGGln5mDPgNzd8huPSJlqv_Sz7BI5Dv9gt3o2373s08Hw8vdS4GUZ0G3timeE98kwoAbZlUOHoNeCShWjhWW1rA="
+          }
+        },
+        {
+          "text": "Current asserts are closer, but they are still not enough to guarantee the new semantic.\n\n## What is correct now\n\nThis part in `State.add` is now logically correct:\n\n[`State.add` literal-mode invariant](file:///<redacted>/lex/src/liblex.zig#L229-L232)\n\nIt expresses:\n\n> if mode is `.literal`, then `literal_index` must be `null`.\n\nThat matches your new meaning.\n\nThis part is also correct:\n\n[`State.add` non-null literal_index invariant](file:///<redacted>/lex/src/liblex.zig#L234-L241)\n\nIt expresses:\n\n> if `literal_index` is set, then mode must be `.telex`, and the index must be in range.\n\nThis is also good.\n\n## The remaining issue\n\nThe problem is not the entry asserts anymore. The problem is that `State.add` can still create an invalid state.\n\nThis block can set `literal_index` even when `mode == .literal`:\n\n[`literal branch overflow behavior](file:///<redacted>/lex/src/liblex.zig#L350-L357)\n\nThe condition is currently only based on:\n\n- `literal_index == null`\n- `buffer_length > buffer_effective.len`\n\nIt does not include the new semantic condition:\n\n> only Telex mode may set `literal_index`.\n\nSo this can happen:\n\n1. state starts in `.literal`\n2. `literal_index == null`\n3. enough literal characters are added to exceed `buffer_effective.len`\n4. line 356 sets `literal_index`\n5. function returns with `mode == .literal` and `literal_index != null`\n\nYour entry assert will catch it on the next call, but the function has already produced an invalid state.\n\nSo if your intention is “only assert enough for the changed meaning,” then the missing check is not more range asserts. The missing protection is around the state transition that sets `literal_index`.\n\n## About `backspace`\n\n`State.backspace` is acceptable for the changed semantic:\n\n[`State.backspace` invariant](file:///<redacted>/lex/src/liblex.zig#L366-L374)\n\nIt says:\n\n> if `literal_index` exists, mode must be `.telex`.\n\nThat is enough to catch the invalid `.literal + literal_index` combination.\n\nYou could also add the direct form:\n\n> if mode is `.literal`, `literal_index` must be `null`.\n\nBut it would be redundant with the existing non-null branch. Since you said you only want enough asserts, the current `backspace` assert is enough for the semantic change.\n\n## Conclusion\n\n- `State.add` entry asserts: good.\n- `State.backspace` asserts: enough for this semantic change.\n- `State.add` mutation logic: still violates the new semantic because the overflow branch can set `literal_index` in `.literal` mode.\n\nThe key change is not to add many more asserts. It is to ensure the only places that assign `literal_index` are Telex-only paths, or to add a postcondition assert that would immediately catch violations at the end of `State.add`.",
+          "type": "text",
+          "finalTime": 1777994673170,
+          "startTime": 1777994666374
+        }
+      ],
+      "messageId": 19,
+      "turnElapsedMs": 26877
+    }
+  ],
+  "agentMode": "deep",
+  "nextMessageId": 20,
+  "creatorUserID": "<redacted>",
+  "updatedAt": "2026-05-05T15:24:06.390Z"
+}
