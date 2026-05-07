@@ -441,7 +441,7 @@ const State = struct {
 
         // decrease the buffer_length to match the backspace.
         self.buffer_length -= 1;
-        // b cause backspace doesn't retro-modify the buffer, unset the buffer_modification_index.
+        // because backspace doesn't retro-modify the buffer, unset the buffer_modification_index.
         self.buffer_modification_index = null;
         // if the literal_index is out of buffer range, unset it.
         if (self.literal_index != null and self.literal_index.? == self.buffer_length) {
@@ -451,8 +451,12 @@ const State = struct {
 };
 
 // Simple ABI wrapper for initialize allocated memory.
-export fn lex_state_init(state: *State) void {
-    state.init();
+export fn lex_state_init(state: *anyopaque) void {
+    // Ensure the allocated memory is aligned.
+    assert(@intFromPtr(state) % @alignOf(State) == 0);
+
+    const s: *State = @ptrCast(@alignCast(state));
+    s.init();
 }
 
 // Needed for the caller to allocate memory for our State.
@@ -461,29 +465,23 @@ export const lex_state_size: usize = @sizeOf(State);
 // Needed for the caller to allocate memory for our State.
 export const lex_state_alignment: usize = @alignOf(State);
 
-// Add operations to the given state based on Telex rules, operations are determined by the input
-// character.
-export fn lex_add(state: *State, c: u8) void {
-    state.add(c);
-}
-
-test "expect lex_add handles non-Telex characters less than buffer_effective range" {
+test "expect State can be initialized by raw allocation" {
     // Arrange
 
     // Allocate memory, only specify on this test to simulate runtime allocation.
     const raw_pointer = std.testing.allocator.rawAlloc(lex_state_size, .fromByteUnits(lex_state_alignment), @returnAddress()) orelse return error.OutOfMemory;
     defer std.testing.allocator.rawFree(raw_pointer[0..lex_state_size], .fromByteUnits(lex_state_alignment), @returnAddress());
-    const state: *align(lex_state_alignment) State = @ptrCast(@alignCast(raw_pointer));
 
     // Initialize state.
-    lex_state_init(state);
+    lex_state_init(raw_pointer);
+    const state: *align(lex_state_alignment) State = @ptrCast(@alignCast(raw_pointer));
     state.mode = .telex;
 
     const input_sequence = "bbbbbqqqqq";
 
     // Act
     for (input_sequence) |c| {
-        lex_add(state, c);
+        lex_add(raw_pointer, c);
     }
 
     // Assert
@@ -504,17 +502,55 @@ test "expect lex_add handles non-Telex characters less than buffer_effective ran
     }
 }
 
-test "expect lex_add handles non-Telex characters exceed the buffer_effective range" {
+// Add operations to the given state based on Telex rules, operations are determined by the input
+// character.
+export fn lex_add(state: *anyopaque, c: u8) void {
+    const s: *State = @ptrCast(@alignCast(state));
+    s.add(c);
+}
+
+test "expect State.add handles non-Telex characters less than buffer_effective range" {
     // Arrange
     var state: State = undefined;
-    lex_state_init(&state);
+    state.init();
+    state.mode = .telex;
+
+    const input_sequence = "bbbbbqqqqq";
+
+    // Act
+    for (input_sequence) |c| {
+        state.add(c);
+    }
+
+    // Assert
+    // We only fill and increase the buffer_length based on input.
+    try expectEqual(10, state.buffer_length);
+    // Because we don't modify any existing character since the last input, expect null.
+    try expectEqual(null, state.buffer_modification_index);
+    // Because we didn't exceed the buffer_affective, don't set literal_index.
+    try expectEqual(null, state.literal_index);
+    // Don't touch on input mode.
+    try expectEqual(.telex, state.mode);
+    // Verify every the spans, must exactly the same with the input.
+    for (input_sequence, 0..) |c, i| {
+        const sp = state.buffer_effective[i];
+        try expectEqual(c, sp.base);
+        try expectEqual(.empty, sp.diacritic);
+        try expectEqual(.level, sp.tone);
+    }
+}
+
+test "expect State.add handles non-Telex characters exceed the buffer_effective range" {
+    // Arrange
+    var state: State = undefined;
+    state.init();
     state.mode = .telex;
 
     const input_sequence = "bbbbbbbbbbqqqqqqqqqq";
 
     // Act
     for (input_sequence) |c| {
-        lex_add(&state, c);
+        state.add(c);
     }
 
     // Assert
@@ -535,14 +571,14 @@ test "expect lex_add handles non-Telex characters exceed the buffer_effective ra
     }
 }
 
-test "expect lex_add adds a literally because it's the start of the buffer" {
+test "expect State.add adds a literally because it's the start of the buffer" {
     // Arrange
     var state: State = undefined;
-    lex_state_init(&state);
+    state.init();
     state.mode = .telex;
 
     // Act
-    lex_add(&state, 'a');
+    state.add('a');
 
     // Assert
     try expectEqual(1, state.buffer_length);
@@ -556,19 +592,19 @@ test "expect lex_add adds a literally because it's the start of the buffer" {
     try expectEqual(.level, sp.tone);
 }
 
-test "expect lex_add start literal input when the new input just exceeds buffer_effective" {
+test "expect State.add start literal input when the new input just exceeds buffer_effective" {
     // Arrange
     var state: State = undefined;
-    lex_state_init(&state);
+    state.init();
     state.mode = .telex;
 
     // input 16 characters.
     for ("bbbbbqqqqqbbbbbq") |c| {
-        lex_add(&state, c);
+        state.add(c);
     }
 
     // Act
-    lex_add(&state, 'a');
+    state.add('a');
 
     // Assert
     try expectEqual(17, state.buffer_length);
@@ -577,15 +613,15 @@ test "expect lex_add start literal input when the new input just exceeds buffer_
     try expectEqual(.telex, state.mode);
 }
 
-test "expect lex_add results â when input aa" {
+test "expect State.add results â when input aa" {
     // Arrange
     var state: State = undefined;
-    lex_state_init(&state);
+    state.init();
     state.mode = .telex;
 
     // Act
-    lex_add(&state, 'a');
-    lex_add(&state, 'a');
+    state.add('a');
+    state.add('a');
 
     // Assert
     try expectEqual(1, state.buffer_length);
@@ -599,16 +635,16 @@ test "expect lex_add results â when input aa" {
     try expectEqual(.level, sp.tone);
 }
 
-test "expect lex_add results aA when input aaA" {
+test "expect State.add results aA when input aaA" {
     // Arrange
     var state: State = undefined;
-    lex_state_init(&state);
+    state.init();
     state.mode = .telex;
 
     // Act
-    lex_add(&state, 'a');
-    lex_add(&state, 'a');
-    lex_add(&state, 'A');
+    state.add('a');
+    state.add('a');
+    state.add('A');
 
     // Assert
     try expectEqual(2, state.buffer_length);
@@ -627,23 +663,24 @@ test "expect lex_add results aA when input aaA" {
     try expectEqual(.level, sp2.tone);
 }
 
-export fn lex_backspace(state: *State) void {
-    state.backspace();
+export fn lex_backspace(state: *anyopaque) void {
+    const s: *State = @ptrCast(@alignCast(state));
+    s.backspace();
 }
 
-test "expect lex_backspace will reduce buffer_length by 1 and won't touch literal_index" {
+test "expect State.backspace will reduce buffer_length by 1 and won't touch literal_index" {
     // Arrange
     var state: State = undefined;
-    lex_state_init(&state);
+    state.init();
     state.mode = .telex;
 
     // input 18 characters.
     for ("bbbbbqqqqqbbbbbqqq") |c| {
-        lex_add(&state, c);
+        state.add(c);
     }
 
     // Act
-    lex_backspace(&state);
+    state.backspace();
 
     // Assert
     try expectEqual(17, state.buffer_length);
@@ -652,19 +689,19 @@ test "expect lex_backspace will reduce buffer_length by 1 and won't touch litera
     try expectEqual(.telex, state.mode);
 }
 
-test "expect lex_backspace will reduce buffer_length by 1 and unset literal_index" {
+test "expect State.backspace will reduce buffer_length by 1 and unset literal_index" {
     // Arrange
     var state: State = undefined;
-    lex_state_init(&state);
+    state.init();
     state.mode = .telex;
 
     // input 17 characters so that the literal_index is set at the 17th character.
     for ("bbbbbqqqqqbbbbbqq") |c| {
-        lex_add(&state, c);
+        state.add(c);
     }
 
     // Act
-    lex_backspace(&state);
+    state.backspace();
 
     // Assert
     try expectEqual(16, state.buffer_length);
@@ -673,19 +710,19 @@ test "expect lex_backspace will reduce buffer_length by 1 and unset literal_inde
     try expectEqual(.telex, state.mode);
 }
 
-test "expect lex_backspace will reduce buffer_length by 1 when literal_index is not set" {
+test "expect State.backspace will reduce buffer_length by 1 when literal_index is not set" {
     // Arrange
     var state: State = undefined;
-    lex_state_init(&state);
+    state.init();
     state.mode = .telex;
 
     // input 17 characters so that the literal_index is set at the 17th character.
     for ("bbbbb") |c| {
-        lex_add(&state, c);
+        state.add(c);
     }
 
     // Act
-    lex_backspace(&state);
+    state.backspace();
 
     // Assert
     try expectEqual(4, state.buffer_length);
