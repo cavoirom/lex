@@ -450,65 +450,6 @@ const State = struct {
     }
 };
 
-// Simple ABI wrapper for initialize allocated memory.
-export fn lex_state_init(state: *anyopaque) void {
-    // Ensure the allocated memory is aligned.
-    assert(@intFromPtr(state) % @alignOf(State) == 0);
-
-    const s: *State = @ptrCast(@alignCast(state));
-    s.init();
-}
-
-// Needed for the caller to allocate memory for our State.
-export const lex_state_size: usize = @sizeOf(State);
-
-// Needed for the caller to allocate memory for our State.
-export const lex_state_alignment: usize = @alignOf(State);
-
-test "expect State can be initialized by raw allocation" {
-    // Arrange
-
-    // Allocate memory, only specify on this test to simulate runtime allocation.
-    const raw_pointer = std.testing.allocator.rawAlloc(lex_state_size, .fromByteUnits(lex_state_alignment), @returnAddress()) orelse return error.OutOfMemory;
-    defer std.testing.allocator.rawFree(raw_pointer[0..lex_state_size], .fromByteUnits(lex_state_alignment), @returnAddress());
-
-    // Initialize state.
-    lex_state_init(raw_pointer);
-    const state: *align(lex_state_alignment) State = @ptrCast(@alignCast(raw_pointer));
-    state.mode = .telex;
-
-    const input_sequence = "bbbbbqqqqq";
-
-    // Act
-    for (input_sequence) |c| {
-        lex_add(raw_pointer, c);
-    }
-
-    // Assert
-    // We only fill and increase the buffer_length based on input.
-    try expectEqual(10, state.buffer_length);
-    // Because we don't modify any existing character since the last input, expect null.
-    try expectEqual(null, state.buffer_modification_index);
-    // Because we didn't exceed the buffer_affective, don't set literal_index.
-    try expectEqual(null, state.literal_index);
-    // Don't touch on input mode.
-    try expectEqual(.telex, state.mode);
-    // Verify every the spans, must exactly the same with the input.
-    for (input_sequence, 0..) |c, i| {
-        const sp = state.buffer_effective[i];
-        try expectEqual(c, sp.base);
-        try expectEqual(.empty, sp.diacritic);
-        try expectEqual(.level, sp.tone);
-    }
-}
-
-// Add operations to the given state based on Telex rules, operations are determined by the input
-// character.
-export fn lex_add(state: *anyopaque, c: u8) void {
-    const s: *State = @ptrCast(@alignCast(state));
-    s.add(c);
-}
-
 test "expect State.add handles non-Telex characters less than buffer_effective range" {
     // Arrange
     var state: State = undefined;
@@ -663,11 +604,6 @@ test "expect State.add results aA when input aaA" {
     try expectEqual(.level, sp2.tone);
 }
 
-export fn lex_backspace(state: *anyopaque) void {
-    const s: *State = @ptrCast(@alignCast(state));
-    s.backspace();
-}
-
 test "expect State.backspace will reduce buffer_length by 1 and won't touch literal_index" {
     // Arrange
     var state: State = undefined;
@@ -729,4 +665,68 @@ test "expect State.backspace will reduce buffer_length by 1 when literal_index i
     try expectEqual(null, state.buffer_modification_index);
     try expectEqual(null, state.literal_index);
     try expectEqual(.telex, state.mode);
+}
+
+// Simple ABI wrapper for initialize allocated memory.
+export fn lex_state_init(state: *anyopaque) void {
+    // Ensure the allocated memory is aligned.
+    assert(@intFromPtr(state) % @alignOf(State) == 0);
+
+    const s: *State = @ptrCast(@alignCast(state));
+    s.init();
+}
+
+// Needed for the caller to allocate memory for our State.
+export const lex_state_size: usize = @sizeOf(State);
+
+// Needed for the caller to allocate memory for our State.
+export const lex_state_alignment: usize = @alignOf(State);
+
+test "expect State can be initialized by raw allocation" {
+    // Arrange
+
+    // Allocate memory, only specify on this test to simulate runtime allocation.
+    const raw_pointer = std.testing.allocator.rawAlloc(lex_state_size, .fromByteUnits(lex_state_alignment), @returnAddress()) orelse return error.OutOfMemory;
+    defer std.testing.allocator.rawFree(raw_pointer[0..lex_state_size], .fromByteUnits(lex_state_alignment), @returnAddress());
+
+    // Initialize state.
+    lex_state_init(raw_pointer);
+    const state: *align(lex_state_alignment) State = @ptrCast(@alignCast(raw_pointer));
+    state.mode = .telex;
+
+    const input_sequence = "bbbbbqqqqq";
+
+    // Act
+    for (input_sequence) |c| {
+        lex_add(raw_pointer, c);
+    }
+
+    // Assert
+    // We only fill and increase the buffer_length based on input.
+    try expectEqual(10, state.buffer_length);
+    // Because we don't modify any existing character since the last input, expect null.
+    try expectEqual(null, state.buffer_modification_index);
+    // Because we didn't exceed the buffer_affective, don't set literal_index.
+    try expectEqual(null, state.literal_index);
+    // Don't touch on input mode.
+    try expectEqual(.telex, state.mode);
+    // Verify every the spans, must exactly the same with the input.
+    for (input_sequence, 0..) |c, i| {
+        const sp = state.buffer_effective[i];
+        try expectEqual(c, sp.base);
+        try expectEqual(.empty, sp.diacritic);
+        try expectEqual(.level, sp.tone);
+    }
+}
+
+// Add operations to the given state based on Telex rules, operations are determined by the input
+// character.
+export fn lex_add(state: *anyopaque, c: u8) void {
+    const s: *State = @ptrCast(@alignCast(state));
+    s.add(c);
+}
+
+export fn lex_backspace(state: *anyopaque) void {
+    const s: *State = @ptrCast(@alignCast(state));
+    s.backspace();
 }
