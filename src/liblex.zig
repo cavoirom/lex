@@ -8,7 +8,7 @@ const Diacritic = enum(u8) {
     circumflex, // dấu nón: â, ô, ê.
     horn, // dấu móc: ư, ơ.
     breve, // dấu ă.
-    bar, // dấu gạch: đ.
+    stroke, // dấu gạch: đ.
 };
 
 const Tone = enum(u8) {
@@ -61,8 +61,8 @@ const Span = struct {
                 'A', 'a' => {},
                 else => unreachable,
             },
-            // Only d is valid with bar.
-            .bar => switch (base) {
+            // Only d is valid with stroke.
+            .stroke => switch (base) {
                 'D', 'd' => {},
                 else => unreachable,
             },
@@ -139,8 +139,8 @@ test "expect Span.init_diacritic can construct any Vietnamese characters" {
         .{ .base = 'o', .diacritic = .horn }, // ơ.
         .{ .base = 'U', .diacritic = .horn }, // Ư.
         .{ .base = 'u', .diacritic = .horn }, // ư.
-        .{ .base = 'D', .diacritic = .bar }, // Đ.
-        .{ .base = 'd', .diacritic = .bar }, // đ.
+        .{ .base = 'D', .diacritic = .stroke }, // Đ.
+        .{ .base = 'd', .diacritic = .stroke }, // đ.
     };
 
     // Need `inline for` to know the tuple at comptime.
@@ -302,7 +302,7 @@ const State = struct {
                 }
             },
             'C', 'c' => {}, // fill missing diacritic, e.g. cước.
-            'D', 'd' => { // bar.
+            'D', 'd' => { // stroke.
                 if (self.literal_index != null or self.mode == .literal or self.buffer_length == 0) {
                     // 1. Enable literal input when literal_index is set or on literal mode. The
                     // literal_index is also set when the word starts with non-Vietnamese onsets.
@@ -312,13 +312,13 @@ const State = struct {
                     // Set modification index to null because we didn't modify any existing span.
                     self.buffer_modification_index = null;
                 } else if (self.buffer_effective_last().equals_ignore_case_and_tone(c, .empty)) {
-                    // 3. Previous span is 'D' or 'd', apply bar.
+                    // 3. Previous span is 'D' or 'd', apply stroke.
                     const span_previous = self.buffer_effective[self.buffer_length - 1];
-                    self.buffer_effective[self.buffer_length - 1] = Span.init_diacritic_tone(span_previous.base, .bar, span_previous.tone);
+                    self.buffer_effective[self.buffer_length - 1] = Span.init_diacritic_tone(span_previous.base, .stroke, span_previous.tone);
                     // Set modification index for calculating synthetic backspace.
                     self.buffer_modification_index = self.buffer_length - 1;
-                } else if (self.buffer_effective_last().equals_ignore_case_and_tone(c, .bar)) {
-                    // 4. Previous span is 'Đ' or 'đ', cancel bar for previous span and append new literal span.
+                } else if (self.buffer_effective_last().equals_ignore_case_and_tone(c, .stroke)) {
+                    // 4. Previous span is 'Đ' or 'đ', cancel stroke for previous span and append new literal span.
                     const span_previous = self.buffer_effective[self.buffer_length - 1];
                     self.buffer_effective[self.buffer_length - 1] = Span.init_diacritic_tone(span_previous.base, .empty, span_previous.tone);
                     // Set modification index for calculating synthetic backspace.
@@ -808,7 +808,7 @@ test "expect State.add apply horn for valid cases" {
     }
 }
 
-test "expect State.add apply bar for valid cases" {
+test "expect State.add apply stroke for valid cases" {
     // Arrange
     const cases = .{
         .{ .consonant = 'd', .new_input = 'd' },
@@ -835,7 +835,7 @@ test "expect State.add apply bar for valid cases" {
 
         const sp = state.buffer_effective[0];
         try expectEqual(c.consonant, sp.base);
-        try expectEqual(.bar, sp.diacritic);
+        try expectEqual(.stroke, sp.diacritic);
         try expectEqual(.level, sp.tone);
     }
 }

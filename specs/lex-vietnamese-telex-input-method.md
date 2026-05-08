@@ -27,14 +27,14 @@ have seperated section.
 
 - Valid for: `O` (Ơ), `U` (Ư) and their lower cases.
 
-#### Bar
+#### Stroke
 
 - Valid for: `D` (Đ) and its lower case.
 
 #### Apply rules
 
 - Only apply diacritic when the immediate previous character doesn't have any diacritic (empty).
-- _Circumflex_, _bar_ are triggered when user inputs the same character (ignore case) with the
+- _Circumflex_, _stroke_ are triggered when user inputs the same character (ignore case) with the
   existing character when that character is valid for the applying diacritic.
   - `Aa` -> `Â`, `Ee` -> `Ê`, `Oo` -> `Ô`.
   - `Dd` -> `Đ`.
@@ -63,7 +63,7 @@ have seperated section.
   - Circumflex: `Âa` -> `Aa`, `Ốo` -> `Óo`... and so on for other cases of the same kind.
   - Breve: `Ăw` -> `Aw`.
   - Horn: `Ưw` -> `Uw`... and so on for other cases of the same kind.
-  - Bar: `Đd` -> `Dd`, `đD` -> `dD`.
+  - Stroke: `Đd` -> `Dd`, `đD` -> `dD`.
 - The new character is literal, keeps its case, no tone.
 - Switch to literal from the new character position and the following characters. Literal input
   remains until the process is reset (usually when starting new word).
