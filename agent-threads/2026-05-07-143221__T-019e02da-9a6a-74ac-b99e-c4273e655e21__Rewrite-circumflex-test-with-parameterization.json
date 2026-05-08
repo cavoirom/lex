@@ -1,0 +1,825 @@
+{
+  "v": 94,
+  "id": "T-019e02da-9a6a-74ac-b99e-c4273e655e21",
+  "env": {
+    "initial": {
+      "trees": [
+        {
+          "uri": "file:///<redacted>/lex",
+          "displayName": "lex"
+        }
+      ],
+      "platform": {
+        "os": "darwin",
+        "client": "JetBrains",
+        "osVersion": "26.5",
+        "clientType": "cli",
+        "webBrowser": false,
+        "clientVersion": "0.0.1778160156-gb2be4b",
+        "installationID": "<redacted>",
+        "cpuArchitecture": "arm64",
+        "deviceFingerprint": "<redacted>"
+      }
+    }
+  },
+  "meta": {
+    "executorType": "local-client",
+    "lastKnownAgentState": {
+      "state": "idle",
+      "messageID": "M-033CdmlNQMV83kwFMvUMdt",
+      "updatedAt": "2026-05-07T15:15:31.545Z"
+    },
+    "deleted": false,
+    "createdOnServer": false,
+    "lastUserMessageAt": "2026-05-07T15:14:56.756Z",
+    "workspaceID": null,
+    "projectID": null,
+    "visibility": "private",
+    "sharedGroupIDs": [],
+    "agentMode": "smart",
+    "usesDtw": true,
+    "usesThreadActors": true
+  },
+  "title": "Rewrite circumflex test with parameterization",
+  "created": 1778164341354,
+  "messages": [
+    {
+      "meta": {
+        "sentAt": 1778164354061
+      },
+      "role": "user",
+      "readAt": null,
+      "content": [
+        {
+          "text": "Discuss with me to rewrite only 1 test: \"expect State.add apply circumflex for valid cases\".\n\n- Use @specs/lex-vietnamese-telex-input-method.md as the source of truth.\n- Only focus on testing \"apply circumflex\".\n- The test should be parameterized, take the existing techniques as the references.\n\nCome up with the approach, then consult the Oracle for another perspective, but prevent the Oracle from producing any example code. You should not write any code.",
+          "type": "text"
+        }
+      ],
+      "messageId": 1,
+      "userState": {
+        "activeEditor": "file:///<redacted>/lex/src/liblex.zig",
+        "selectionRange": {
+          "end": {
+            "line": 557,
+            "column": 55
+          },
+          "start": {
+            "line": 557,
+            "column": 6
+          }
+        },
+        "currentlyVisibleFiles": [
+          "file:///<redacted>/lex/src/liblex.zig",
+          "file:///<redacted>/lex/specs/lex-vietnamese-telex-input-method.md",
+          "file:///<redacted>/lex/devlog/2026-05-07__refine_abi_signature.md"
+        ]
+      },
+      "protocolMessageID": "M-033Ccj8kmwYU1iOH0bwf9k"
+    },
+    {
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "tool_use"
+      },
+      "usage": {
+        "timestamp": "2026-05-07T14:32:51.219Z",
+        "inputTokens": 6,
+        "outputTokens": 206,
+        "maxInputTokens": 300000,
+        "totalInputTokens": 18553,
+        "cacheReadInputTokens": 15773,
+        "cacheCreationInputTokens": 2774
+      },
+      "readAt": null,
+      "content": [
+        {
+          "type": "thinking",
+          "provider": "anthropic",
+          "thinking": " I need to understand the approach for rewriting a single test before consulting the Oracle, so let me start by reviewing the relevant files.",
+          "finalTime": 1778164367676,
+          "signature": "<redacted>",
+          "startTime": 1778164363735
+        },
+        {
+          "id": "TU-033Ccjqklr9n37BNOp3xyh",
+          "name": "Bash",
+          "type": "tool_use",
+          "input": {
+            "cmd": "wc -l /<redacted>/lex/src/liblex.zig /<redacted>/lex/specs/lex-vietnamese-telex-input-method.md"
+          },
+          "complete": true
+        }
+      ],
+      "messageId": 2,
+      "protocolMessageID": "M-033CcjemYYaYFlva7KUfHF"
+    },
+    {
+      "role": "user",
+      "readAt": null,
+      "content": [
+        {
+          "run": {
+            "result": {
+              "output": "     732 /<redacted>/lex/src/liblex.zig\n     104 /<redacted>/lex/specs/lex-vietnamese-telex-input-method.md\n     836 total\n",
+              "exitCode": 0
+            },
+            "status": "done"
+          },
+          "type": "tool_result",
+          "toolUseID": "TU-033Ccjqklr9n37BNOp3xyh"
+        }
+      ],
+      "messageId": 3,
+      "protocolMessageID": "M-033Cck6CDeCMYrmU00KAVm"
+    },
+    {
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "tool_use"
+      },
+      "usage": {
+        "timestamp": "2026-05-07T14:33:01.727Z",
+        "inputTokens": 6,
+        "outputTokens": 103,
+        "maxInputTokens": 300000,
+        "totalInputTokens": 18903,
+        "cacheReadInputTokens": 15773,
+        "cacheCreationInputTokens": 3124
+      },
+      "readAt": null,
+      "content": [
+        {
+          "id": "TU-033CckAZ1Gh3yj41R00KQd",
+          "name": "Read",
+          "type": "tool_use",
+          "input": {
+            "path": "/<redacted>/lex/specs/lex-vietnamese-telex-input-method.md"
+          },
+          "complete": true
+        }
+      ],
+      "messageId": 4,
+      "protocolMessageID": "M-033Cck70cMfGEJNrBwf1S7"
+    },
+    {
+      "role": "user",
+      "readAt": null,
+      "content": [
+        {
+          "run": {
+            "result": {
+              "content": "1: # Lex - Vietnamese Telex input method\n2: \n3: The specification of the Lex program, a Vietnamese Telex input method.\n4: \n5: ## Vietnamese Telex Rules\n6: \n7: ### Diacritics\n8: \n9: Diacritics let a letter have many variant. We only focus on letter diacritics in this section. Tones\n10: have seperated section.\n11: \n12: #### Empty\n13: \n14: - Any literal alphabet character has empty diacritic by default.\n15: - Only a specific number of characters have other diacritic and it must follow the rules for those\n16:   characters.\n17: \n18: #### Circumflex\n19: \n20: - Valid for: `A` (Â), `E` (Ê), `O` (Ô) and their lower cases.\n21: \n22: #### Breve\n23: \n24: - Valid for: `A` (Ă) and its lower case.\n25: \n26: #### Horn\n27: \n28: - Valid for: `O` (Ơ), `U` (Ư) and their lower cases.\n29: \n30: #### Bar\n31: \n32: - Valid for: `D` (Đ) and its lower case.\n33: \n34: #### Apply rules\n35: \n36: - Only apply diacritic when the immediate previous character doesn't have any diacritic (empty).\n37: - _Circumflex_, _bar_ are triggered when user inputs the same character (ignore case) with the\n38:   existing character when that character is valid for the applying diacritic.\n39:   - `Aa` -> `Â`, `Ee` -> `Ê`, `Oo` -> `Ô`.\n40:   - `Dd` -> `Đ`.\n41: - _Breve_, _horn_ are triggered when user input `W`, `w` after the character when that character is\n42:   valid for the applying diacritic. Otherwise, treat `W`, `w` literally.\n43:   - `Aw` -> `Ă`.\n44:   - `Ow` -> `Ơ`, `Uw` -> `Ư`.\n45: - The existing character keep its case, tone.\n46: - Treat out of scope characters as literal.\n47: \n48: #### Override rules\n49: \n50: - New valid diacritic can override existing valid diacritic of the same base character.\n51:   - `Ăa` -> `Â`, `Âw` -> `Ă`.\n52:   - `Ôw` -> `Ơ`, `Ơo` -> `Ô`.\n53: - Only `A`, `O` have override rules because they have more than one possible letter diacritic.\n54: - Keep tone untouched.\n55: - The existing character keep its case, tone.\n56: - Treat out of scope characters as literal.\n57: \n58: #### Cancel rules\n59: \n60: - The cancellation is triggered if and only if user inputs the character (ignore case) that would\n61:   produce the existing diacritic for the same base character of the immediate previous character.\n62: - The existing character keeps its case, tone, but the diacritic is removed.\n63:   - Circumflex: `Âa` -> `Aa`, `Ốo` -> `Óo`... and so on for other cases of the same kind.\n64:   - Breve: `Ăw` -> `Aw`.\n65:   - Horn: `Ưw` -> `Uw`... and so on for other cases of the same kind.\n66:   - Bar: `Đd` -> `Dd`, `đD` -> `dD`.\n67: - The new character is literal, keeps its case, no tone.\n68: - Switch to literal from the new character position and the following characters. Literal input\n69:   remains until the process is reset (usually when starting new word).\n70:   - Existing `Â`, input `aa`, result `Aaa`.\n71: - When the user backspaces pass before the literal point, we switch to Vietnamese input again.\n72: \n73: #### Auto-fill rules\n74: \n75: - The auto-fill is only applied for `ươ` syllable immediately before the user input, when one of the\n76:   character in the syllable is missing horn: `uơ` and `ưo`.\n77: - Fill the missing _horn_ when the input is one of these character (ignore case): `C`, `I`, `M`,\n78:   `N`, `P`, `T`, `U` and their lower cases.\n79:   - Fill missing horn on `U`: `uơn` -> `ươn`.\n80:   - Fill missing horn on `O`: `ưóp` -> `ướp`.\n81: - The new input character is appended literally.\n82: - Tone and case of existing characters are preserved on the original characters.\n83: \n84: ### Tones\n85: \n86: _(the tones specification is not ready)_\n87: \n88: #### Level\n89: \n90: #### Rising\n91: \n92: #### Falling\n93: \n94: #### Dipping-rising\n95: \n96: #### Rising-glottalized\n97: \n98: #### Falling-glottalized\n99: \n100: #### Apply rules\n101: \n102: #### Override rules\n103: \n104: #### Reposition rules",
+              "absolutePath": "/<redacted>/lex/specs/lex-vietnamese-telex-input-method.md"
+            },
+            "status": "done",
+            "progress": {},
+            "trackFiles": [
+              "file:///<redacted>/lex/specs/lex-vietnamese-telex-input-method.md"
+            ]
+          },
+          "type": "tool_result",
+          "toolUseID": "TU-033CckAZ1Gh3yj41R00KQd"
+        }
+      ],
+      "messageId": 5,
+      "protocolMessageID": "M-033CckIPjimDXKpmVdywG1"
+    },
+    {
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "tool_use"
+      },
+      "usage": {
+        "timestamp": "2026-05-07T14:33:18.717Z",
+        "inputTokens": 6,
+        "outputTokens": 91,
+        "maxInputTokens": 300000,
+        "totalInputTokens": 20792,
+        "cacheReadInputTokens": 18897,
+        "cacheCreationInputTokens": 1889
+      },
+      "readAt": null,
+      "content": [
+        {
+          "id": "TU-033CckYEaD2nUAuD14Bc05",
+          "name": "Read",
+          "type": "tool_use",
+          "input": {
+            "path": "/<redacted>/lex/src/liblex.zig"
+          },
+          "complete": true
+        }
+      ],
+      "messageId": 6,
+      "protocolMessageID": "M-033CckKMDpmP6gN2XfQHN1"
+    },
+    {
+      "role": "user",
+      "readAt": null,
+      "content": [
+        {
+          "run": {
+            "result": {
+              "content": "1: const std = @import(\"std\");\n2: const assert = std.debug.assert;\n3: const expectEqual = std.testing.expectEqual;\n4: const Allocator = std.mem.Allocator;\n5: \n6: // Compare two character, ignore case. Caller must check both is alphabet before using this\n7: // function.\n8: fn ascii_equal_ignore_case(a: u8, b: u8) bool {\n9:     return std.ascii.toLower(a) == std.ascii.toLower(b);\n10: }\n11: \n12: const Diacritic = enum(u8) {\n13:     empty, // nguyên âm, không dấu.\n14:     circumflex, // dấu nón: â, ô, ê.\n15:     horn, // dấu móc: ư, ơ.\n16:     breve, // dấu ă.\n17:     bar, // dấu gạch: đ.\n18: };\n19: \n20: const Tone = enum(u8) {\n21:     level, // thanh ngang, không dấu.\n22:     rising, // sắc.\n23:     falling, // huyền.\n24:     dipping_rising, // hỏi.\n25:     rising_glottalized, // ngã.\n26:     falling_glottalized, // nặng.\n27: };\n28: \n29: const Span = extern struct {\n30:     // Alphabet ASCII character, could be lowercase or uppercase.\n31:     base: u8,\n32:     // By default, it's plain alphabet character.\n33:     diacritic: Diacritic = .empty,\n34:     // By default, no tone is placed.\n35:     tone: Tone = .level,\n36: \n37:     // Create a Span with plain alphabet character, no diacritic, no tone.\n38:     pub fn init(base: u8) Span {\n39:         return Span.init_diacritic_tone(base, .empty, .level);\n40:     }\n41: \n42:     // Create a Span with diacritic, no tone.\n43:     pub fn init_diacritic(base: u8, diacritic: Diacritic) Span {\n44:         return Span.init_diacritic_tone(base, diacritic, .level);\n45:     }\n46: \n47:     pub fn init_diacritic_tone(base: u8, diacritic: Diacritic, tone: Tone) Span {\n48:         // Only allow a-zA-Z.\n49:         assert(std.ascii.isAlphabetic(base));\n50: \n51:         // Only allow a valid Vietnamese alphabet combinations.\n52:         switch (diacritic) {\n53:             // All alphabet is allowed without diacritic.\n54:             .empty => {},\n55:             // Only a, o, e are valid with circumflex.\n56:             .circumflex => switch (base) {\n57:                 'A', 'E', 'O', 'a', 'e', 'o' => {},\n58:                 else => unreachable,\n59:             },\n60:             // Only u, o are valid with horn.\n61:             .horn => switch (base) {\n62:                 'O', 'U', 'o', 'u' => {},\n63:                 else => unreachable,\n64:             },\n65:             // Only a is valid with breve.\n66:             .breve => switch (base) {\n67:                 'A', 'a' => {},\n68:                 else => unreachable,\n69:             },\n70:             // Only d is valid with bar.\n71:             .bar => switch (base) {\n72:                 'D', 'd' => {},\n73:                 else => unreachable,\n74:             },\n75:         }\n76: \n77:         // Only allow tone on valid Vietnamese vowels based on Vietnamese rules.\n78:         switch (tone) {\n79:             // All alphabet is allowed with level.\n80:             .level => {},\n81:             // All vowels is allowed with remaining tones.\n82:             .rising, .falling, .dipping_rising, .rising_glottalized, .falling_glottalized => switch (base) {\n83:                 'A', 'E', 'I', 'O', 'U', 'Y', 'a', 'e', 'i', 'o', 'u', 'y' => {},\n84:                 else => unreachable,\n85:             },\n86:         }\n87: \n88:         return .{ .base = base, .diacritic = diacritic, .tone = tone };\n89:     }\n90: };\n91: \n92: test \"expect Span.init allows alphabet characters\" {\n93:     // Arrange\n94:     for (\"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz\") |c| {\n95:         // Act\n96:         const sp = Span.init(c);\n97: \n98:         // Assert\n99:         try expectEqual(c, sp.base);\n100:         try expectEqual(.empty, sp.diacritic);\n101:         try expectEqual(.level, sp.tone);\n102:     }\n103: }\n104: \n105: test \"expect Span.init_diacritic can construct any alphabet characters\" {\n106:     // Arrange\n107:     for (\"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz\") |c| {\n108:         // Act\n109:         const sp = Span.init_diacritic(c, .empty);\n110: \n111:         // Assert\n112:         try expectEqual(c, sp.base);\n113:         try expectEqual(.empty, sp.diacritic);\n114:         try expectEqual(.level, sp.tone);\n115:     }\n116: }\n117: \n118: test \"expect Span.init_diacritic can construct any Vietnamese characters\" {\n119:     // Arrange\n120:     const chars = .{\n121:         .{ .base = 'A', .diacritic = .breve }, // Ă.\n122:         .{ .base = 'a', .diacritic = .breve }, // ă.\n123:         .{ .base = 'A', .diacritic = .circumflex }, // Â.\n124:         .{ .base = 'a', .diacritic = .circumflex }, // â.\n125:         .{ .base = 'E', .diacritic = .circumflex }, // Ê.\n126:         .{ .base = 'e', .diacritic = .circumflex }, // ê.\n127:         .{ .base = 'O', .diacritic = .circumflex }, // Ô.\n128:         .{ .base = 'o', .diacritic = .circumflex }, // ô.\n129:         .{ .base = 'O', .diacritic = .horn }, // Ơ.\n130:         .{ .base = 'o', .diacritic = .horn }, // ơ.\n131:         .{ .base = 'U', .diacritic = .horn }, // Ư.\n132:         .{ .base = 'u', .diacritic = .horn }, // ư.\n133:         .{ .base = 'D', .diacritic = .bar }, // Đ.\n134:         .{ .base = 'd', .diacritic = .bar }, // đ.\n135:     };\n136: \n137:     // Need `inline for` to know the tuple at comptime.\n138:     inline for (chars) |c| {\n139:         // Act\n140:         const sp = Span.init_diacritic(c.base, c.diacritic);\n141: \n142:         // Assert\n143:         try expectEqual(c.base, sp.base);\n144:         try expectEqual(c.diacritic, sp.diacritic);\n145:         try expectEqual(.level, sp.tone);\n146:     }\n147: }\n148: \n149: test \"expect Span.init_diacritic_tone can construct all vowels with all tones\" {\n150:     // Arrange\n151:     const chars = .{\n152:         .{ .base = 'A', .diacritic = .empty }, // A.\n153:         .{ .base = 'A', .diacritic = .breve }, // Ă.\n154:         .{ .base = 'A', .diacritic = .circumflex }, // Â.\n155:         .{ .base = 'E', .diacritic = .empty }, // E.\n156:         .{ .base = 'E', .diacritic = .circumflex }, // Ê.\n157:         .{ .base = 'I', .diacritic = .empty }, // I.\n158:         .{ .base = 'O', .diacritic = .empty }, // O.\n159:         .{ .base = 'O', .diacritic = .circumflex }, // Ô.\n160:         .{ .base = 'O', .diacritic = .horn }, // Ơ.\n161:         .{ .base = 'U', .diacritic = .empty }, // U.\n162:         .{ .base = 'U', .diacritic = .horn }, // Ư.\n163:         .{ .base = 'Y', .diacritic = .empty }, // Y.\n164:         .{ .base = 'a', .diacritic = .empty }, // a.\n165:         .{ .base = 'a', .diacritic = .breve }, // ă.\n166:         .{ .base = 'a', .diacritic = .circumflex }, // â.\n167:         .{ .base = 'e', .diacritic = .empty }, // e.\n168:         .{ .base = 'e', .diacritic = .circumflex }, // ê.\n169:         .{ .base = 'i', .diacritic = .empty }, // i.\n170:         .{ .base = 'o', .diacritic = .empty }, // o.\n171:         .{ .base = 'o', .diacritic = .circumflex }, // ô.\n172:         .{ .base = 'o', .diacritic = .horn }, // ơ.\n173:         .{ .base = 'u', .diacritic = .empty }, // u.\n174:         .{ .base = 'u', .diacritic = .horn }, // ư.\n175:         .{ .base = 'y', .diacritic = .empty }, // y.\n176:     };\n177: \n178:     const tones = .{ .level, .rising, .falling, .dipping_rising, .rising_glottalized, .falling_glottalized };\n179: \n180:     inline for (chars) |c| {\n181:         inline for (tones) |t| {\n182:             // Act\n183:             const sp = Span.init_diacritic_tone(c.base, c.diacritic, t);\n184: \n185:             // Assert\n186:             try expectEqual(c.base, sp.base);\n187:             try expectEqual(c.diacritic, sp.diacritic);\n188:             try expectEqual(t, sp.tone);\n189:         }\n190:     }\n191: }\n192: \n193: const InputMode = enum(u8) {\n194:     // By pass Vietnamese input processing and append the character as is.\n195:     literal,\n196:     // Process Vietnamese input in Telex input method.\n197:     telex,\n198: };\n199: \n200: const State = struct {\n201:     // The effective buffer to process Vietnamese input. we will skip processing if the buffer\n202:     // longer than 16.\n203:     buffer_effective: [16]Span,\n204:     // The maximum buffer length that the engine still keeps the effective buffer, after the maximum\n205:     // value (255), we will reset the effective buffer and this value.\n206:     buffer_length: u8 = 0,\n207:     // Mark the earliest position (inclusive) in buffer where we modified the span, will be used to\n208:     // calculate backspaces and replacement characters.\n209:     buffer_modification_index: ?u8 = null,\n210:     // Mark the position (inclusive) in buffer where we will switch to literal mode (due to manually\n211:     // switch, input cancellation, exceed effective buffer). This value is only used in .telex mode\n212:     // and the engine is working on position on or after literal index, the engine will skip\n213:     // Vietnamese input processing (we only count valid numbers, null mean no literal index).\n214:     literal_index: ?u8 = null,\n215:     // Determine if we will process input in the specified mode (Telex) or append the character as is.\n216:     mode: InputMode = .literal,\n217: \n218:     // Initialize the State on allocated memory.\n219:     fn init(self: *State) void {\n220:         self.* = .{\n221:             .buffer_effective = undefined,\n222:         };\n223:     }\n224: \n225:     fn add(self: *State, c: u8) void {\n226:         // Only allow a-zA-Z.\n227:         assert(std.ascii.isAlphabetic(c));\n228: \n229:         // The buffer_modification index must be inbound of the buffer_effective.\n230:         assert(self.buffer_modification_index == null or self.buffer_modification_index.? < self.buffer_effective.len);\n231: \n232:         // Input mode must be either .literal or .telex.\n233:         assert(self.mode == .literal or self.mode == .telex);\n234: \n235:         // Should never set literal_index in .literal mode.\n236:         if (self.mode == .literal) {\n237:             assert(self.literal_index == null);\n238:         }\n239: \n240:         if (self.literal_index) |literal_index| {\n241:             // When literal_index is set, mode must be .telex.\n242:             assert(self.mode == .telex);\n243:             // The literal_index value must be in range null or 0 -> 16 (buffer_effective length)\n244:             // because we won't process Vietnamese input outside the buffer_effective.\n245:             assert(literal_index <= self.buffer_effective.len);\n246:             // The literal_index value must be less than buffer length.\n247:             assert(literal_index < self.buffer_length);\n248:         }\n249: \n250:         switch (c) {\n[... omitted lines 251 to 482 ...]\n483: \n484: test \"expect State.add handles non-Telex characters exceed the buffer_effective range\" {\n485:     // Arrange\n486:     var state: State = undefined;\n487:     state.init();\n488:     state.mode = .telex;\n489: \n490:     const input_sequence = \"bbbbbbbbbbqqqqqqqqqq\";\n491: \n492:     // Act\n493:     for (input_sequence) |c| {\n494:         state.add(c);\n495:     }\n496: \n497:     // Assert\n498:     // We only fill and increase the buffer_length based on input.\n499:     try expectEqual(20, state.buffer_length);\n500:     // Because we don't modify any existing character since the last input, expect null.\n501:     try expectEqual(null, state.buffer_modification_index);\n502:     // Because the input exceed the buffer_effective, we set literal_index after the last effective spans (16).\n503:     try expectEqual(16, state.literal_index);\n504:     // Don't touch on input mode.\n505:     try expectEqual(.telex, state.mode);\n506:     // Verify every the spans, must exactly the same with the input.\n507:     for (input_sequence[0..16], 0..) |c, i| {\n508:         const sp = state.buffer_effective[i];\n509:         try expectEqual(c, sp.base);\n510:         try expectEqual(.empty, sp.diacritic);\n511:         try expectEqual(.level, sp.tone);\n512:     }\n513: }\n514: \n515: test \"expect State.add adds a literally because it's the start of the buffer\" {\n516:     // Arrange\n517:     var state: State = undefined;\n518:     state.init();\n519:     state.mode = .telex;\n520: \n521:     // Act\n522:     state.add('a');\n523: \n524:     // Assert\n525:     try expectEqual(1, state.buffer_length);\n526:     try expectEqual(null, state.buffer_modification_index);\n527:     try expectEqual(null, state.literal_index);\n528:     try expectEqual(.telex, state.mode);\n529: \n530:     const sp = state.buffer_effective[0];\n531:     try expectEqual('a', sp.base);\n532:     try expectEqual(.empty, sp.diacritic);\n533:     try expectEqual(.level, sp.tone);\n534: }\n535: \n536: test \"expect State.add start literal input when the new input just exceeds buffer_effective\" {\n537:     // Arrange\n538:     var state: State = undefined;\n539:     state.init();\n540:     state.mode = .telex;\n541: \n542:     // input 16 characters.\n543:     for (\"bbbbbqqqqqbbbbbq\") |c| {\n544:         state.add(c);\n545:     }\n546: \n547:     // Act\n548:     state.add('a');\n549: \n550:     // Assert\n551:     try expectEqual(17, state.buffer_length);\n552:     try expectEqual(null, state.buffer_modification_index);\n553:     try expectEqual(16, state.literal_index);\n554:     try expectEqual(.telex, state.mode);\n555: }\n556: \n557: test \"expect State.add apply circumflex for valid cases\" {\n558:     // Arrange\n559:     var state: State = undefined;\n560:     state.init();\n561:     state.mode = .telex;\n562: \n563:     // Act\n564:     state.add('a');\n565:     state.add('a');\n566: \n567:     // Assert\n568:     try expectEqual(1, state.buffer_length);\n569:     try expectEqual(0, state.buffer_modification_index);\n570:     try expectEqual(null, state.literal_index);\n571:     try expectEqual(.telex, state.mode);\n572: \n573:     const sp = state.buffer_effective[0];\n574:     try expectEqual('a', sp.base);\n575:     try expectEqual(.circumflex, sp.diacritic);\n576:     try expectEqual(.level, sp.tone);\n577: }\n578: \n579: test \"expect State.add results aA when input aaA\" {\n580:     // Arrange\n581:     var state: State = undefined;\n582:     state.init();\n583:     state.mode = .telex;\n584: \n585:     // Act\n586:     state.add('a');\n587:     state.add('a');\n588:     state.add('A');\n589: \n590:     // Assert\n591:     try expectEqual(2, state.buffer_length);\n592:     try expectEqual(0, state.buffer_modification_index);\n593:     try expectEqual(1, state.literal_index);\n594:     try expectEqual(.telex, state.mode);\n595: \n596:     const sp1 = state.buffer_effective[0];\n597:     try expectEqual('a', sp1.base);\n598:     try expectEqual(.empty, sp1.diacritic);\n599:     try expectEqual(.level, sp1.tone);\n600: \n601:     const sp2 = state.buffer_effective[1];\n602:     try expectEqual('A', sp2.base);\n603:     try expectEqual(.empty, sp2.diacritic);\n604:     try expectEqual(.level, sp2.tone);\n605: }\n606: \n607: test \"expect State.backspace will reduce buffer_length by 1 and won't touch literal_index\" {\n608:     // Arrange\n609:     var state: State = undefined;\n610:     state.init();\n611:     state.mode = .telex;\n612: \n613:     // input 18 characters.\n614:     for (\"bbbbbqqqqqbbbbbqqq\") |c| {\n615:         state.add(c);\n616:     }\n617: \n618:     // Act\n619:     state.backspace();\n620: \n621:     // Assert\n622:     try expectEqual(17, state.buffer_length);\n623:     try expectEqual(null, state.buffer_modification_index);\n624:     try expectEqual(16, state.literal_index);\n625:     try expectEqual(.telex, state.mode);\n626: }\n627: \n628: test \"expect State.backspace will reduce buffer_length by 1 and unset literal_index\" {\n629:     // Arrange\n630:     var state: State = undefined;\n631:     state.init();\n632:     state.mode = .telex;\n633: \n634:     // input 17 characters so that the literal_index is set at the 17th character.\n635:     for (\"bbbbbqqqqqbbbbbqq\") |c| {\n636:         state.add(c);\n637:     }\n638: \n639:     // Act\n640:     state.backspace();\n641: \n642:     // Assert\n643:     try expectEqual(16, state.buffer_length);\n644:     try expectEqual(null, state.buffer_modification_index);\n645:     try expectEqual(null, state.literal_index);\n646:     try expectEqual(.telex, state.mode);\n647: }\n648: \n649: test \"expect State.backspace will reduce buffer_length by 1 when literal_index is not set\" {\n650:     // Arrange\n651:     var state: State = undefined;\n652:     state.init();\n653:     state.mode = .telex;\n654: \n655:     // input 17 characters so that the literal_index is set at the 17th character.\n656:     for (\"bbbbb\") |c| {\n657:         state.add(c);\n658:     }\n659: \n660:     // Act\n661:     state.backspace();\n662: \n663:     // Assert\n664:     try expectEqual(4, state.buffer_length);\n665:     try expectEqual(null, state.buffer_modification_index);\n666:     try expectEqual(null, state.literal_index);\n667:     try expectEqual(.telex, state.mode);\n668: }\n669: \n670: // Simple ABI wrapper for initialize allocated memory.\n671: export fn lex_state_init(state: *anyopaque) void {\n672:     // Ensure the allocated memory is aligned.\n673:     assert(@intFromPtr(state) % @alignOf(State) == 0);\n674: \n675:     const s: *State = @ptrCast(@alignCast(state));\n676:     s.init();\n677: }\n678: \n679: // Needed for the caller to allocate memory for our State.\n680: export const lex_state_size: usize = @sizeOf(State);\n681: \n682: // Needed for the caller to allocate memory for our State.\n683: export const lex_state_alignment: usize = @alignOf(State);\n684: \n685: test \"expect State can be initialized by raw allocation\" {\n686:     // Arrange\n687: \n688:     // Allocate memory, only specify on this test to simulate runtime allocation.\n689:     const raw_pointer = std.testing.allocator.rawAlloc(lex_state_size, .fromByteUnits(lex_state_alignment), @returnAddress()) orelse return error.OutOfMemory;\n690:     defer std.testing.allocator.rawFree(raw_pointer[0..lex_state_size], .fromByteUnits(lex_state_alignment), @returnAddress());\n691: \n692:     // Initialize state.\n693:     lex_state_init(raw_pointer);\n694:     const state: *align(lex_state_alignment) State = @ptrCast(@alignCast(raw_pointer));\n695:     state.mode = .telex;\n696: \n697:     const input_sequence = \"bbbbbqqqqq\";\n698: \n699:     // Act\n700:     for (input_sequence) |c| {\n701:         lex_add(raw_pointer, c);\n702:     }\n703: \n704:     // Assert\n705:     // We only fill and increase the buffer_length based on input.\n706:     try expectEqual(10, state.buffer_length);\n707:     // Because we don't modify any existing character since the last input, expect null.\n708:     try expectEqual(null, state.buffer_modification_index);\n709:     // Because we didn't exceed the buffer_affective, don't set literal_index.\n710:     try expectEqual(null, state.literal_index);\n711:     // Don't touch on input mode.\n712:     try expectEqual(.telex, state.mode);\n713:     // Verify every the spans, must exactly the same with the input.\n714:     for (input_sequence, 0..) |c, i| {\n715:         const sp = state.buffer_effective[i];\n716:         try expectEqual(c, sp.base);\n717:         try expectEqual(.empty, sp.diacritic);\n718:         try expectEqual(.level, sp.tone);\n719:     }\n720: }\n721: \n722: // Add operations to the given state based on Telex rules, operations are determined by the input\n723: // character.\n724: export fn lex_add(state: *anyopaque, c: u8) void {\n725:     const s: *State = @ptrCast(@alignCast(state));\n726:     s.add(c);\n727: }\n728: \n729: export fn lex_backspace(state: *anyopaque) void {\n730:     const s: *State = @ptrCast(@alignCast(state));\n731:     s.backspace();\n732: }",
+              "absolutePath": "/<redacted>/lex/src/liblex.zig"
+            },
+            "status": "done",
+            "progress": {},
+            "trackFiles": [
+              "file:///<redacted>/lex/src/liblex.zig"
+            ]
+          },
+          "type": "tool_result",
+          "toolUseID": "TU-033CckYEaD2nUAuD14Bc05"
+        }
+      ],
+      "messageId": 7,
+      "protocolMessageID": "M-033CckzrVGh2gHcrShyHXU"
+    },
+    {
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "tool_use"
+      },
+      "usage": {
+        "timestamp": "2026-05-07T14:34:33.947Z",
+        "inputTokens": 6,
+        "outputTokens": 2777,
+        "maxInputTokens": 300000,
+        "totalInputTokens": 29074,
+        "cacheReadInputTokens": 18547,
+        "cacheCreationInputTokens": 10521
+      },
+      "readAt": null,
+      "content": [
+        {
+          "type": "thinking",
+          "provider": "anthropic",
+          "thinking": " I'm working through how to parameterize the test for the circumflex diacritical mark. The rule applies to A, E, and O (both uppercase and lowercase), where inputting the same character again applies the circumflex accent. The existing character retains its case and tone, and I need to account for all combinations like Aa, aA, AA, and aa for each vowel.\n\nI'll structure the test cases using an inline array of structs with named fields and `inline for` to iterate through them at compile time. For each of the three base letters with four case combinations, I need to verify that after adding two characters, the buffer contains the correct base (matching the first character's case), the circumflex diacritic, and a level tone. The buffer state should show length 1, modification index 0, no literal index, and telex mode. I'm considering whether the test should also verify tone preservation, though that would require pre-seeding the buffer with a toned character first.\n\nNow I'm going to outline the approach and then consult the Oracle for another perspective.",
+          "finalTime": 1778164439938,
+          "signature": "<redacted>",
+          "startTime": 1778164425389
+        },
+        {
+          "text": "## Approach for parameterizing \"expect State.add apply circumflex for valid cases\"\n\n**Scope (from spec section \"Circumflex\" + \"Apply rules\"):**\n- Valid bases: `A`, `E`, `O` and lowercase `a`, `e`, `o`.\n- Trigger: the immediate previous span (with `.empty` diacritic) receives the same letter ignoring case.\n- The existing character keeps its case (and tone, but tone is unreachable from `State.add` alone, so out of scope for this single test).\n\n**Parameter matrix:** 3 base letters × 4 case combinations of `(first, second)` = 12 cases.\n- `(a,a) (a,A) (A,a) (A,A)` for `A`\n- same shape for `E` and `O`\n- expected resulting `base` equals `first` (existing keeps its case).\n\n**Test data shape (mirroring the existing `inline for` style at lines 120–146 / 151–190):**\n```\n.{ .first = 'a', .second = 'a', .expected_base = 'a' }\n.{ .first = 'a', .second = 'A', .expected_base = 'a' }\n.{ .first = 'A', .second = 'a', .expected_base = 'A' }\n.{ .first = 'A', .second = 'A', .expected_base = 'A' }\n... and same for e/E, o/O\n```\n\n**Per-iteration flow:**\n1. Arrange: `var state: State = undefined; state.init(); state.mode = .telex;`\n2. Act: `state.add(first); state.add(second);`\n3. Assert state-wide invariants: `buffer_length == 1`, `buffer_modification_index == 0`, `literal_index == null`, `mode == .telex`.\n4. Assert span at index 0: `base == expected_base`, `diacritic == .circumflex`, `tone == .level`.\n\n**Loop construct:** `inline for` (matches existing precedent and is required since the tuple is built at comptime).\n\n**Naming/style conformance:** snake_case fields, `Arrange/Act/Assert` comment blocks, `try expectEqual(expected, actual)` argument order as in the existing tests.\n\n**Out of scope for this test (handled by other tests per spec sections):** override rules (`Ăa`, `Ơo`), cancel rules (`Âa`), invalid bases (treat literally), tone preservation, and circumflex on non-empty existing diacritic.\n\nNow consulting the Oracle for an alternative perspective.",
+          "type": "text",
+          "finalTime": 1778164450379,
+          "startTime": 1778164439949
+        },
+        {
+          "id": "TU-033CclwixlXl3IwEZUlvoY",
+          "name": "oracle",
+          "type": "tool_use",
+          "input": {
+            "task": "Critique a proposed parameterized test design. Do NOT write or include any code, snippets, pseudo-code, or test data literals in your response. Reply in prose only. If you would normally illustrate with code, describe it in words instead.\n\nContext: A Zig file `liblex.zig` implements `State.add(c: u8)` for a Vietnamese Telex input method. We want to rewrite a single existing test named `\"expect State.add apply circumflex for valid cases\"` so it is parameterized, following the style of existing parameterized tests in the file (which use an inline tuple of structs with named fields plus `inline for`).\n\nSource-of-truth spec excerpt (Circumflex + Apply rules):\n- Circumflex is valid for A (Â), E (Ê), O (Ô) and their lowercases.\n- Only apply diacritic when the immediate previous character has empty diacritic.\n- Circumflex is triggered when the user inputs the same character (ignore case) as the existing character, when that character is valid for circumflex.\n- The existing character keeps its case and tone.\n- Treat out-of-scope characters as literal.\n\nProposed approach:\n1. Parameter matrix: 3 valid base letters {A, E, O} crossed with 4 case combinations of (first_char, second_char) = lower+lower, lower+upper, upper+lower, upper+upper. Total 12 cases.\n2. Each parameter row carries: first char to add, second char to add, expected resulting base (which equals first_char because existing keeps its case).\n3. Per iteration: initialize a fresh State, set mode=.telex, call State.add(first) then State.add(second). Assert buffer_length=1, buffer_modification_index=0, literal_index=null, mode=.telex; assert span[0] base=expected_base, diacritic=.circumflex, tone=.level.\n4. Use `inline for` because the parameter tuple is comptime.\n5. Out of scope for THIS test (covered by other tests): override rules (Ăa, Ơo), cancel rules (Âa), invalid bases treated literally, tone preservation, circumflex on non-empty existing diacritic.\n\nQuestions for the Oracle:\n- Is the parameter matrix complete and minimal for the stated scope (\"apply circumflex for valid cases\")?\n- Are the assertions sufficient and correct given the spec?\n- Is anything in scope per the spec that the matrix misses (e.g., should \"valid cases\" include the trigger applied when prior span has tone but empty diacritic)?\n- Is the case-combination dimension justified, or redundant given existing tests of `ascii_equal_ignore_case`?\n- Any risk of conflating this test's responsibility with the cancel/override tests?\n- Suggestions to keep the test minimal and aligned with TigerStyle simplicity.\n\nHard constraint: respond in prose only. Do not output any code blocks, snippets, identifiers in backticks listing arrays, or example test data literals. You may name fields and identifiers inline in prose.",
+            "files": [
+              "/<redacted>/lex/src/liblex.zig",
+              "/<redacted>/lex/specs/lex-vietnamese-telex-input-method.md"
+            ]
+          },
+          "complete": true
+        }
+      ],
+      "messageId": 8,
+      "protocolMessageID": "M-033Ccl1avTeaKPGymmCWFk"
+    },
+    {
+      "role": "user",
+      "readAt": null,
+      "content": [
+        {
+          "run": {
+            "result": "1. TL;DR\n\nThe proposed table is complete for the narrow, plain positive path, but it is not quite minimal. I would keep the parameterized rewrite, trim one redundant case combination, and treat tone preservation as a separate focused test if it is not already covered elsewhere. Effort: S.\n\n2. Recommended approach, simple path\n\n1. Keep one parameterized test for the three circumflex-eligible vowel families only.\n2. For case coverage, use three scenarios per base instead of all four:\n   - all-lowercase as the baseline positive case\n   - lowercase existing character with uppercase trigger\n   - uppercase existing character with lowercase trigger\n3. Drop the all-uppercase pair unless you specifically want exhaustive symmetry rather than minimal coverage.\n4. Keep the per-row data limited to what truly varies. The expected resulting base is derivable from the first input, so carrying it as a separate field is probably unnecessary.\n5. Keep the shared assertions exactly on the externally meaningful state for this path:\n   - length stays at one\n   - modification index points at the first span\n   - literal index stays unset\n   - mode stays in Telex\n   - the remaining span keeps the original base character’s case\n   - the diacritic becomes circumflex\n   - the tone remains level for these fresh-state cases\n6. If tone preservation is not covered elsewhere, add one separate focused test for “previous span has a tone but empty diacritic, then circumflex is applied and the tone survives.” I would not expand this matrix to cover that extra dimension.\n\n3. Rationale and trade-offs\n\nOn completeness: for the stated narrow scope, your matrix covers the right positive space: all valid circumflex bases, case-insensitive triggering, and preservation of the existing character’s case.\n\nOn minimality: the four-way case cross is slightly overcomplete. Once you have one same-case baseline plus the two mixed-case directions, the remaining same-case uppercase row does not buy much new signal. It mostly repeats logic you have already exercised.\n\nOn whether mixed-case rows are justified: yes, at least some are. This is not just an internal helper concern. Case-insensitive triggering and preservation of the existing character’s case are both part of the externally visible behavior of State.add. Also, in this file the branches for the three bases are hand-written rather than abstracted, so per-base coverage is worth keeping.\n\nOn assertions: they are correct for a fresh-state positive apply case. They verify the key semantic point that the second input modifies the prior span instead of appending a new one.\n\nOn tone: the current assertions only show that a plain input stays plain in tone. They do not prove the spec requirement that an existing tone is preserved through circumflex application. That is a real spec obligation, but it is orthogonal enough that I would cover it in one dedicated test rather than inflate this matrix.\n\n4. Risks and guardrails\n\nThe main risk is test scope drift.\n\n- If you keep the broad phrase “valid cases,” readers may reasonably expect tone-preserving cases to be included, because the spec explicitly says case and tone are preserved. You can solve that either by narrowing the test’s intent in the name or by adding one separate tone-preservation test.\n- Do not pull override behavior, cancel behavior, invalid-base literal behavior, or non-empty-diacritic negatives into this same table. Those are distinct rules with distinct failure modes. Mixing them here will make the test harder to read and harder to diagnose.\n- Do not reuse state across rows. Fresh state per row is the right shape for this test because it isolates exactly one application event.\n\n5. When to consider the advanced path\n\nMove to a more elaborate structure only if one of these happens:\n\n- you start adding tone-preservation, prefix-position, and non-empty-diacritic variants into the same table\n- the parameter table grows to the point where the signal is buried in repetition\n- several diacritic tests begin repeating the same state assertions\n\nThose are the signs that a small shared assertion helper or a split into multiple narrowly named tests would be justified.\n\n6. Optional advanced path\n\nIf you later want even tighter simplicity, split the concerns into two tests:\n\n- one parameterized test proving that each eligible base applies circumflex on the ordinary plain-case path\n- one small test focused on cross-case triggering and preservation of the existing character’s case, possibly using fewer bases if you already trust the duplicated branches less than the shared comparison behavior\n\nFor now, though, the simplest good-enough path is: keep the parameterized rewrite, reduce the case matrix slightly, and add a separate tone-preservation test only if that behavior is otherwise uncovered.",
+            "status": "done",
+            "progress": [
+              {
+                "tool_uses": [
+                  {
+                    "id": "TU-033Ccns3VcvLz1EiZExVN0",
+                    "input": {
+                      "path": "/<redacted>/lex/src/liblex.zig",
+                      "read_range": [
+                        1,
+                        1200
+                      ]
+                    },
+                    "result": {
+                      "content": "1: const std = @import(\"std\");\n2: const assert = std.debug.assert;\n3: const expectEqual = std.testing.expectEqual;\n4: const Allocator = std.mem.Allocator;\n5: \n6: // Compare two character, ignore case. Caller must check both is alphabet before using this\n7: // function.\n8: fn ascii_equal_ignore_case(a: u8, b: u8) bool {\n9:     return std.ascii.toLower(a) == std.ascii.toLower(b);\n10: }\n11: \n12: const Diacritic = enum(u8) {\n13:     empty, // nguyên âm, không dấu.\n14:     circumflex, // dấu nón: â, ô, ê.\n15:     horn, // dấu móc: ư, ơ.\n16:     breve, // dấu ă.\n17:     bar, // dấu gạch: đ.\n18: };\n19: \n20: const Tone = enum(u8) {\n21:     level, // thanh ngang, không dấu.\n22:     rising, // sắc.\n23:     falling, // huyền.\n24:     dipping_rising, // hỏi.\n25:     rising_glottalized, // ngã.\n26:     falling_glottalized, // nặng.\n27: };\n28: \n29: const Span = extern struct {\n30:     // Alphabet ASCII character, could be lowercase or uppercase.\n31:     base: u8,\n32:     // By default, it's plain alphabet character.\n33:     diacritic: Diacritic = .empty,\n34:     // By default, no tone is placed.\n35:     tone: Tone = .level,\n36: \n37:     // Create a Span with plain alphabet character, no diacritic, no tone.\n38:     pub fn init(base: u8) Span {\n39:         return Span.init_diacritic_tone(base, .empty, .level);\n40:     }\n41: \n42:     // Create a Span with diacritic, no tone.\n43:     pub fn init_diacritic(base: u8, diacritic: Diacritic) Span {\n44:         return Span.init_diacritic_tone(base, diacritic, .level);\n45:     }\n46: \n47:     pub fn init_diacritic_tone(base: u8, diacritic: Diacritic, tone: Tone) Span {\n48:         // Only allow a-zA-Z.\n49:         assert(std.ascii.isAlphabetic(base));\n50: \n51:         // Only allow a valid Vietnamese alphabet combinations.\n52:         switch (diacritic) {\n53:             // All alphabet is allowed without diacritic.\n54:             .empty => {},\n55:             // Only a, o, e are valid with circumflex.\n56:             .circumflex => switch (base) {\n57:                 'A', 'E', 'O', 'a', 'e', 'o' => {},\n58:                 else => unreachable,\n59:             },\n60:             // Only u, o are valid with horn.\n61:             .horn => switch (base) {\n62:                 'O', 'U', 'o', 'u' => {},\n63:                 else => unreachable,\n64:             },\n65:             // Only a is valid with breve.\n66:             .breve => switch (base) {\n67:                 'A', 'a' => {},\n68:                 else => unreachable,\n69:             },\n70:             // Only d is valid with bar.\n71:             .bar => switch (base) {\n72:                 'D', 'd' => {},\n73:                 else => unreachable,\n74:             },\n75:         }\n76: \n77:         // Only allow tone on valid Vietnamese vowels based on Vietnamese rules.\n78:         switch (tone) {\n79:             // All alphabet is allowed with level.\n80:             .level => {},\n81:             // All vowels is allowed with remaining tones.\n82:             .rising, .falling, .dipping_rising, .rising_glottalized, .falling_glottalized => switch (base) {\n83:                 'A', 'E', 'I', 'O', 'U', 'Y', 'a', 'e', 'i', 'o', 'u', 'y' => {},\n84:                 else => unreachable,\n85:             },\n86:         }\n87: \n88:         return .{ .base = base, .diacritic = diacritic, .tone = tone };\n89:     }\n90: };\n91: \n92: test \"expect Span.init allows alphabet characters\" {\n93:     // Arrange\n94:     for (\"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz\") |c| {\n95:         // Act\n96:         const sp = Span.init(c);\n97: \n98:         // Assert\n99:         try expectEqual(c, sp.base);\n100:         try expectEqual(.empty, sp.diacritic);\n101:         try expectEqual(.level, sp.tone);\n102:     }\n103: }\n104: \n105: test \"expect Span.init_diacritic can construct any alphabet characters\" {\n106:     // Arrange\n107:     for (\"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz\") |c| {\n108:         // Act\n109:         const sp = Span.init_diacritic(c, .empty);\n110: \n111:         // Assert\n112:         try expectEqual(c, sp.base);\n113:         try expectEqual(.empty, sp.diacritic);\n114:         try expectEqual(.level, sp.tone);\n115:     }\n116: }\n117: \n118: test \"expect Span.init_diacritic can construct any Vietnamese characters\" {\n119:     // Arrange\n120:     const chars = .{\n121:         .{ .base = 'A', .diacritic = .breve }, // Ă.\n122:         .{ .base = 'a', .diacritic = .breve }, // ă.\n123:         .{ .base = 'A', .diacritic = .circumflex }, // Â.\n124:         .{ .base = 'a', .diacritic = .circumflex }, // â.\n125:         .{ .base = 'E', .diacritic = .circumflex }, // Ê.\n126:         .{ .base = 'e', .diacritic = .circumflex }, // ê.\n127:         .{ .base = 'O', .diacritic = .circumflex }, // Ô.\n128:         .{ .base = 'o', .diacritic = .circumflex }, // ô.\n129:         .{ .base = 'O', .diacritic = .horn }, // Ơ.\n130:         .{ .base = 'o', .diacritic = .horn }, // ơ.\n131:         .{ .base = 'U', .diacritic = .horn }, // Ư.\n132:         .{ .base = 'u', .diacritic = .horn }, // ư.\n133:         .{ .base = 'D', .diacritic = .bar }, // Đ.\n134:         .{ .base = 'd', .diacritic = .bar }, // đ.\n135:     };\n136: \n137:     // Need `inline for` to know the tuple at comptime.\n138:     inline for (chars) |c| {\n139:         // Act\n140:         const sp = Span.init_diacritic(c.base, c.diacritic);\n141: \n142:         // Assert\n143:         try expectEqual(c.base, sp.base);\n144:         try expectEqual(c.diacritic, sp.diacritic);\n145:         try expectEqual(.level, sp.tone);\n146:     }\n147: }\n148: \n149: test \"expect Span.init_diacritic_tone can construct all vowels with all tones\" {\n150:     // Arrange\n151:     const chars = .{\n152:         .{ .base = 'A', .diacritic = .empty }, // A.\n153:         .{ .base = 'A', .diacritic = .breve }, // Ă.\n154:         .{ .base = 'A', .diacritic = .circumflex }, // Â.\n155:         .{ .base = 'E', .diacritic = .empty }, // E.\n156:         .{ .base = 'E', .diacritic = .circumflex }, // Ê.\n157:         .{ .base = 'I', .diacritic = .empty }, // I.\n158:         .{ .base = 'O', .diacritic = .empty }, // O.\n159:         .{ .base = 'O', .diacritic = .circumflex }, // Ô.\n160:         .{ .base = 'O', .diacritic = .horn }, // Ơ.\n161:         .{ .base = 'U', .diacritic = .empty }, // U.\n162:         .{ .base = 'U', .diacritic = .horn }, // Ư.\n163:         .{ .base = 'Y', .diacritic = .empty }, // Y.\n164:         .{ .base = 'a', .diacritic = .empty }, // a.\n165:         .{ .base = 'a', .diacritic = .breve }, // ă.\n166:         .{ .base = 'a', .diacritic = .circumflex }, // â.\n167:         .{ .base = 'e', .diacritic = .empty }, // e.\n168:         .{ .base = 'e', .diacritic = .circumflex }, // ê.\n169:         .{ .base = 'i', .diacritic = .empty }, // i.\n170:         .{ .base = 'o', .diacritic = .empty }, // o.\n171:         .{ .base = 'o', .diacritic = .circumflex }, // ô.\n172:         .{ .base = 'o', .diacritic = .horn }, // ơ.\n173:         .{ .base = 'u', .diacritic = .empty }, // u.\n174:         .{ .base = 'u', .diacritic = .horn }, // ư.\n175:         .{ .base = 'y', .diacritic = .empty }, // y.\n176:     };\n177: \n178:     const tones = .{ .level, .rising, .falling, .dipping_rising, .rising_glottalized, .falling_glottalized };\n179: \n180:     inline for (chars) |c| {\n181:         inline for (tones) |t| {\n182:             // Act\n183:             const sp = Span.init_diacritic_tone(c.base, c.diacritic, t);\n184: \n185:             // Assert\n186:             try expectEqual(c.base, sp.base);\n187:             try expectEqual(c.diacritic, sp.diacritic);\n188:             try expectEqual(t, sp.tone);\n189:         }\n190:     }\n191: }\n192: \n193: const InputMode = enum(u8) {\n194:     // By pass Vietnamese input processing and append the character as is.\n195:     literal,\n196:     // Process Vietnamese input in Telex input method.\n197:     telex,\n198: };\n199: \n200: const State = struct {\n201:     // The effective buffer to process Vietnamese input. we will skip processing if the buffer\n202:     // longer than 16.\n203:     buffer_effective: [16]Span,\n204:     // The maximum buffer length that the engine still keeps the effective buffer, after the maximum\n205:     // value (255), we will reset the effective buffer and this value.\n206:     buffer_length: u8 = 0,\n207:     // Mark the earliest position (inclusive) in buffer where we modified the span, will be used to\n208:     // calculate backspaces and replacement characters.\n209:     buffer_modification_index: ?u8 = null,\n210:     // Mark the position (inclusive) in buffer where we will switch to literal mode (due to manually\n211:     // switch, input cancellation, exceed effective buffer). This value is only used in .telex mode\n212:     // and the engine is working on position on or after literal index, the engine will skip\n213:     // Vietnamese input processing (we only count valid numbers, null mean no literal index).\n214:     literal_index: ?u8 = null,\n215:     // Determine if we will process input in the specified mode (Telex) or append the character as is.\n216:     mode: InputMode = .literal,\n217: \n218:     // Initialize the State on allocated memory.\n219:     fn init(self: *State) void {\n220:         self.* = .{\n221:             .buffer_effective = undefined,\n222:         };\n223:     }\n224: \n225:     fn add(self: *State, c: u8) void {\n226:         // Only allow a-zA-Z.\n227:         assert(std.ascii.isAlphabetic(c));\n228: \n229:         // The buffer_modification index must be inbound of the buffer_effective.\n230:         assert(self.buffer_modification_index == null or self.buffer_modification_index.? < self.buffer_effective.len);\n231: \n232:         // Input mode must be either .literal or .telex.\n233:         assert(self.mode == .literal or self.mode == .telex);\n234: \n235:         // Should never set literal_index in .literal mode.\n236:         if (self.mode == .literal) {\n237:             assert(self.literal_index == null);\n238:         }\n239: \n240:         if (self.literal_index) |literal_index| {\n241:             // When literal_index is set, mode must be .telex.\n242:             assert(self.mode == .telex);\n243:             // The literal_index value must be in range null or 0 -> 16 (buffer_effective length)\n244:             // because we won't process Vietnamese input outside the buffer_effective.\n245:             assert(literal_index <= self.buffer_effective.len);\n246:             // The literal_index value must be less than buffer length.\n247:             assert(literal_index < self.buffer_length);\n248:         }\n249: \n250:         switch (c) {\n251:             'A', 'a' => {\n252:                 if (self.literal_index != null or self.mode == .literal or self.buffer_length == 0) {\n253:                     // 1. Enable literal input when literal_index is set or on literal mode. The\n254:                     // literal_index is also set when the word starts with non-Vietnamese onsets.\n255:                     // 2. Append literal because no previous span existed. Continue Vietnamese\n256:                     // processing on next input.\n257:                     self.append_literal(c);\n258:                     // Set modification index to null because we didn't modify any existing span.\n259:                     self.buffer_modification_index = null;\n260:                 } else if (ascii_equal_ignore_case(self.buffer_effective[self.buffer_length - 1].base, c) and self.buffer_effective[self.buffer_length - 1].diacritic == .empty) {\n261:                     // 3. Previous span is 'A' or 'a', apply circumflex.\n262:                     const span_previous = self.buffer_effective[self.buffer_length - 1];\n263:                     self.buffer_effective[self.buffer_length - 1] = Span.init_diacritic_tone(span_previous.base, .circumflex, span_previous.tone);\n264:                     // Set modification index for calculating synthetic backspace.\n265:                     self.buffer_modification_index = self.buffer_length - 1;\n266:                 } else if (ascii_equal_ignore_case(self.buffer_effective[self.buffer_length - 1].base, c) and self.buffer_effective[self.buffer_length - 1].diacritic == .breve) {\n267:                     // 4. Previous span is 'Ă' or 'ă', override to circumflex.\n268:                     const span_previous = self.buffer_effective[self.buffer_length - 1];\n269:                     self.buffer_effective[self.buffer_length - 1] = Span.init_diacritic_tone(span_previous.base, .circumflex, span_previous.tone);\n270:                     // Set modification index for calculating synthetic backspace.\n271:                     self.buffer_modification_index = self.buffer_length - 1;\n272:                 } else if (ascii_equal_ignore_case(self.buffer_effective[self.buffer_length - 1].base, c) and self.buffer_effective[self.buffer_length - 1].diacritic == .circumflex) {\n273:                     // 5. Previous span is 'Â' or 'â', cancel circumflex for previous span and append new literal span.\n274:                     const span_previous = self.buffer_effective[self.buffer_length - 1];\n275:                     self.buffer_effective[self.buffer_length - 1] = Span.init_diacritic_tone(span_previous.base, .empty, span_previous.tone);\n276:                     // Set modification index for calculating synthetic backspace.\n277:                     self.buffer_modification_index = self.buffer_length - 1;\n278:                     // Start literal input from this position.\n279:                     self.literal_index = self.buffer_length;\n280:                     // Append literal 'A' or 'a'.\n281:                     self.append_literal(c);\n282:                 } else if (std.ascii.toLower(self.buffer_effective[self.buffer_length - 1].base) != std.ascii.toLower(c)) {\n283:                     // 6. Append literal when previous span is not 'A', 'a' and its variants.\n284:                     if (self.buffer_length == self.buffer_effective.len) {\n285:                         // Start literal input from this position when buffer_length exceeds the buffer_effective.\n286:                         self.literal_index = self.buffer_length;\n287:                     }\n288:                     self.append_literal(c);\n289:                     // No modification.\n290:                     self.buffer_modification_index = null;\n291:                 } else {\n292:                     unreachable;\n293:                 }\n294:             },\n295:             'C', 'c' => {}, // fill missing diacritic, e.g. cước.\n296:             'D', 'd' => {}, // bar.\n297:             'E', 'e' => {\n298:                 if (self.literal_index != null or self.mode == .literal or self.buffer_length == 0) {\n299:                     // 1. Enable literal input when literal_index is set or on literal mode. The\n300:                     // literal_index is also set when the word starts with non-Vietnamese onsets.\n301:                     // 2. Append literal because no previous span existed. Continue Vietnamese\n302:                     // processing on next input.\n303:                     self.append_literal(c);\n304:                     // Set modification index to null because we didn't modify any existing span.\n305:                     self.buffer_modification_index = null;\n306:                 } else if (ascii_equal_ignore_case(self.buffer_effective[self.buffer_length - 1].base, c) and self.buffer_effective[self.buffer_length - 1].diacritic == .empty) {\n307:                     // 3. Previous span is 'E' or 'e', apply circumflex.\n308:                     const span_previous = self.buffer_effective[self.buffer_length - 1];\n309:                     self.buffer_effective[self.buffer_length - 1] = Span.init_diacritic_tone(span_previous.base, .circumflex, span_previous.tone);\n310:                     // Set modification index for calculating synthetic backspace.\n311:                     self.buffer_modification_index = self.buffer_length - 1;\n312:                 } else if (ascii_equal_ignore_case(self.buffer_effective[self.buffer_length - 1].base, c) and self.buffer_effective[self.buffer_length - 1].diacritic == .circumflex) {\n313:                     // 4. Previous span is 'Ê' or 'ê', cancel circumflex for previous span and append new literal span.\n314:                     const span_previous = self.buffer_effective[self.buffer_length - 1];\n315:                     self.buffer_effective[self.buffer_length - 1] = Span.init_diacritic_tone(span_previous.base, .empty, span_previous.tone);\n316:                     // Set modification index for calculating synthetic backspace.\n317:                     self.buffer_modification_index = self.buffer_length - 1;\n318:                     // Start literal input from this position.\n319:                     self.literal_index = self.buffer_length;\n320:                     // Append literal 'E' or 'e'.\n321:                     self.append_literal(c);\n322:                 } else if (std.ascii.toLower(self.buffer_effective[self.buffer_length - 1].base) != std.ascii.toLower(c)) {\n323:                     // 5. Append literal when previous span is not 'E', 'e' and its variants.\n324:                     if (self.buffer_length == self.buffer_effective.len) {\n325:                         // Start literal input from this position when buffer_length exceeds the buffer_effective.\n326:                         self.literal_index = self.buffer_length;\n327:                     }\n328:                     self.append_literal(c);\n329:                     // No modification.\n330:                     self.buffer_modification_index = null;\n331:                 } else {\n332:                     unreachable;\n333:                 }\n334:             },\n335:             'F', 'f' => {}, // falling.\n336:             'I', 'i' => {}, // fill missing diacritic, e.g. người.\n337:             'J', 'j' => {}, // falling_glottalized.\n338:             'M', 'm' => {}, // fill missing diacritic, e.g. cườm.\n339:             'N', 'n' => {}, // fill missing diacritic, e.g. cường.\n340:             'O', 'o' => {\n341:                 if (self.literal_index != null or self.mode == .literal or self.buffer_length == 0) {\n342:                     // 1. Enable literal input when literal_index is set or on literal mode. The\n343:                     // literal_index is also set when the word starts with non-Vietnamese onsets.\n344:                     // 2. Append literal because no previous span existed. Continue Vietnamese\n345:                     // processing on next input.\n346:                     self.append_literal(c);\n347:                     // Set modification index to null because we didn't modify any existing span.\n348:                     self.buffer_modification_index = null;\n349:                 } else if (ascii_equal_ignore_case(self.buffer_effective[self.buffer_length - 1].base, c) and self.buffer_effective[self.buffer_length - 1].diacritic == .empty) {\n350:                     // 3. Previous span is 'O' or 'o', apply circumflex.\n351:                     const span_previous = self.buffer_effective[self.buffer_length - 1];\n352:                     self.buffer_effective[self.buffer_length - 1] = Span.init_diacritic_tone(span_previous.base, .circumflex, span_previous.tone);\n353:                     // Set modification index for calculating synthetic backspace.\n354:                     self.buffer_modification_index = self.buffer_length - 1;\n355:                 } else if (ascii_equal_ignore_case(self.buffer_effective[self.buffer_length - 1].base, c) and self.buffer_effective[self.buffer_length - 1].diacritic == .horn) {\n356:                     // 4. Previous span is 'Ơ' or 'ơ', override to circumflex.\n357:                     const span_previous = self.buffer_effective[self.buffer_length - 1];\n358:                     self.buffer_effective[self.buffer_length - 1] = Span.init_diacritic_tone(span_previous.base, .circumflex, span_previous.tone);\n359:                     // Set modification index for calculating synthetic backspace\n360:                     self.buffer_modification_index = self.buffer_length - 1;\n361:                 } else if (ascii_equal_ignore_case(self.buffer_effective[self.buffer_length - 1].base, c) and self.buffer_effective[self.buffer_length - 1].diacritic == .circumflex) {\n362:                     // 5. Previous span is 'Ô' or 'ô', cancel circumflex for previous span and append new literal span.\n363:                     const span_previous = self.buffer_effective[self.buffer_length - 1];\n364:                     self.buffer_effective[self.buffer_length - 1] = Span.init_diacritic_tone(span_previous.base, .empty, span_previous.tone);\n365:                     // Set modification index for calculating synthetic backspace.\n366:                     self.buffer_modification_index = self.buffer_length - 1;\n367:                     // Start literal input from this position.\n368:                     self.literal_index = self.buffer_length;\n369:                     // Append literal 'O' or 'o'.\n370:                     self.append_literal(c);\n371:                 } else if (std.ascii.toLower(self.buffer_effective[self.buffer_length - 1].base) != std.ascii.toLower(c)) {\n372:                     // 6. Append literal when previous span is not 'O', 'o' and its variants.\n373:                     if (self.buffer_length == self.buffer_effective.len) {\n374:                         // Start literal input from this position when buffer_length exceeds the buffer_effective.\n375:                         self.literal_index = self.buffer_length;\n376:                     }\n377:                     self.append_literal(c);\n378:                     // No modification.\n379:                     self.buffer_modification_index = null;\n380:                 } else {\n381:                     unreachable;\n382:                 }\n383:             },\n384:             'P', 'p' => {}, // fill missing diacritic, e.g. cướp.\n385:             'R', 'r' => {}, // dipping_rising.\n386:             'S', 's' => {}, // rising.\n387:             'T', 't' => {}, // fill missing diacritic, e.g. trượt.\n388:             'U', 'u' => {}, // fill missing diacritic, e.g. hươu.\n389:             'W', 'w' => {}, // breve.\n390:             'X', 'x' => {}, // rising_glottalized.\n391:             'Z', 'z' => {}, // level / reset.\n392:             else => { // literal.\n393:                 // These characters will be added to state literally.\n394:                 self.append_literal(c);\n395:                 // Set modification index to null because we didn't modify any existing span.\n396:                 self.buffer_modification_index = null;\n397:                 // Set literal index if it's not set and the length exceed the buffer_effective.\n398:                 if (self.literal_index == null and self.buffer_length > self.buffer_effective.len) {\n399:                     // Set literal mode since buffer index 16 (just after the last buffer_effective\n400:                     // item) because we don't have span for these position, we stop processing Telex\n401:                     // rules but we will continue processing if user use backspaces to move back to the\n402:                     // buffer_effective range, all existing spans must work as expected.\n403:                     self.literal_index = self.buffer_effective.len;\n404:                 }\n405:             },\n406:         }\n407: \n408:         // Ensure the literal_index in valid state.\n409:         if (self.mode == .literal) {\n410:             assert(self.literal_index == null);\n411:         }\n412:     }\n413: \n414:     // Append literal character when possible. Then inclease the buffer_length.\n415:     fn append_literal(self: *State, c: u8) void {\n416:         // Only allow a-zA-Z.\n417:         assert(std.ascii.isAlphabetic(c));\n418: \n419:         // Check if we can add new span for input character.\n420:         if (self.buffer_length < self.buffer_effective.len) {\n421:             // Add character to span.\n422:             self.buffer_effective[self.buffer_length] = Span.init(c);\n423:         }\n424:         // Increase the buffer length for tracking, we will need it went handling backspace.\n425:         self.buffer_length = self.buffer_length + 1;\n426:     }\n427: \n428:     fn backspace(self: *State) void {\n429:         // buffer_length must be positive for backspace.\n430:         assert(self.buffer_length > 0);\n431: \n432:         // Input mode must be either .literal or .telex.\n433:         assert(self.mode == .literal or self.mode == .telex);\n434: \n435:         if (self.literal_index) |literal_index| {\n436:             // Input mode must be .telex when literal_index is set.\n437:             assert(self.mode == .telex);\n438:             // literal_index must be within buffer range when set.\n439:             assert(literal_index < self.buffer_length);\n440:         }\n441: \n442:         // decrease the buffer_length to match the backspace.\n443:         self.buffer_length -= 1;\n444:         // because backspace doesn't retro-modify the buffer, unset the buffer_modification_index.\n445:         self.buffer_modification_index = null;\n446:         // if the literal_index is out of buffer range, unset it.\n447:         if (self.literal_index != null and self.literal_index.? == self.buffer_length) {\n448:             self.literal_index = null;\n449:         }\n450:     }\n451: };\n452: \n453: test \"expect State.add handles non-Telex characters less than buffer_effective range\" {\n454:     // Arrange\n455:     var state: State = undefined;\n456:     state.init();\n457:     state.mode = .telex;\n458: \n459:     const input_sequence = \"bbbbbqqqqq\";\n460: \n461:     // Act\n462:     for (input_sequence) |c| {\n463:         state.add(c);\n464:     }\n465: \n466:     // Assert\n467:     // We only fill and increase the buffer_length based on input.\n468:     try expectEqual(10, state.buffer_length);\n469:     // Because we don't modify any existing character since the last input, expect null.\n470:     try expectEqual(null, state.buffer_modification_index);\n471:     // Because we didn't exceed the buffer_affective, don't set literal_index.\n472:     try expectEqual(null, state.literal_index);\n473:     // Don't touch on input mode.\n474:     try expectEqual(.telex, state.mode);\n475:     // Verify every the spans, must exactly the same with the input.\n476:     for (input_sequence, 0..) |c, i| {\n477:         const sp = state.buffer_effective[i];\n478:         try expectEqual(c, sp.base);\n479:         try expectEqual(.empty, sp.diacritic);\n480:         try expectEqual(.level, sp.tone);\n481:     }\n482: }\n483: \n484: test \"expect State.add handles non-Telex characters exceed the buffer_effective range\" {\n485:     // Arrange\n486:     var state: State = undefined;\n487:     state.init();\n488:     state.mode = .telex;\n489: \n490:     const input_sequence = \"bbbbbbbbbbqqqqqqqqqq\";\n491: \n492:     // Act\n493:     for (input_sequence) |c| {\n494:         state.add(c);\n495:     }\n496: \n497:     // Assert\n498:     // We only fill and increase the buffer_length based on input.\n499:     try expectEqual(20, state.buffer_length);\n500:     // Because we don't modify any existing character since the last input, expect null.\n501:     try expectEqual(null, state.buffer_modification_index);\n502:     // Because the input exceed the buffer_effective, we set literal_index after the last effective spans (16).\n503:     try expectEqual(16, state.literal_index);\n504:     // Don't touch on input mode.\n505:     try expectEqual(.telex, state.mode);\n506:     // Verify every the spans, must exactly the same with the input.\n507:     for (input_sequence[0..16], 0..) |c, i| {\n508:         const sp = state.buffer_effective[i];\n509:         try expectEqual(c, sp.base);\n510:         try expectEqual(.empty, sp.diacritic);\n511:         try expectEqual(.level, sp.tone);\n512:     }\n513: }\n514: \n515: test \"expect State.add adds a literally because it's the start of the buffer\" {\n516:     // Arrange\n517:     var state: State = undefined;\n518:     state.init();\n519:     state.mode = .telex;\n520: \n521:     // Act\n522:     state.add('a');\n523: \n524:     // Assert\n525:     try expectEqual(1, state.buffer_length);\n526:     try expectEqual(null, state.buffer_modification_index);\n527:     try expectEqual(null, state.literal_index);\n528:     try expectEqual(.telex, state.mode);\n529: \n530:     const sp = state.buffer_effective[0];\n531:     try expectEqual('a', sp.base);\n532:     try expectEqual(.empty, sp.diacritic);\n533:     try expectEqual(.level, sp.tone);\n534: }\n535: \n536: test \"expect State.add start literal input when the new input just exceeds buffer_effective\" {\n537:     // Arrange\n538:     var state: State = undefined;\n539:     state.init();\n540:     state.mode = .telex;\n541: \n542:     // input 16 characters.\n543:     for (\"bbbbbqqqqqbbbbbq\") |c| {\n544:         state.add(c);\n545:     }\n546: \n547:     // Act\n548:     state.add('a');\n549: \n550:     // Assert\n551:     try expectEqual(17, state.buffer_length);\n552:     try expectEqual(null, state.buffer_modification_index);\n553:     try expectEqual(16, state.literal_index);\n554:     try expectEqual(.telex, state.mode);\n555: }\n556: \n557: test \"expect State.add apply circumflex for valid cases\" {\n558:     // Arrange\n559:     var state: State = undefined;\n560:     state.init();\n561:     state.mode = .telex;\n562: \n563:     // Act\n564:     state.add('a');\n565:     state.add('a');\n566: \n567:     // Assert\n568:     try expectEqual(1, state.buffer_length);\n569:     try expectEqual(0, state.buffer_modification_index);\n570:     try expectEqual(null, state.literal_index);\n571:     try expectEqual(.telex, state.mode);\n572: \n573:     const sp = state.buffer_effective[0];\n574:     try expectEqual('a', sp.base);\n575:     try expectEqual(.circumflex, sp.diacritic);\n576:     try expectEqual(.level, sp.tone);\n577: }\n578: \n579: test \"expect State.add results aA when input aaA\" {\n580:     // Arrange\n581:     var state: State = undefined;\n582:     state.init();\n583:     state.mode = .telex;\n584: \n585:     // Act\n586:     state.add('a');\n587:     state.add('a');\n588:     state.add('A');\n589: \n590:     // Assert\n591:     try expectEqual(2, state.buffer_length);\n592:     try expectEqual(0, state.buffer_modification_index);\n593:     try expectEqual(1, state.literal_index);\n594:     try expectEqual(.telex, state.mode);\n595: \n596:     const sp1 = state.buffer_effective[0];\n597:     try expectEqual('a', sp1.base);\n598:     try expectEqual(.empty, sp1.diacritic);\n599:     try expectEqual(.level, sp1.tone);\n600: \n601:     const sp2 = state.buffer_effective[1];\n602:     try expectEqual('A', sp2.base);\n603:     try expectEqual(.empty, sp2.diacritic);\n604:     try expectEqual(.level, sp2.tone);\n605: }\n606: \n607: test \"expect State.backspace will reduce buffer_length by 1 and won't touch literal_index\" {\n608:     // Arrange\n609:     var state: State = undefined;\n610:     state.init();\n611:     state.mode = .telex;\n612: \n613:     // input 18 characters.\n614:     for (\"bbbbbqqqqqbbbbbqqq\") |c| {\n615:         state.add(c);\n616:     }\n617: \n618:     // Act\n619:     state.backspace();\n620: \n621:     // Assert\n622:     try expectEqual(17, state.buffer_length);\n623:     try expectEqual(null, state.buffer_modification_index);\n624:     try expectEqual(16, state.literal_index);\n625:     try expectEqual(.telex, state.mode);\n626: }\n627: \n628: test \"expect State.backspace will reduce buffer_length by 1 and unset literal_index\" {\n629:     // Arrange\n630:     var state: State = undefined;\n631:     state.init();\n632:     state.mode = .telex;\n633: \n634:     // input 17 characters so that the literal_index is set at the 17th character.\n635:     for (\"bbbbbqqqqqbbbbbqq\") |c| {\n636:         state.add(c);\n637:     }\n638: \n639:     // Act\n640:     state.backspace();\n641: \n642:     // Assert\n643:     try expectEqual(16, state.buffer_length);\n644:     try expectEqual(null, state.buffer_modification_index);\n645:     try expectEqual(null, state.literal_index);\n646:     try expectEqual(.telex, state.mode);\n647: }\n648: \n649: test \"expect State.backspace will reduce buffer_length by 1 when literal_index is not set\" {\n650:     // Arrange\n651:     var state: State = undefined;\n652:     state.init();\n653:     state.mode = .telex;\n654: \n655:     // input 17 characters so that the literal_index is set at the 17th character.\n656:     for (\"bbbbb\") |c| {\n657:         state.add(c);\n658:     }\n659: \n660:     // Act\n661:     state.backspace();\n662: \n663:     // Assert\n664:     try expectEqual(4, state.buffer_length);\n665:     try expectEqual(null, state.buffer_modification_index);\n666:     try expectEqual(null, state.literal_index);\n667:     try expectEqual(.telex, state.mode);\n668: }\n669: \n670: // Simple ABI wrapper for initialize allocated memory.\n671: export fn lex_state_init(state: *anyopaque) void {\n672:     // Ensure the allocated memory is aligned.\n673:     assert(@intFromPtr(state) % @alignOf(State) == 0);\n674: \n675:     const s: *State = @ptrCast(@alignCast(state));\n676:     s.init();\n677: }\n678: \n679: // Needed for the caller to allocate memory for our State.\n680: export const lex_state_size: usize = @sizeOf(State);\n681: \n682: // Needed for the caller to allocate memory for our State.\n683: export const lex_state_alignment: usize = @alignOf(State);\n684: \n685: test \"expect State can be initialized by raw allocation\" {\n686:     // Arrange\n687: \n688:     // Allocate memory, only specify on this test to simulate runtime allocation.\n689:     const raw_pointer = std.testing.allocator.rawAlloc(lex_state_size, .fromByteUnits(lex_state_alignment), @returnAddress()) orelse return error.OutOfMemory;\n690:     defer std.testing.allocator.rawFree(raw_pointer[0..lex_state_size], .fromByteUnits(lex_state_alignment), @returnAddress());\n691: \n692:     // Initialize state.\n693:     lex_state_init(raw_pointer);\n694:     const state: *align(lex_state_alignment) State = @ptrCast(@alignCast(raw_pointer));\n695:     state.mode = .telex;\n696: \n697:     const input_sequence = \"bbbbbqqqqq\";\n698: \n699:     // Act\n700:     for (input_sequence) |c| {\n701:         lex_add(raw_pointer, c);\n702:     }\n703: \n704:     // Assert\n705:     // We only fill and increase the buffer_length based on input.\n706:     try expectEqual(10, state.buffer_length);\n707:     // Because we don't modify any existing character since the last input, expect null.\n708:     try expectEqual(null, state.buffer_modification_index);\n709:     // Because we didn't exceed the buffer_affective, don't set literal_index.\n710:     try expectEqual(null, state.literal_index);\n711:     // Don't touch on input mode.\n712:     try expectEqual(.telex, state.mode);\n713:     // Verify every the spans, must exactly the same with the input.\n714:     for (input_sequence, 0..) |c, i| {\n715:         const sp = state.buffer_effective[i];\n716:         try expectEqual(c, sp.base);\n717:         try expectEqual(.empty, sp.diacritic);\n718:         try expectEqual(.level, sp.tone);\n719:     }\n720: }\n721: \n722: // Add operations to the given state based on Telex rules, operations are determined by the input\n723: // character.\n724: export fn lex_add(state: *anyopaque, c: u8) void {\n725:     const s: *State = @ptrCast(@alignCast(state));\n726:     s.add(c);\n727: }\n728: \n729: export fn lex_backspace(state: *anyopaque) void {\n730:     const s: *State = @ptrCast(@alignCast(state));\n731:     s.backspace();\n732: }",
+                      "absolutePath": "/<redacted>/lex/src/liblex.zig"
+                    },
+                    "status": "done",
+                    "tool_name": "Read"
+                  },
+                  {
+                    "id": "TU-033Ccns9wQ5ZlUNEbotEyQ",
+                    "input": {
+                      "path": "/<redacted>/lex/specs/lex-vietnamese-telex-input-method.md",
+                      "read_range": [
+                        1,
+                        400
+                      ]
+                    },
+                    "result": {
+                      "content": "1: # Lex - Vietnamese Telex input method\n2: \n3: The specification of the Lex program, a Vietnamese Telex input method.\n4: \n5: ## Vietnamese Telex Rules\n6: \n7: ### Diacritics\n8: \n9: Diacritics let a letter have many variant. We only focus on letter diacritics in this section. Tones\n10: have seperated section.\n11: \n12: #### Empty\n13: \n14: - Any literal alphabet character has empty diacritic by default.\n15: - Only a specific number of characters have other diacritic and it must follow the rules for those\n16:   characters.\n17: \n18: #### Circumflex\n19: \n20: - Valid for: `A` (Â), `E` (Ê), `O` (Ô) and their lower cases.\n21: \n22: #### Breve\n23: \n24: - Valid for: `A` (Ă) and its lower case.\n25: \n26: #### Horn\n27: \n28: - Valid for: `O` (Ơ), `U` (Ư) and their lower cases.\n29: \n30: #### Bar\n31: \n32: - Valid for: `D` (Đ) and its lower case.\n33: \n34: #### Apply rules\n35: \n36: - Only apply diacritic when the immediate previous character doesn't have any diacritic (empty).\n37: - _Circumflex_, _bar_ are triggered when user inputs the same character (ignore case) with the\n38:   existing character when that character is valid for the applying diacritic.\n39:   - `Aa` -> `Â`, `Ee` -> `Ê`, `Oo` -> `Ô`.\n40:   - `Dd` -> `Đ`.\n41: - _Breve_, _horn_ are triggered when user input `W`, `w` after the character when that character is\n42:   valid for the applying diacritic. Otherwise, treat `W`, `w` literally.\n43:   - `Aw` -> `Ă`.\n44:   - `Ow` -> `Ơ`, `Uw` -> `Ư`.\n45: - The existing character keep its case, tone.\n46: - Treat out of scope characters as literal.\n47: \n48: #### Override rules\n49: \n50: - New valid diacritic can override existing valid diacritic of the same base character.\n51:   - `Ăa` -> `Â`, `Âw` -> `Ă`.\n52:   - `Ôw` -> `Ơ`, `Ơo` -> `Ô`.\n53: - Only `A`, `O` have override rules because they have more than one possible letter diacritic.\n54: - Keep tone untouched.\n55: - The existing character keep its case, tone.\n56: - Treat out of scope characters as literal.\n57: \n58: #### Cancel rules\n59: \n60: - The cancellation is triggered if and only if user inputs the character (ignore case) that would\n61:   produce the existing diacritic for the same base character of the immediate previous character.\n62: - The existing character keeps its case, tone, but the diacritic is removed.\n63:   - Circumflex: `Âa` -> `Aa`, `Ốo` -> `Óo`... and so on for other cases of the same kind.\n64:   - Breve: `Ăw` -> `Aw`.\n65:   - Horn: `Ưw` -> `Uw`... and so on for other cases of the same kind.\n66:   - Bar: `Đd` -> `Dd`, `đD` -> `dD`.\n67: - The new character is literal, keeps its case, no tone.\n68: - Switch to literal from the new character position and the following characters. Literal input\n69:   remains until the process is reset (usually when starting new word).\n70:   - Existing `Â`, input `aa`, result `Aaa`.\n71: - When the user backspaces pass before the literal point, we switch to Vietnamese input again.\n72: \n73: #### Auto-fill rules\n74: \n75: - The auto-fill is only applied for `ươ` syllable immediately before the user input, when one of the\n76:   character in the syllable is missing horn: `uơ` and `ưo`.\n77: - Fill the missing _horn_ when the input is one of these character (ignore case): `C`, `I`, `M`,\n78:   `N`, `P`, `T`, `U` and their lower cases.\n79:   - Fill missing horn on `U`: `uơn` -> `ươn`.\n80:   - Fill missing horn on `O`: `ưóp` -> `ướp`.\n81: - The new input character is appended literally.\n82: - Tone and case of existing characters are preserved on the original characters.\n83: \n84: ### Tones\n85: \n86: _(the tones specification is not ready)_\n87: \n88: #### Level\n89: \n90: #### Rising\n91: \n92: #### Falling\n93: \n94: #### Dipping-rising\n95: \n96: #### Rising-glottalized\n97: \n98: #### Falling-glottalized\n99: \n100: #### Apply rules\n101: \n102: #### Override rules\n103: \n104: #### Reposition rules",
+                      "absolutePath": "/<redacted>/lex/specs/lex-vietnamese-telex-input-method.md"
+                    },
+                    "status": "done",
+                    "tool_name": "Read"
+                  }
+                ]
+              },
+              {
+                "tool_uses": [
+                  {
+                    "id": "TU-033CcqtEu6gYksCWmyRhdc",
+                    "input": {
+                      "path": "/<redacted>/lex/src/liblex.zig",
+                      "pattern": "buffer_effective\\[|tone|circumflex|ascii_equal_ignore_case"
+                    },
+                    "result": [
+                      "/<redacted>/lex/src/liblex.zig:8:fn ascii_equal_ignore_case(a: u8, b: u8) bool {",
+                      "/<redacted>/lex/src/liblex.zig:14:circumflex, // dấu nón: â, ô, ê.",
+                      "/<redacted>/lex/src/liblex.zig:20:const Tone = enum(u8) {",
+                      "/<redacted>/lex/src/liblex.zig:34:// By default, no tone is placed.",
+                      "/<redacted>/lex/src/liblex.zig:35:tone: Tone = .level,",
+                      "/<redacted>/lex/src/liblex.zig:37:// Create a Span with plain alphabet character, no diacritic, no tone.",
+                      "/<redacted>/lex/src/liblex.zig:39:return Span.init_diacritic_tone(base, .empty, .level);",
+                      "/<redacted>/lex/src/liblex.zig:42:// Create a Span with diacritic, no tone.",
+                      "/<redacted>/lex/src/liblex.zig:44:return Span.init_diacritic_tone(base, diacritic, .level);",
+                      "/<redacted>/lex/src/liblex.zig:47:pub fn init_diacritic_tone(base: u8, diacritic: Diacritic, tone: Tone) Span {"
+                    ],
+                    "status": "done",
+                    "tool_name": "Grep"
+                  }
+                ]
+              },
+              {
+                "message": "1. TL;DR\n\nThe proposed table is complete for the narrow, plain positive path, but it is not quite minimal. I would keep the parameterized rewrite, trim one redundant case combination, and treat tone preservation as a separate focused test if it is not already covered elsewhere. Effort: S.\n\n2. Recommended approach, simple path\n\n1. Keep one parameterized test for the three circumflex-eligible vowel families only.\n2. For case coverage, use three scenarios per base instead of all four:\n   - all-lowercase as the baseline positive case\n   - lowercase existing character with uppercase trigger\n   - uppercase existing character with lowercase trigger\n3. Drop the all-uppercase pair unless you specifically want exhaustive symmetry rather than minimal coverage.\n4. Keep the per-row data limited to what truly varies. The expected resulting base is derivable from the first input, so carrying it as a separate field is probably unnecessary.\n5. Keep the shared assertions exactly on the externally meaningful state for this path:\n   - length stays at one\n   - modification index points at the first span\n   - literal index stays unset\n   - mode stays in Telex\n   - the remaining span keeps the original base character’s case\n   - the diacritic becomes circumflex\n   - the tone remains level for these fresh-state cases\n6. If tone preservation is not covered elsewhere, add one separate focused test for “previous span has a tone but empty diacritic, then circumflex is applied and the tone survives.” I would not expand this matrix to cover that extra dimension.\n\n3. Rationale and trade-offs\n\nOn completeness: for the stated narrow scope, your matrix covers the right positive space: all valid circumflex bases, case-insensitive triggering, and preservation of the existing character’s case.\n\nOn minimality: the four-way case cross is slightly overcomplete. Once you have one same-case baseline plus the two mixed-case directions, the remaining same-case uppercase row does not buy much new signal. It mostly repeats logic you have already exercised.\n\nOn whether mixed-case rows are justified: yes, at least some are. This is not just an internal helper concern. Case-insensitive triggering and preservation of the existing character’s case are both part of the externally visible behavior of State.add. Also, in this file the branches for the three bases are hand-written rather than abstracted, so per-base coverage is worth keeping.\n\nOn assertions: they are correct for a fresh-state positive apply case. They verify the key semantic point that the second input modifies the prior span instead of appending a new one.\n\nOn tone: the current assertions only show that a plain input stays plain in tone. They do not prove the spec requirement that an existing tone is preserved through circumflex application. That is a real spec obligation, but it is orthogonal enough that I would cover it in one dedicated test rather than inflate this matrix.\n\n4. Risks and guardrails\n\nThe main risk is test scope drift.\n\n- If you keep the broad phrase “valid cases,” readers may reasonably expect tone-preserving cases to be included, because the spec explicitly says case and tone are preserved. You can solve that either by narrowing the test’s intent in the name or by adding one separate tone-preservation test.\n- Do not pull override behavior, cancel behavior, invalid-base literal behavior, or non-empty-diacritic negatives into this same table. Those are distinct rules with distinct failure modes. Mixing them here will make the test harder to read and harder to diagnose.\n- Do not reuse state across rows. Fresh state per row is the right shape for this test because it isolates exactly one application event.\n\n5. When to consider the advanced path\n\nMove to a more elaborate structure only if one of these happens:\n\n- you start adding tone-preservation, prefix-position, and non-empty-diacritic variants into the same table\n- the parameter table grows to the point where the signal is buried in repetition\n- several diacritic tests begin repeating the same state assertions\n\nThose are the signs that a small shared assertion helper or a split into multiple narrowly named tests would be justified.\n\n6. Optional advanced path\n\nIf you later want even tighter simplicity, split the concerns into two tests:\n\n- one parameterized test proving that each eligible base applies circumflex on the ordinary plain-case path\n- one small test focused on cross-case triggering and preservation of the existing character’s case, possibly using fewer bases if you already trust the duplicated branches less than the shared comparison behavior\n\nFor now, though, the simplest good-enough path is: keep the parameterized rewrite, reduce the case matrix slightly, and add a separate tone-preservation test only if that behavior is otherwise uncovered.",
+                "tool_uses": []
+              }
+            ]
+          },
+          "type": "tool_result",
+          "toolUseID": "TU-033CclwixlXl3IwEZUlvoY"
+        }
+      ],
+      "messageId": 9,
+      "protocolMessageID": "M-033CcvZkV5YaO8g8shH7cG"
+    },
+    {
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "end_turn"
+      },
+      "usage": {
+        "timestamp": "2026-05-07T14:40:54.744Z",
+        "inputTokens": 6,
+        "outputTokens": 776,
+        "maxInputTokens": 300000,
+        "totalInputTokens": 33400,
+        "cacheReadInputTokens": 15773,
+        "cacheCreationInputTokens": 17621
+      },
+      "readAt": null,
+      "content": [
+        {
+          "text": "## Synthesis: my approach + Oracle's perspective\n\n**Where I agree with the Oracle:**\n- Keep one parameterized test focused on the positive apply path; do not pull override/cancel/invalid-base/non-empty-diacritic into this matrix.\n- Fresh `State` per row.\n- Tone preservation is a real spec obligation but belongs in a separate test, not this matrix (and is currently unreachable anyway via `State.add` from a fresh buffer, since there is no public way to seed a tone first; that test can be deferred until tone application exists).\n\n**Where I'd push back / refine:**\n- **Keep all 4 case combinations**, not 3. The Oracle's argument for dropping `upper+upper` is \"redundant with the lower+lower baseline.\" But the per-base branches in `State.add` are hand-written; we already pay per-base duplication, so paying for the symmetric same-case pair is cheap and removes a \"why is this asymmetric?\" question for the reader. Cost: 3 extra rows of data; benefit: an obvious, exhaustive 3×4 grid.\n- **Keep `expected_base` as an explicit field** even though it is derivable from `first`. It documents the spec rule (\"existing keeps its case\") at the data site rather than implicitly in the assertion, which matches how the existing `init_diacritic_tone` table spells out `.base`/`.diacritic` rather than computing them.\n\n**Final agreed plan:**\n1. One parameterized test, replacing the existing single-case test at lines 557–577.\n2. Inline tuple of 12 rows: 3 bases × 4 case pairs; fields: `first`, `second`, `expected_base`.\n3. `inline for` loop. Per row: fresh `State`, set `mode=.telex`, `add(first)`, `add(second)`.\n4. Assert `buffer_length=1`, `buffer_modification_index=0`, `literal_index=null`, `mode=.telex`; span[0] `base=expected_base`, `diacritic=.circumflex`, `tone=.level`.\n5. Test name unchanged: \"expect State.add apply circumflex for valid cases\" — scope is \"trigger circumflex from a fresh empty-diacritic span.\" Tone preservation, override, cancel, invalid bases stay out.\n\nConfirm this plan and I will write the code.",
+          "type": "text",
+          "finalTime": 1778164853565,
+          "startTime": 1778164838859
+        }
+      ],
+      "messageId": 10,
+      "turnElapsedMs": 499514,
+      "protocolMessageID": "M-033CcvcwHnizfYON9vhGUk"
+    },
+    {
+      "meta": {
+        "sentAt": 1778164894422
+      },
+      "role": "user",
+      "readAt": null,
+      "content": [
+        {
+          "text": "I want tone preservation in this test. We could use `Span.init*` to prepare the Span. Continue the discussion.",
+          "type": "text"
+        }
+      ],
+      "messageId": 11,
+      "protocolMessageID": "M-033Ccx939ahMRv1rIEr6h0"
+    },
+    {
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "end_turn"
+      },
+      "usage": {
+        "timestamp": "2026-05-07T14:42:36.931Z",
+        "inputTokens": 6,
+        "outputTokens": 2727,
+        "maxInputTokens": 300000,
+        "totalInputTokens": 34219,
+        "cacheReadInputTokens": 33394,
+        "cacheCreationInputTokens": 819
+      },
+      "readAt": null,
+      "content": [
+        {
+          "type": "thinking",
+          "provider": "anthropic",
+          "thinking": " I'm working through how to preserve tone in this test by initializing a Span with diacritic tone and placing it directly into the buffer, then incrementing the buffer length and adding the second span.\n\nThe test scope becomes: given a previous span with a base letter (any case) from {A, E, O}, empty diacritic, and any tone, when the user inputs the same letter (any case), the span gets circumflex applied while preserving the original case and tone. Rather than enumerate all 72 combinations by hand (3 base families × 4 case combinations × 6 tones), I should use nested inline loops like the existing tone construction test does.\n\nThe approach is to loop over a tuple of (first, second, expected_base) pairs covering the 3×4 case grid, then nest an inner loop over the 6 tones. For each combination, I seed the span at index 0 with the initial diacritic-tone span, set buffer_length to 1, call add(second), and verify that buffer_length stays 1, buffer_modification_index becomes 0, literal_index remains null, mode stays telex, and the span has the expected base, circumflex diacritic, and preserved tone. The test couples directly to State's internal representation, but that's consistent with how existing tests already inspect these fields. Both loops will use inline for since tones is a comptime tuple of enum literals, matching the existing pattern.\n\nI'll name the test \"expect State.add apply circumflex for valid cases and preserves tone\" for clarity. The state.init() call is still needed to set defaults like buffer_effective before we override buffer_effective[0] and buffer_length. Since A, E, O are all vowels, all 6 tones are valid for the first character. The second character's case doesn't matter for the output because the existing character keeps its case and tone while the new input is consumed.",
+          "finalTime": 1778164937797,
+          "signature": "<redacted>",
+          "startTime": 1778164915739
+        },
+        {
+          "text": "## Revised plan with tone preservation\n\n**Setup technique — seed the prior span via `Span.init_diacritic_tone`:**\nAfter `state.init()` and `state.mode = .telex`, write `state.buffer_effective[0] = Span.init_diacritic_tone(first, .empty, tone)` and set `state.buffer_length = 1`. Then call `state.add(second)`. This bypasses `State.add` for the seed step, which is intentional: the unit under test is the *triggering* `add` call, and the seed is just a precondition. This pattern is already consistent with how the file's other state tests reach into `buffer_effective` directly.\n\n**Parameter dimensions:**\n- 3 base families: `A`, `E`, `O`.\n- 4 case combinations of `(first, second)`: `ll`, `lu`, `ul`, `uu`.\n- 6 tones: `level`, `rising`, `falling`, `dipping_rising`, `rising_glottalized`, `falling_glottalized`.\n\nTotal: 12 × 6 = 72 effective cases.\n\n**Loop shape:** mirror the existing nested-`inline for` pattern at lines 178–190 (\"construct all vowels with all tones\"). Outer `inline for` over a 12-row tuple of `{ first, second, expected_base }`. Inner `inline for` over the 6-tone tuple. Both must be `inline for` since both tuples are comptime.\n\n**Per-iteration flow:**\n1. Arrange: fresh `var state: State = undefined; state.init(); state.mode = .telex;` then seed span[0] and `buffer_length = 1`.\n2. Act: `state.add(second)`.\n3. Assert state-wide: `buffer_length == 1`, `buffer_modification_index == 0`, `literal_index == null`, `mode == .telex`.\n4. Assert span[0]: `base == expected_base`, `diacritic == .circumflex`, `tone == tone` (preserved unchanged).\n\n**Validity check on the seed:** `Span.init_diacritic_tone` accepts all six tones for `A/E/O` (they are vowels), and `.empty` diacritic is unconditionally valid, so all 72 seed combinations are constructible without hitting `unreachable`.\n\n**Important precondition reset:** the seeded `buffer_modification_index` stays `null` (the default from `init`). The assertion that it becomes `0` after the act step then genuinely tests that `State.add`'s circumflex branch sets it correctly — this is what allows the caller to compute synthetic backspaces (per AGENTS.md \"every `State.add` action must decide the value for `buffer_modification_index`\").\n\n**Test name:** I propose renaming to `\"expect State.add apply circumflex for valid cases and preserve tone\"` so the broadened scope is announced. If you prefer to keep the original name, the tone dimension is still defensible under \"valid cases\" but less self-documenting.\n\n**Out of scope (still excluded):** override (`Ăa`, `Ơo`), cancel (`Âa`), invalid bases, circumflex on non-empty existing diacritic. These remain separate tests.\n\n**Open questions for you to confirm:**\n1. Keep the 4-way case grid (12 rows) or trim to 3 per Oracle's earlier suggestion — given we are already multiplying by 6 tones, I'd keep 4 to preserve the clean rectangular matrix.\n2. Rename the test to mention tone preservation, yes or no?\n3. Are you comfortable with the direct `buffer_effective[0]` seed write, or would you prefer to add a small test-only helper on `State` (e.g., `seed_span`) to make the intent explicit? My recommendation: direct write — adding a helper just for tests violates the \"no abstractions for one-time operations\" guideline.",
+          "type": "text",
+          "finalTime": 1778164955930,
+          "startTime": 1778164937799
+        }
+      ],
+      "messageId": 12,
+      "turnElapsedMs": 61578,
+      "protocolMessageID": "M-033CcxaRkIN2N4EkAf8ioW"
+    },
+    {
+      "meta": {
+        "sentAt": 1778166632316
+      },
+      "role": "user",
+      "readAt": null,
+      "content": [
+        {
+          "text": "My decisions:\n\n- Keep 4-way cases.\n- Don't rename the test.\n- Write to buffer_effective directly.\n- Rename `first` to `vowel`, `second` to `new_input`.\n- No need for `expected_base` because we can reuse `base` from `vowel`.\n\nLet me preview your plan.",
+          "type": "text"
+        }
+      ],
+      "messageId": 13,
+      "protocolMessageID": "M-033CdfHIDlYWcKvo4sJiCY"
+    },
+    {
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "end_turn"
+      },
+      "usage": {
+        "timestamp": "2026-05-07T15:10:49.498Z",
+        "inputTokens": 6,
+        "outputTokens": 693,
+        "maxInputTokens": 300000,
+        "totalInputTokens": 37044,
+        "cacheReadInputTokens": 0,
+        "cacheCreationInputTokens": 37038
+      },
+      "readAt": null,
+      "content": [
+        {
+          "text": "## Final plan preview\n\n**Replaces:** the existing test at lines 557–577.\n\n**Test name (unchanged):** `\"expect State.add apply circumflex for valid cases\"`.\n\n**Parameter table — outer `inline for` over a 12-row tuple, fields:**\n- `vowel: u8` — the seed character placed at span[0].\n- `new_input: u8` — the character passed to `state.add`.\n\nRows (3 bases × 4 case combinations):\n- `A`: `(a,a)`, `(a,A)`, `(A,a)`, `(A,A)`\n- `E`: `(e,e)`, `(e,E)`, `(E,e)`, `(E,E)`\n- `O`: `(o,o)`, `(o,O)`, `(O,o)`, `(O,O)`\n\n**Inner `inline for` over the tones tuple:** `level`, `rising`, `falling`, `dipping_rising`, `rising_glottalized`, `falling_glottalized`.\n\n**Per-iteration flow:**\n1. Arrange:\n   - `var state: State = undefined;`\n   - `state.init();`\n   - `state.mode = .telex;`\n   - `state.buffer_effective[0] = Span.init_diacritic_tone(vowel, .empty, tone);`\n   - `state.buffer_length = 1;`\n2. Act:\n   - `state.add(new_input);`\n3. Assert state-wide:\n   - `buffer_length == 1`\n   - `buffer_modification_index == 0`\n   - `literal_index == null`\n   - `mode == .telex`\n4. Assert `state.buffer_effective[0]`:\n   - `base == vowel`\n   - `diacritic == .circumflex`\n   - `tone == tone`\n\n**Style conformance:** snake_case fields, Arrange/Act/Assert comment blocks, `try expectEqual(expected, actual)` order, nested `inline for` matching the precedent at lines 178–190.\n\n**Total assertions executed:** 72 cases × 7 assertions = 504 checks.\n\nConfirm and I'll write the code.",
+          "type": "text",
+          "finalTime": 1778166649392,
+          "startTime": 1778166641253
+        }
+      ],
+      "messageId": 14,
+      "turnElapsedMs": 17093,
+      "protocolMessageID": "M-033CdfRkr2JBG7PvGFTSUU"
+    },
+    {
+      "meta": {
+        "sentAt": 1778166896756
+      },
+      "role": "user",
+      "readAt": null,
+      "content": [
+        {
+          "text": "Good. Now write the test and verify the result.",
+          "type": "text"
+        }
+      ],
+      "messageId": 15,
+      "protocolMessageID": "M-033CdlxI09lqLquXsRAzH8"
+    },
+    {
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "tool_use"
+      },
+      "usage": {
+        "timestamp": "2026-05-07T15:15:07.892Z",
+        "inputTokens": 6,
+        "outputTokens": 1071,
+        "maxInputTokens": 300000,
+        "totalInputTokens": 37757,
+        "cacheReadInputTokens": 37038,
+        "cacheCreationInputTokens": 713
+      },
+      "readAt": null,
+      "content": [
+        {
+          "type": "thinking",
+          "provider": "anthropic",
+          "thinking": " I'm going to rewrite the test by replacing that section of code.",
+          "finalTime": 1778166899750,
+          "signature": "<redacted>",
+          "startTime": 1778166898840
+        },
+        {
+          "id": "TU-033Cdm3lufzK4uwI5zg5qH",
+          "name": "edit_file",
+          "type": "tool_use",
+          "input": {
+            "path": "/<redacted>/lex/src/liblex.zig",
+            "new_str": "test \"expect State.add apply circumflex for valid cases\" {\n    // Arrange\n    const cases = .{\n        .{ .vowel = 'a', .new_input = 'a' },\n        .{ .vowel = 'a', .new_input = 'A' },\n        .{ .vowel = 'A', .new_input = 'a' },\n        .{ .vowel = 'A', .new_input = 'A' },\n        .{ .vowel = 'e', .new_input = 'e' },\n        .{ .vowel = 'e', .new_input = 'E' },\n        .{ .vowel = 'E', .new_input = 'e' },\n        .{ .vowel = 'E', .new_input = 'E' },\n        .{ .vowel = 'o', .new_input = 'o' },\n        .{ .vowel = 'o', .new_input = 'O' },\n        .{ .vowel = 'O', .new_input = 'o' },\n        .{ .vowel = 'O', .new_input = 'O' },\n    };\n\n    const tones = .{ .level, .rising, .falling, .dipping_rising, .rising_glottalized, .falling_glottalized };\n\n    inline for (cases) |c| {\n        inline for (tones) |t| {\n            var state: State = undefined;\n            state.init();\n            state.mode = .telex;\n            state.buffer_effective[0] = Span.init_diacritic_tone(c.vowel, .empty, t);\n            state.buffer_length = 1;\n\n            // Act\n            state.add(c.new_input);\n\n            // Assert\n            try expectEqual(1, state.buffer_length);\n            try expectEqual(0, state.buffer_modification_index);\n            try expectEqual(null, state.literal_index);\n            try expectEqual(.telex, state.mode);\n\n            const sp = state.buffer_effective[0];\n            try expectEqual(c.vowel, sp.base);\n            try expectEqual(.circumflex, sp.diacritic);\n            try expectEqual(t, sp.tone);\n        }\n    }\n}",
+            "old_str": "test \"expect State.add apply circumflex for valid cases\" {\n    // Arrange\n    var state: State = undefined;\n    state.init();\n    state.mode = .telex;\n\n    // Act\n    state.add('a');\n    state.add('a');\n\n    // Assert\n    try expectEqual(1, state.buffer_length);\n    try expectEqual(0, state.buffer_modification_index);\n    try expectEqual(null, state.literal_index);\n    try expectEqual(.telex, state.mode);\n\n    const sp = state.buffer_effective[0];\n    try expectEqual('a', sp.base);\n    try expectEqual(.circumflex, sp.diacritic);\n    try expectEqual(.level, sp.tone);\n}"
+          },
+          "complete": true
+        }
+      ],
+      "messageId": 16,
+      "protocolMessageID": "M-033Cdm083DG9q66Uv4mFEG"
+    },
+    {
+      "role": "user",
+      "readAt": null,
+      "content": [
+        {
+          "run": {
+            "result": {
+              "diff": "```diff\n--- /<redacted>/lex/src/liblex.zig\toriginal\n+++ /<redacted>/lex/src/liblex.zig\tmodified\n@@ -555,27 +555,49 @@\n }\n \n test \"expect State.add apply circumflex for valid cases\" {\n     // Arrange\n+    const cases = .{\n+        .{ .vowel = 'a', .new_input = 'a' },\n+        .{ .vowel = 'a', .new_input = 'A' },\n+        .{ .vowel = 'A', .new_input = 'a' },\n+        .{ .vowel = 'A', .new_input = 'A' },\n+        .{ .vowel = 'e', .new_input = 'e' },\n+        .{ .vowel = 'e', .new_input = 'E' },\n+        .{ .vowel = 'E', .new_input = 'e' },\n+        .{ .vowel = 'E', .new_input = 'E' },\n+        .{ .vowel = 'o', .new_input = 'o' },\n+        .{ .vowel = 'o', .new_input = 'O' },\n+        .{ .vowel = 'O', .new_input = 'o' },\n+        .{ .vowel = 'O', .new_input = 'O' },\n+    };\n+\n+    const tones = .{ .level, .rising, .falling, .dipping_rising, .rising_glottalized, .falling_glottalized };\n+\n+    inline for (cases) |c| {\n+        inline for (tones) |t| {\n             var state: State = undefined;\n             state.init();\n             state.mode = .telex;\n+            state.buffer_effective[0] = Span.init_diacritic_tone(c.vowel, .empty, t);\n+            state.buffer_length = 1;\n \n             // Act\n-    state.add('a');\n-    state.add('a');\n+            state.add(c.new_input);\n \n             // Assert\n             try expectEqual(1, state.buffer_length);\n             try expectEqual(0, state.buffer_modification_index);\n             try expectEqual(null, state.literal_index);\n             try expectEqual(.telex, state.mode);\n \n             const sp = state.buffer_effective[0];\n-    try expectEqual('a', sp.base);\n+            try expectEqual(c.vowel, sp.base);\n             try expectEqual(.circumflex, sp.diacritic);\n-    try expectEqual(.level, sp.tone);\n+            try expectEqual(t, sp.tone);\n         }\n+    }\n+}\n \n test \"expect State.add results aA when input aaA\" {\n     // Arrange\n     var state: State = undefined;\n```",
+              "lineRange": [
+                557,
+                599
+              ]
+            },
+            "status": "done",
+            "progress": {},
+            "trackFiles": [
+              "file:///<redacted>/lex/src/liblex.zig"
+            ]
+          },
+          "type": "tool_result",
+          "toolUseID": "TU-033Cdm3lufzK4uwI5zg5qH"
+        }
+      ],
+      "messageId": 17,
+      "protocolMessageID": "M-033CdmHqwUnQlx6KnyjSGl"
+    },
+    {
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "tool_use"
+      },
+      "usage": {
+        "timestamp": "2026-05-07T15:15:10.803Z",
+        "inputTokens": 6,
+        "outputTokens": 109,
+        "maxInputTokens": 300000,
+        "totalInputTokens": 39783,
+        "cacheReadInputTokens": 37751,
+        "cacheCreationInputTokens": 2026
+      },
+      "readAt": null,
+      "content": [
+        {
+          "id": "TU-033CdmKJCrHjjWuPnX6rN6",
+          "name": "Bash",
+          "type": "tool_use",
+          "input": {
+            "cmd": "ls",
+            "cwd": "/<redacted>/lex"
+          },
+          "complete": true
+        }
+      ],
+      "messageId": 18,
+      "protocolMessageID": "M-033CdmI6Xe1wLcpbDWfjPK"
+    },
+    {
+      "role": "user",
+      "readAt": null,
+      "content": [
+        {
+          "run": {
+            "result": {
+              "output": "agent-threads\narticles\ndevlog\nLICENSE\nmacos\nplayground\nREADME.md\nspecs\nsrc\n",
+              "exitCode": 0
+            },
+            "status": "done"
+          },
+          "type": "tool_result",
+          "toolUseID": "TU-033CdmKJCrHjjWuPnX6rN6"
+        }
+      ],
+      "messageId": 19,
+      "protocolMessageID": "M-033CdmM3DN6TeG7nKhACNb"
+    },
+    {
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "tool_use"
+      },
+      "usage": {
+        "timestamp": "2026-05-07T15:15:16.320Z",
+        "inputTokens": 6,
+        "outputTokens": 145,
+        "maxInputTokens": 300000,
+        "totalInputTokens": 39986,
+        "cacheReadInputTokens": 39777,
+        "cacheCreationInputTokens": 203
+      },
+      "readAt": null,
+      "content": [
+        {
+          "type": "thinking",
+          "provider": "anthropic",
+          "thinking": " I need to locate the build configuration file or understand how the test suite is executed.",
+          "finalTime": 1778166915781,
+          "signature": "<redacted>",
+          "startTime": 1778166914406
+        },
+        {
+          "id": "TU-033CdmSz0QhrjJVLQCqwbW",
+          "name": "Bash",
+          "type": "tool_use",
+          "input": {
+            "cmd": "ls src/",
+            "cwd": "/<redacted>/lex"
+          },
+          "complete": true
+        }
+      ],
+      "messageId": 20,
+      "protocolMessageID": "M-033CdmMXEwHqukaxfrIndv"
+    },
+    {
+      "role": "user",
+      "readAt": null,
+      "content": [
+        {
+          "run": {
+            "result": {
+              "output": "liblex.h\nliblex.zig\n",
+              "exitCode": 0
+            },
+            "status": "done"
+          },
+          "type": "tool_result",
+          "toolUseID": "TU-033CdmSz0QhrjJVLQCqwbW"
+        }
+      ],
+      "messageId": 21,
+      "protocolMessageID": "M-033CdmUpw4ZRHNkTj8S26C"
+    },
+    {
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "tool_use"
+      },
+      "usage": {
+        "timestamp": "2026-05-07T15:15:20.003Z",
+        "inputTokens": 6,
+        "outputTokens": 158,
+        "maxInputTokens": 300000,
+        "totalInputTokens": 40203,
+        "cacheReadInputTokens": 39980,
+        "cacheCreationInputTokens": 217
+      },
+      "readAt": null,
+      "content": [
+        {
+          "type": "thinking",
+          "provider": "anthropic",
+          "thinking": " I don't see a build.zig file, so I'll try running the tests directly with zig test instead.",
+          "finalTime": 1778166919836,
+          "signature": "<redacted>",
+          "startTime": 1778166918739
+        },
+        {
+          "id": "TU-033CdmZLtcJtAyM4f6zexF",
+          "name": "Bash",
+          "type": "tool_use",
+          "input": {
+            "cmd": "zig test src/liblex.zig 2>&1",
+            "cwd": "/<redacted>/lex"
+          },
+          "complete": true
+        }
+      ],
+      "messageId": 22,
+      "protocolMessageID": "M-033CdmVMISs04DsFugADA6"
+    },
+    {
+      "role": "user",
+      "readAt": null,
+      "content": [
+        {
+          "run": {
+            "result": {
+              "output": "1/14 liblex.test.expect Span.init allows alphabet characters...OK\n2/14 liblex.test.expect Span.init_diacritic can construct any alphabet characters...OK\n3/14 liblex.test.expect Span.init_diacritic can construct any Vietnamese characters...OK\n4/14 liblex.test.expect Span.init_diacritic_tone can construct all vowels with all tones...OK\n5/14 liblex.test.expect State.add handles non-Telex characters less than buffer_effective range...OK\n6/14 liblex.test.expect State.add handles non-Telex characters exceed the buffer_effective range...OK\n7/14 liblex.test.expect State.add adds a literally because it's the start of the buffer...OK\n8/14 liblex.test.expect State.add start literal input when the new input just exceeds buffer_effective...OK\n9/14 liblex.test.expect State.add apply circumflex for valid cases...OK\n10/14 liblex.test.expect State.add results aA when input aaA...OK\n11/14 liblex.test.expect State.backspace will reduce buffer_length by 1 and won't touch literal_index...OK\n12/14 liblex.test.expect State.backspace will reduce buffer_length by 1 and unset literal_index...OK\n13/14 liblex.test.expect State.backspace will reduce buffer_length by 1 when literal_index is not set...OK\n14/14 liblex.test.expect State can be initialized by raw allocation...OK\nAll 14 tests passed.\n",
+              "exitCode": 0
+            },
+            "status": "done"
+          },
+          "type": "tool_result",
+          "toolUseID": "TU-033CdmZLtcJtAyM4f6zexF"
+        }
+      ],
+      "messageId": 23,
+      "protocolMessageID": "M-033CdmegeHCyPdsTU0P1Zd"
+    },
+    {
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "tool_use"
+      },
+      "usage": {
+        "timestamp": "2026-05-07T15:15:25.379Z",
+        "inputTokens": 6,
+        "outputTokens": 127,
+        "maxInputTokens": 300000,
+        "totalInputTokens": 40928,
+        "cacheReadInputTokens": 40197,
+        "cacheCreationInputTokens": 725
+      },
+      "readAt": null,
+      "content": [
+        {
+          "id": "TU-033CdmhDOf2UocugqxkWJh",
+          "name": "Bash",
+          "type": "tool_use",
+          "input": {
+            "cmd": "zig fmt --check src/liblex.zig 2>&1",
+            "cwd": "/<redacted>/lex"
+          },
+          "complete": true
+        }
+      ],
+      "messageId": 24,
+      "protocolMessageID": "M-033CdmfEZLct3mIL8MNPxs"
+    },
+    {
+      "role": "user",
+      "readAt": null,
+      "content": [
+        {
+          "run": {
+            "result": {
+              "output": "",
+              "exitCode": 0
+            },
+            "status": "done"
+          },
+          "type": "tool_result",
+          "toolUseID": "TU-033CdmhDOf2UocugqxkWJh"
+        }
+      ],
+      "messageId": 25,
+      "protocolMessageID": "M-033Cdmks8PCcX4ygvraZ5H"
+    },
+    {
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "end_turn"
+      },
+      "usage": {
+        "timestamp": "2026-05-07T15:15:31.133Z",
+        "inputTokens": 6,
+        "outputTokens": 116,
+        "maxInputTokens": 300000,
+        "totalInputTokens": 41114,
+        "cacheReadInputTokens": 40922,
+        "cacheCreationInputTokens": 186
+      },
+      "readAt": null,
+      "content": [
+        {
+          "text": "All 14 tests pass; `zig fmt --check` is clean. The rewritten test \"expect State.add apply circumflex for valid cases\" now exercises 12 case combinations × 6 tones = 72 sub-cases, seeding span[0] via `Span.init_diacritic_tone` to verify tone preservation alongside circumflex application.",
+          "type": "text",
+          "finalTime": 1778166931022,
+          "startTime": 1778166928550
+        }
+      ],
+      "messageId": 26,
+      "turnElapsedMs": 34315,
+      "protocolMessageID": "M-033CdmlNQMV83kwFMvUMdt"
+    }
+  ],
+  "agentMode": "smart",
+  "nextMessageId": 27,
+  "creatorUserID": "<redacted>",
+  "updatedAt": "2026-05-07T15:14:56.756Z"
+}

@@ -3,12 +3,6 @@ const assert = std.debug.assert;
 const expectEqual = std.testing.expectEqual;
 const Allocator = std.mem.Allocator;
 
-// Compare two character, ignore case. Caller must check both is alphabet before using this
-// function.
-fn ascii_equal_ignore_case(a: u8, b: u8) bool {
-    return std.ascii.toLower(a) == std.ascii.toLower(b);
-}
-
 const Diacritic = enum(u8) {
     empty, // nguyên âm, không dấu.
     circumflex, // dấu nón: â, ô, ê.
@@ -26,7 +20,7 @@ const Tone = enum(u8) {
     falling_glottalized, // nặng.
 };
 
-const Span = extern struct {
+const Span = struct {
     // Alphabet ASCII character, could be lowercase or uppercase.
     base: u8,
     // By default, it's plain alphabet character.
@@ -35,16 +29,16 @@ const Span = extern struct {
     tone: Tone = .level,
 
     // Create a Span with plain alphabet character, no diacritic, no tone.
-    pub fn init(base: u8) Span {
+    fn init(base: u8) Span {
         return Span.init_diacritic_tone(base, .empty, .level);
     }
 
     // Create a Span with diacritic, no tone.
-    pub fn init_diacritic(base: u8, diacritic: Diacritic) Span {
+    fn init_diacritic(base: u8, diacritic: Diacritic) Span {
         return Span.init_diacritic_tone(base, diacritic, .level);
     }
 
-    pub fn init_diacritic_tone(base: u8, diacritic: Diacritic, tone: Tone) Span {
+    fn init_diacritic_tone(base: u8, diacritic: Diacritic, tone: Tone) Span {
         // Only allow a-zA-Z.
         assert(std.ascii.isAlphabetic(base));
 
@@ -86,6 +80,21 @@ const Span = extern struct {
         }
 
         return .{ .base = base, .diacritic = diacritic, .tone = tone };
+    }
+
+    // Compare the span with a base character (ignore case) and diacritic, tone is ignored.
+    fn equals_ignore_case_and_tone(self: Span, base: u8, diacritic: Diacritic) bool {
+        // Base must be alphabet letters.
+        assert(std.ascii.isAlphabetic(base));
+
+        return std.ascii.toUpper(self.base) == std.ascii.toUpper(base) and self.diacritic == diacritic;
+    }
+
+    // Compare only base character, ignore other aspects.
+    fn equals_base(self: Span, base: u8) bool {
+        // Base must be alphabet letters.
+
+        return std.ascii.toUpper(self.base) == std.ascii.toUpper(base);
     }
 };
 
@@ -257,19 +266,19 @@ const State = struct {
                     self.append_literal(c);
                     // Set modification index to null because we didn't modify any existing span.
                     self.buffer_modification_index = null;
-                } else if (ascii_equal_ignore_case(self.buffer_effective[self.buffer_length - 1].base, c) and self.buffer_effective[self.buffer_length - 1].diacritic == .empty) {
+                } else if (self.buffer_effective_last().equals_ignore_case_and_tone(c, .empty)) {
                     // 3. Previous span is 'A' or 'a', apply circumflex.
                     const span_previous = self.buffer_effective[self.buffer_length - 1];
                     self.buffer_effective[self.buffer_length - 1] = Span.init_diacritic_tone(span_previous.base, .circumflex, span_previous.tone);
                     // Set modification index for calculating synthetic backspace.
                     self.buffer_modification_index = self.buffer_length - 1;
-                } else if (ascii_equal_ignore_case(self.buffer_effective[self.buffer_length - 1].base, c) and self.buffer_effective[self.buffer_length - 1].diacritic == .breve) {
+                } else if (self.buffer_effective_last().equals_ignore_case_and_tone(c, .breve)) {
                     // 4. Previous span is 'Ă' or 'ă', override to circumflex.
                     const span_previous = self.buffer_effective[self.buffer_length - 1];
                     self.buffer_effective[self.buffer_length - 1] = Span.init_diacritic_tone(span_previous.base, .circumflex, span_previous.tone);
                     // Set modification index for calculating synthetic backspace.
                     self.buffer_modification_index = self.buffer_length - 1;
-                } else if (ascii_equal_ignore_case(self.buffer_effective[self.buffer_length - 1].base, c) and self.buffer_effective[self.buffer_length - 1].diacritic == .circumflex) {
+                } else if (self.buffer_effective_last().equals_ignore_case_and_tone(c, .circumflex)) {
                     // 5. Previous span is 'Â' or 'â', cancel circumflex for previous span and append new literal span.
                     const span_previous = self.buffer_effective[self.buffer_length - 1];
                     self.buffer_effective[self.buffer_length - 1] = Span.init_diacritic_tone(span_previous.base, .empty, span_previous.tone);
@@ -279,7 +288,7 @@ const State = struct {
                     self.literal_index = self.buffer_length;
                     // Append literal 'A' or 'a'.
                     self.append_literal(c);
-                } else if (std.ascii.toLower(self.buffer_effective[self.buffer_length - 1].base) != std.ascii.toLower(c)) {
+                } else if (!self.buffer_effective_last().equals_base(c)) {
                     // 6. Append literal when previous span is not 'A', 'a' and its variants.
                     if (self.buffer_length == self.buffer_effective.len) {
                         // Start literal input from this position when buffer_length exceeds the buffer_effective.
@@ -293,7 +302,44 @@ const State = struct {
                 }
             },
             'C', 'c' => {}, // fill missing diacritic, e.g. cước.
-            'D', 'd' => {}, // bar.
+            'D', 'd' => { // bar.
+                if (self.literal_index != null or self.mode == .literal or self.buffer_length == 0) {
+                    // 1. Enable literal input when literal_index is set or on literal mode. The
+                    // literal_index is also set when the word starts with non-Vietnamese onsets.
+                    // 2. Append literal because no previous span existed. Continue Vietnamese
+                    // processing on next input.
+                    self.append_literal(c);
+                    // Set modification index to null because we didn't modify any existing span.
+                    self.buffer_modification_index = null;
+                } else if (self.buffer_effective_last().equals_ignore_case_and_tone(c, .empty)) {
+                    // 3. Previous span is 'D' or 'd', apply bar.
+                    const span_previous = self.buffer_effective[self.buffer_length - 1];
+                    self.buffer_effective[self.buffer_length - 1] = Span.init_diacritic_tone(span_previous.base, .bar, span_previous.tone);
+                    // Set modification index for calculating synthetic backspace.
+                    self.buffer_modification_index = self.buffer_length - 1;
+                } else if (self.buffer_effective_last().equals_ignore_case_and_tone(c, .bar)) {
+                    // 4. Previous span is 'Đ' or 'đ', cancel bar for previous span and append new literal span.
+                    const span_previous = self.buffer_effective[self.buffer_length - 1];
+                    self.buffer_effective[self.buffer_length - 1] = Span.init_diacritic_tone(span_previous.base, .empty, span_previous.tone);
+                    // Set modification index for calculating synthetic backspace.
+                    self.buffer_modification_index = self.buffer_length - 1;
+                    // Start literal input from this position.
+                    self.literal_index = self.buffer_length;
+                    // Append literal 'D' or 'd'.
+                    self.append_literal(c);
+                } else if (!self.buffer_effective_last().equals_base(c)) {
+                    // 5. Append literal when previous span is not 'D', 'd' and its variants.
+                    if (self.buffer_length == self.buffer_effective.len) {
+                        // Start literal input from this position when buffer_length exceeds the buffer_effective.
+                        self.literal_index = self.buffer_length;
+                    }
+                    self.append_literal(c);
+                    // No modification.
+                    self.buffer_modification_index = null;
+                } else {
+                    unreachable;
+                }
+            },
             'E', 'e' => {
                 if (self.literal_index != null or self.mode == .literal or self.buffer_length == 0) {
                     // 1. Enable literal input when literal_index is set or on literal mode. The
@@ -303,13 +349,13 @@ const State = struct {
                     self.append_literal(c);
                     // Set modification index to null because we didn't modify any existing span.
                     self.buffer_modification_index = null;
-                } else if (ascii_equal_ignore_case(self.buffer_effective[self.buffer_length - 1].base, c) and self.buffer_effective[self.buffer_length - 1].diacritic == .empty) {
+                } else if (self.buffer_effective_last().equals_ignore_case_and_tone(c, .empty)) {
                     // 3. Previous span is 'E' or 'e', apply circumflex.
                     const span_previous = self.buffer_effective[self.buffer_length - 1];
                     self.buffer_effective[self.buffer_length - 1] = Span.init_diacritic_tone(span_previous.base, .circumflex, span_previous.tone);
                     // Set modification index for calculating synthetic backspace.
                     self.buffer_modification_index = self.buffer_length - 1;
-                } else if (ascii_equal_ignore_case(self.buffer_effective[self.buffer_length - 1].base, c) and self.buffer_effective[self.buffer_length - 1].diacritic == .circumflex) {
+                } else if (self.buffer_effective_last().equals_ignore_case_and_tone(c, .circumflex)) {
                     // 4. Previous span is 'Ê' or 'ê', cancel circumflex for previous span and append new literal span.
                     const span_previous = self.buffer_effective[self.buffer_length - 1];
                     self.buffer_effective[self.buffer_length - 1] = Span.init_diacritic_tone(span_previous.base, .empty, span_previous.tone);
@@ -319,7 +365,7 @@ const State = struct {
                     self.literal_index = self.buffer_length;
                     // Append literal 'E' or 'e'.
                     self.append_literal(c);
-                } else if (std.ascii.toLower(self.buffer_effective[self.buffer_length - 1].base) != std.ascii.toLower(c)) {
+                } else if (!self.buffer_effective_last().equals_base(c)) {
                     // 5. Append literal when previous span is not 'E', 'e' and its variants.
                     if (self.buffer_length == self.buffer_effective.len) {
                         // Start literal input from this position when buffer_length exceeds the buffer_effective.
@@ -346,19 +392,19 @@ const State = struct {
                     self.append_literal(c);
                     // Set modification index to null because we didn't modify any existing span.
                     self.buffer_modification_index = null;
-                } else if (ascii_equal_ignore_case(self.buffer_effective[self.buffer_length - 1].base, c) and self.buffer_effective[self.buffer_length - 1].diacritic == .empty) {
+                } else if (self.buffer_effective_last().equals_ignore_case_and_tone(c, .empty)) {
                     // 3. Previous span is 'O' or 'o', apply circumflex.
                     const span_previous = self.buffer_effective[self.buffer_length - 1];
                     self.buffer_effective[self.buffer_length - 1] = Span.init_diacritic_tone(span_previous.base, .circumflex, span_previous.tone);
                     // Set modification index for calculating synthetic backspace.
                     self.buffer_modification_index = self.buffer_length - 1;
-                } else if (ascii_equal_ignore_case(self.buffer_effective[self.buffer_length - 1].base, c) and self.buffer_effective[self.buffer_length - 1].diacritic == .horn) {
+                } else if (self.buffer_effective_last().equals_ignore_case_and_tone(c, .horn)) {
                     // 4. Previous span is 'Ơ' or 'ơ', override to circumflex.
                     const span_previous = self.buffer_effective[self.buffer_length - 1];
                     self.buffer_effective[self.buffer_length - 1] = Span.init_diacritic_tone(span_previous.base, .circumflex, span_previous.tone);
                     // Set modification index for calculating synthetic backspace
                     self.buffer_modification_index = self.buffer_length - 1;
-                } else if (ascii_equal_ignore_case(self.buffer_effective[self.buffer_length - 1].base, c) and self.buffer_effective[self.buffer_length - 1].diacritic == .circumflex) {
+                } else if (self.buffer_effective_last().equals_ignore_case_and_tone(c, .circumflex)) {
                     // 5. Previous span is 'Ô' or 'ô', cancel circumflex for previous span and append new literal span.
                     const span_previous = self.buffer_effective[self.buffer_length - 1];
                     self.buffer_effective[self.buffer_length - 1] = Span.init_diacritic_tone(span_previous.base, .empty, span_previous.tone);
@@ -368,7 +414,7 @@ const State = struct {
                     self.literal_index = self.buffer_length;
                     // Append literal 'O' or 'o'.
                     self.append_literal(c);
-                } else if (std.ascii.toLower(self.buffer_effective[self.buffer_length - 1].base) != std.ascii.toLower(c)) {
+                } else if (!self.buffer_effective_last().equals_base(c)) {
                     // 6. Append literal when previous span is not 'O', 'o' and its variants.
                     if (self.buffer_length == self.buffer_effective.len) {
                         // Start literal input from this position when buffer_length exceeds the buffer_effective.
@@ -386,7 +432,87 @@ const State = struct {
             'S', 's' => {}, // rising.
             'T', 't' => {}, // fill missing diacritic, e.g. trượt.
             'U', 'u' => {}, // fill missing diacritic, e.g. hươu.
-            'W', 'w' => {}, // breve.
+            'W', 'w' => { // breve, horn
+                if (self.literal_index != null or self.mode == .literal or self.buffer_length == 0) {
+                    // 1. Literal index is set, stop process Vietnamese input.
+                    // 2. Literal mode.
+                    // 3. No previous character, append literally.
+                    self.append_literal(c);
+                    // Set modification index to null because we didn't modify any existing span.
+                    self.buffer_modification_index = null;
+                } else if (self.buffer_effective_last().equals_ignore_case_and_tone('A', .empty)) {
+                    // 4. Previous span is 'A', 'a', apply breve.
+                    const span_previous = self.buffer_effective[self.buffer_length - 1];
+                    self.buffer_effective[self.buffer_length - 1] = Span.init_diacritic_tone(span_previous.base, .breve, span_previous.tone);
+                    // Set modification index for calculating synthetic backspace.
+                    self.buffer_modification_index = self.buffer_length - 1;
+                } else if (self.buffer_effective_last().equals_ignore_case_and_tone('A', .circumflex)) {
+                    // 5. Previous span is 'Â', 'â', override to breve.
+                    const span_previous = self.buffer_effective[self.buffer_length - 1];
+                    self.buffer_effective[self.buffer_length - 1] = Span.init_diacritic_tone(span_previous.base, .breve, span_previous.tone);
+                    // Set modification index for calculating synthetic backspace.
+                    self.buffer_modification_index = self.buffer_length - 1;
+                } else if (self.buffer_effective_last().equals_ignore_case_and_tone('A', .breve)) {
+                    // 6. Previous span is 'Ă', 'ă', cancel breve for previous span and append new literal span.
+                    const span_previous = self.buffer_effective[self.buffer_length - 1];
+                    self.buffer_effective[self.buffer_length - 1] = Span.init_diacritic_tone(span_previous.base, .empty, span_previous.tone);
+                    // Set modification index for calculating synthetic backspace.
+                    self.buffer_modification_index = self.buffer_length - 1;
+                    // Start literal input from this position.
+                    self.literal_index = self.buffer_length;
+                    // Append literal 'W', 'w'.
+                    self.append_literal(c);
+                } else if (self.buffer_effective_last().equals_ignore_case_and_tone('O', .empty)) {
+                    // 7. Previous span is 'O', 'o', apply horn.
+                    const span_previous = self.buffer_effective[self.buffer_length - 1];
+                    self.buffer_effective[self.buffer_length - 1] = Span.init_diacritic_tone(span_previous.base, .horn, span_previous.tone);
+                    // Set modification index for calculating synthetic backspace.
+                    self.buffer_modification_index = self.buffer_length - 1;
+                } else if (self.buffer_effective_last().equals_ignore_case_and_tone('O', .circumflex)) {
+                    // 8. Previous span is 'Ô', 'ô', override to horn.
+                    const span_previous = self.buffer_effective[self.buffer_length - 1];
+                    self.buffer_effective[self.buffer_length - 1] = Span.init_diacritic_tone(span_previous.base, .horn, span_previous.tone);
+                    // Set modification index for calculating synthetic backspace.
+                    self.buffer_modification_index = self.buffer_length - 1;
+                } else if (self.buffer_effective_last().equals_ignore_case_and_tone('O', .horn)) {
+                    // 9. Previous span is 'Ơ', 'ơ', cancel horn for previous span and append new literal span.
+                    const span_previous = self.buffer_effective[self.buffer_length - 1];
+                    self.buffer_effective[self.buffer_length - 1] = Span.init_diacritic_tone(span_previous.base, .empty, span_previous.tone);
+                    // Set modification index for calculating synthetic backspace.
+                    self.buffer_modification_index = self.buffer_length - 1;
+                    // Start literal input from this position.
+                    self.literal_index = self.buffer_length;
+                    // Append literal 'W', 'w'.
+                    self.append_literal(c);
+                } else if (self.buffer_effective_last().equals_ignore_case_and_tone('U', .empty)) {
+                    // 10. Previous span is 'U', 'u', apply horn.
+                    const span_previous = self.buffer_effective[self.buffer_length - 1];
+                    self.buffer_effective[self.buffer_length - 1] = Span.init_diacritic_tone(span_previous.base, .horn, span_previous.tone);
+                    // Set modification index for calculating synthetic backspace.
+                    self.buffer_modification_index = self.buffer_length - 1;
+                } else if (self.buffer_effective_last().equals_ignore_case_and_tone('U', .horn)) {
+                    // 11. Previous span is 'Ư', 'ư', cancel horn for previous span and append new literal span.
+                    const span_previous = self.buffer_effective[self.buffer_length - 1];
+                    self.buffer_effective[self.buffer_length - 1] = Span.init_diacritic_tone(span_previous.base, .empty, span_previous.tone);
+                    // Set modification index for calculating synthetic backspace.
+                    self.buffer_modification_index = self.buffer_length - 1;
+                    // Start literal input from this position.
+                    self.literal_index = self.buffer_length;
+                    // Append literal 'W', 'w'.
+                    self.append_literal(c);
+                } else if (std.mem.indexOfScalar(u8, "AOU", std.ascii.toUpper(self.buffer_effective[self.buffer_length - 1].base)) == null) {
+                    // ? (last). Previous base character is not 'A', 'O', 'U'.
+                    if (self.buffer_length == self.buffer_effective.len) {
+                        // Start literal input from this position when buffer_length exceeds the buffer_effective.
+                        self.literal_index = self.buffer_length;
+                    }
+                    self.append_literal(c);
+                    // Set modification index to null because we didn't modify any existing span.
+                    self.buffer_modification_index = null;
+                } else {
+                    unreachable;
+                }
+            },
             'X', 'x' => {}, // rising_glottalized.
             'Z', 'z' => {}, // level / reset.
             else => { // literal.
@@ -423,6 +549,14 @@ const State = struct {
         }
         // Increase the buffer length for tracking, we will need it went handling backspace.
         self.buffer_length = self.buffer_length + 1;
+    }
+
+    // Return the last item in buffer_effective, not valid if the buffer_length is out of range.
+    fn buffer_effective_last(self: *State) Span {
+        // Should not work if buffer_length exceed buffer_effective.
+        assert(self.buffer_length <= self.buffer_effective.len);
+
+        return self.buffer_effective[self.buffer_length - 1];
     }
 
     fn backspace(self: *State) void {
@@ -554,54 +688,208 @@ test "expect State.add start literal input when the new input just exceeds buffe
     try expectEqual(.telex, state.mode);
 }
 
-test "expect State.add results â when input aa" {
+test "expect State.add apply circumflex for valid cases" {
     // Arrange
-    var state: State = undefined;
-    state.init();
-    state.mode = .telex;
+    const cases = .{
+        .{ .vowel = 'a', .new_input = 'a' },
+        .{ .vowel = 'a', .new_input = 'A' },
+        .{ .vowel = 'A', .new_input = 'a' },
+        .{ .vowel = 'A', .new_input = 'A' },
+        .{ .vowel = 'e', .new_input = 'e' },
+        .{ .vowel = 'e', .new_input = 'E' },
+        .{ .vowel = 'E', .new_input = 'e' },
+        .{ .vowel = 'E', .new_input = 'E' },
+        .{ .vowel = 'o', .new_input = 'o' },
+        .{ .vowel = 'o', .new_input = 'O' },
+        .{ .vowel = 'O', .new_input = 'o' },
+        .{ .vowel = 'O', .new_input = 'O' },
+    };
 
-    // Act
-    state.add('a');
-    state.add('a');
+    const tones = .{ .level, .rising, .falling, .dipping_rising, .rising_glottalized, .falling_glottalized };
 
-    // Assert
-    try expectEqual(1, state.buffer_length);
-    try expectEqual(0, state.buffer_modification_index);
-    try expectEqual(null, state.literal_index);
-    try expectEqual(.telex, state.mode);
+    inline for (cases) |c| {
+        inline for (tones) |t| {
+            var state: State = undefined;
+            state.init();
+            state.mode = .telex;
+            state.buffer_effective[0] = Span.init_diacritic_tone(c.vowel, .empty, t);
+            state.buffer_length = 1;
 
-    const sp = state.buffer_effective[0];
-    try expectEqual('a', sp.base);
-    try expectEqual(.circumflex, sp.diacritic);
-    try expectEqual(.level, sp.tone);
+            // Act
+            state.add(c.new_input);
+
+            // Assert
+            try expectEqual(1, state.buffer_length);
+            try expectEqual(0, state.buffer_modification_index);
+            try expectEqual(null, state.literal_index);
+            try expectEqual(.telex, state.mode);
+
+            const sp = state.buffer_effective[0];
+            try expectEqual(c.vowel, sp.base);
+            try expectEqual(.circumflex, sp.diacritic);
+            try expectEqual(t, sp.tone);
+        }
+    }
 }
 
-test "expect State.add results aA when input aaA" {
+test "expect State.add apply breve for valid cases" {
     // Arrange
-    var state: State = undefined;
-    state.init();
-    state.mode = .telex;
+    const cases = .{
+        .{ .vowel = 'a', .new_input = 'w' },
+        .{ .vowel = 'a', .new_input = 'W' },
+        .{ .vowel = 'A', .new_input = 'w' },
+        .{ .vowel = 'A', .new_input = 'W' },
+    };
 
-    // Act
-    state.add('a');
-    state.add('a');
-    state.add('A');
+    const tones = .{ .level, .rising, .falling, .dipping_rising, .rising_glottalized, .falling_glottalized };
 
-    // Assert
-    try expectEqual(2, state.buffer_length);
-    try expectEqual(0, state.buffer_modification_index);
-    try expectEqual(1, state.literal_index);
-    try expectEqual(.telex, state.mode);
+    inline for (cases) |c| {
+        inline for (tones) |t| {
+            var state: State = undefined;
+            state.init();
+            state.mode = .telex;
+            state.buffer_effective[0] = Span.init_diacritic_tone(c.vowel, .empty, t);
+            state.buffer_length = 1;
 
-    const sp1 = state.buffer_effective[0];
-    try expectEqual('a', sp1.base);
-    try expectEqual(.empty, sp1.diacritic);
-    try expectEqual(.level, sp1.tone);
+            // Act
+            state.add(c.new_input);
 
-    const sp2 = state.buffer_effective[1];
-    try expectEqual('A', sp2.base);
-    try expectEqual(.empty, sp2.diacritic);
-    try expectEqual(.level, sp2.tone);
+            // Assert
+            try expectEqual(1, state.buffer_length);
+            try expectEqual(0, state.buffer_modification_index);
+            try expectEqual(null, state.literal_index);
+            try expectEqual(.telex, state.mode);
+
+            const sp = state.buffer_effective[0];
+            try expectEqual(c.vowel, sp.base);
+            try expectEqual(.breve, sp.diacritic);
+            try expectEqual(t, sp.tone);
+        }
+    }
+}
+
+test "expect State.add apply horn for valid cases" {
+    // Arrange
+    const cases = .{
+        .{ .vowel = 'o', .new_input = 'w' },
+        .{ .vowel = 'o', .new_input = 'W' },
+        .{ .vowel = 'O', .new_input = 'w' },
+        .{ .vowel = 'O', .new_input = 'W' },
+        .{ .vowel = 'u', .new_input = 'w' },
+        .{ .vowel = 'u', .new_input = 'W' },
+        .{ .vowel = 'U', .new_input = 'w' },
+        .{ .vowel = 'U', .new_input = 'W' },
+    };
+
+    const tones = .{ .level, .rising, .falling, .dipping_rising, .rising_glottalized, .falling_glottalized };
+
+    inline for (cases) |c| {
+        inline for (tones) |t| {
+            var state: State = undefined;
+            state.init();
+            state.mode = .telex;
+            state.buffer_effective[0] = Span.init_diacritic_tone(c.vowel, .empty, t);
+            state.buffer_length = 1;
+
+            // Act
+            state.add(c.new_input);
+
+            // Assert
+            try expectEqual(1, state.buffer_length);
+            try expectEqual(0, state.buffer_modification_index);
+            try expectEqual(null, state.literal_index);
+            try expectEqual(.telex, state.mode);
+
+            const sp = state.buffer_effective[0];
+            try expectEqual(c.vowel, sp.base);
+            try expectEqual(.horn, sp.diacritic);
+            try expectEqual(t, sp.tone);
+        }
+    }
+}
+
+test "expect State.add apply bar for valid cases" {
+    // Arrange
+    const cases = .{
+        .{ .consonant = 'd', .new_input = 'd' },
+        .{ .consonant = 'd', .new_input = 'D' },
+        .{ .consonant = 'D', .new_input = 'd' },
+        .{ .consonant = 'D', .new_input = 'D' },
+    };
+
+    inline for (cases) |c| {
+        var state: State = undefined;
+        state.init();
+        state.mode = .telex;
+        state.buffer_effective[0] = Span.init_diacritic_tone(c.consonant, .empty, .level);
+        state.buffer_length = 1;
+
+        // Act
+        state.add(c.new_input);
+
+        // Assert
+        try expectEqual(1, state.buffer_length);
+        try expectEqual(0, state.buffer_modification_index);
+        try expectEqual(null, state.literal_index);
+        try expectEqual(.telex, state.mode);
+
+        const sp = state.buffer_effective[0];
+        try expectEqual(c.consonant, sp.base);
+        try expectEqual(.bar, sp.diacritic);
+        try expectEqual(.level, sp.tone);
+    }
+}
+
+test "expect State.add override existing diacritic with the new diacritic for valid cases" {
+    // Arrange
+    const cases = .{
+        // breve on A overridden by circumflex via 'a'/'A'.
+        .{ .vowel = 'a', .start_diacritic = .breve, .new_input = 'a', .expected_diacritic = .circumflex },
+        .{ .vowel = 'a', .start_diacritic = .breve, .new_input = 'A', .expected_diacritic = .circumflex },
+        .{ .vowel = 'A', .start_diacritic = .breve, .new_input = 'a', .expected_diacritic = .circumflex },
+        .{ .vowel = 'A', .start_diacritic = .breve, .new_input = 'A', .expected_diacritic = .circumflex },
+        // circumflex on A overridden by breve via 'w'/'W'.
+        .{ .vowel = 'a', .start_diacritic = .circumflex, .new_input = 'w', .expected_diacritic = .breve },
+        .{ .vowel = 'a', .start_diacritic = .circumflex, .new_input = 'W', .expected_diacritic = .breve },
+        .{ .vowel = 'A', .start_diacritic = .circumflex, .new_input = 'w', .expected_diacritic = .breve },
+        .{ .vowel = 'A', .start_diacritic = .circumflex, .new_input = 'W', .expected_diacritic = .breve },
+        // circumflex on O overridden by horn via 'w'/'W'.
+        .{ .vowel = 'o', .start_diacritic = .circumflex, .new_input = 'w', .expected_diacritic = .horn },
+        .{ .vowel = 'o', .start_diacritic = .circumflex, .new_input = 'W', .expected_diacritic = .horn },
+        .{ .vowel = 'O', .start_diacritic = .circumflex, .new_input = 'w', .expected_diacritic = .horn },
+        .{ .vowel = 'O', .start_diacritic = .circumflex, .new_input = 'W', .expected_diacritic = .horn },
+        // horn on O overridden by circumflex via 'o'/'O'.
+        .{ .vowel = 'o', .start_diacritic = .horn, .new_input = 'o', .expected_diacritic = .circumflex },
+        .{ .vowel = 'o', .start_diacritic = .horn, .new_input = 'O', .expected_diacritic = .circumflex },
+        .{ .vowel = 'O', .start_diacritic = .horn, .new_input = 'o', .expected_diacritic = .circumflex },
+        .{ .vowel = 'O', .start_diacritic = .horn, .new_input = 'O', .expected_diacritic = .circumflex },
+    };
+
+    const tones = .{ .level, .rising, .falling, .dipping_rising, .rising_glottalized, .falling_glottalized };
+
+    inline for (cases) |c| {
+        inline for (tones) |t| {
+            var state: State = undefined;
+            state.init();
+            state.mode = .telex;
+            state.buffer_effective[0] = Span.init_diacritic_tone(c.vowel, c.start_diacritic, t);
+            state.buffer_length = 1;
+
+            // Act
+            state.add(c.new_input);
+
+            // Assert
+            try expectEqual(1, state.buffer_length);
+            try expectEqual(0, state.buffer_modification_index);
+            try expectEqual(null, state.literal_index);
+            try expectEqual(.telex, state.mode);
+
+            const sp = state.buffer_effective[0];
+            try expectEqual(c.vowel, sp.base);
+            try expectEqual(c.expected_diacritic, sp.diacritic);
+            try expectEqual(t, sp.tone);
+        }
+    }
 }
 
 test "expect State.backspace will reduce buffer_length by 1 and won't touch literal_index" {
