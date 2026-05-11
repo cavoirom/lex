@@ -237,7 +237,7 @@ const State = struct {
         assert(std.ascii.isAlphabetic(c));
 
         // The buffer_modification index must be inbound of the buffer_effective.
-        assert(self.buffer_modification_index == null or self.buffer_modification_index.? < self.buffer_effective.len);
+        assert(self.buffer_modification_index == null or (self.buffer_modification_index.? < self.buffer_effective.len and self.buffer_modification_index.? < self.buffer_length));
 
         // Input mode must be either .literal or .telex.
         assert(self.mode == .literal or self.mode == .telex);
@@ -256,6 +256,11 @@ const State = struct {
             // The literal_index value must be less than buffer length.
             assert(literal_index < self.buffer_length);
         }
+
+        // buffer_length conditions
+        // 1. must be within buffer_effective length in Vietnamese input.
+        // 2. could be more than buffer_effective in literal input.
+        assert(self.buffer_length <= self.buffer_effective.len or self.mode == .literal or self.literal_index != null);
 
         switch (c) {
             'A', 'a' => {
@@ -717,6 +722,8 @@ const State = struct {
     fn append_literal(self: *State, c: u8) void {
         // Only allow a-zA-Z.
         assert(std.ascii.isAlphabetic(c));
+        // Could not append if the buffer_length is full.
+        assert(self.buffer_length < std.math.maxInt(@TypeOf(self.buffer_length)));
 
         // Check if we can add new span for input character.
         if (self.buffer_length < self.buffer_effective.len) {
@@ -734,8 +741,9 @@ const State = struct {
 
     // Return the last item in buffer_effective, not valid if the buffer_length is out of range.
     fn buffer_effective_last(self: *State) Span {
-        // Should not work if buffer_length exceed buffer_effective.
-        assert(self.buffer_length <= self.buffer_effective.len);
+        // 1. Should not work if buffer_length exceed buffer_effective.
+        // 2. Bufeer must have al least 1 character.
+        assert(self.buffer_length > 0 and self.buffer_length <= self.buffer_effective.len);
 
         return self.buffer_effective[self.buffer_length - 1];
     }
@@ -1649,6 +1657,8 @@ test "expect State.backspace will reduce buffer_length by 1 when literal_index i
 
 // Simple ABI wrapper for initialize allocated memory.
 export fn lex_state_init(state: *anyopaque) void {
+    // Pointer must not be null.
+    assert(@intFromPtr(state) != 0);
     // Ensure the allocated memory is aligned.
     assert(@intFromPtr(state) % @alignOf(State) == 0);
 
@@ -1702,11 +1712,21 @@ test "expect State can be initialized by raw allocation" {
 // Add operations to the given state based on Telex rules, operations are determined by the input
 // character.
 export fn lex_add(state: *anyopaque, c: u8) void {
+    // Pointer must not be null.
+    assert(@intFromPtr(state) != 0);
+    // Ensure the allocated memory is aligned.
+    assert(@intFromPtr(state) % @alignOf(State) == 0);
+
     const s: *State = @ptrCast(@alignCast(state));
     s.add(c);
 }
 
 export fn lex_backspace(state: *anyopaque) void {
+    // Pointer must not be null.
+    assert(@intFromPtr(state) != 0);
+    // Ensure the allocated memory is aligned.
+    assert(@intFromPtr(state) % @alignOf(State) == 0);
+
     const s: *State = @ptrCast(@alignCast(state));
     s.backspace();
 }
