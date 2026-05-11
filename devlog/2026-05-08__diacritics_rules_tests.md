@@ -3,6 +3,7 @@
 ## Goals
 
 - Implement all diacritics rules.
+- Write complete tests for diacritics rules.
 
 ## Code
 
@@ -12,7 +13,3 @@ Research the code pattern to write more helpers:
 - Compare a span with a base character (ignore case) and diacritic, ignore tone:
   `Span.equals_ignore_case_and_tone(self: Span, c: u8, diacritic: Diacritic)`.
 - Compare only base character: `Span.equals_base(base: u8)`.
-
-## Next session
-
-- Write complete tests for diacritics rules.
