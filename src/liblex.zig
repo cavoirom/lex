@@ -1,7 +1,11 @@
 const std = @import("std");
+
 const assert = std.debug.assert;
 const expectEqual = std.testing.expectEqual;
-const Allocator = std.mem.Allocator;
+const indexOfScalar = std.mem.indexOfScalar;
+const isAlphabetic = std.ascii.isAlphabetic;
+const maxInt = std.math.maxInt;
+const toUpper = std.ascii.toUpper;
 
 const Diacritic = enum(u8) {
     empty, // nguyên âm, không dấu.
@@ -40,7 +44,7 @@ const Span = struct {
 
     fn init_diacritic_tone(base: u8, diacritic: Diacritic, tone: Tone) Span {
         // Only allow a-zA-Z.
-        assert(std.ascii.isAlphabetic(base));
+        assert(isAlphabetic(base));
 
         // Only allow a valid Vietnamese alphabet combinations.
         switch (diacritic) {
@@ -85,30 +89,30 @@ const Span = struct {
     // Compare only base character, ignore case and other aspects.
     fn equals_base_ignore_case(self: *const Span, base: u8) bool {
         // Base must be alphabet letters.
-        assert(std.ascii.isAlphabetic(base));
+        assert(isAlphabetic(base));
 
-        return std.ascii.toUpper(self.base) == std.ascii.toUpper(base);
+        return toUpper(self.base) == toUpper(base);
     }
 
     // Compare the span with a base character (ignore case) and diacritic, tone is ignored.
     fn equals_ignore_case_and_tone(self: *const Span, base: u8, diacritic: Diacritic) bool {
         // Base must be alphabet letters.
-        assert(std.ascii.isAlphabetic(base));
+        assert(isAlphabetic(base));
 
-        return std.ascii.toUpper(self.base) == std.ascii.toUpper(base) and self.diacritic == diacritic;
+        return toUpper(self.base) == toUpper(base) and self.diacritic == diacritic;
     }
 
     // Compare the Span base (ignore case), diacritic, tone.
     fn equals_ignore_case(self: *const Span, base: u8, diacritic: Diacritic, tone: Tone) bool {
         // Base must be alphabet letters.
-        assert(std.ascii.isAlphabetic(base));
+        assert(isAlphabetic(base));
 
-        return std.ascii.toUpper(self.base) == std.ascii.toUpper(base) and self.diacritic == diacritic and self.tone == tone;
+        return toUpper(self.base) == toUpper(base) and self.diacritic == diacritic and self.tone == tone;
     }
 
     // Check if the Span.base is vowel or not.
     fn is_vowel(self: *const Span) bool {
-        return switch (std.ascii.toUpper(self.base)) {
+        return switch (toUpper(self.base)) {
             'A', 'E', 'I', 'O', 'U', 'Y' => true,
             else => false,
         };
@@ -274,7 +278,7 @@ const State = struct {
 
     fn add(self: *State, c: u8) void {
         // Only allow a-zA-Z.
-        assert(std.ascii.isAlphabetic(c));
+        assert(isAlphabetic(c));
 
         // Input mode must be either .literal or .telex.
         assert(self.mode == .literal or self.mode == .telex);
@@ -897,7 +901,7 @@ const State = struct {
                     self.literal_index = self.buffer_length;
                     // Append literal 'W', 'w'.
                     self.append_literal(c);
-                } else if (std.mem.indexOfScalar(u8, "AOU", std.ascii.toUpper(self.buffer_effective[self.buffer_length - 1].base)) == null) {
+                } else if (indexOfScalar(u8, "AOU", toUpper(self.buffer_effective[self.buffer_length - 1].base)) == null) {
                     // 12. Previous base character is not 'A', 'O', 'U'.
                     self.append_literal(c);
                     // Set modification index to null because we didn't modify any existing span.
@@ -932,9 +936,9 @@ const State = struct {
     // Append literal character when possible. Then inclease the buffer_length.
     fn append_literal(self: *State, c: u8) void {
         // Only allow a-zA-Z.
-        assert(std.ascii.isAlphabetic(c));
+        assert(isAlphabetic(c));
         // Could not append if the buffer_length is full.
-        assert(self.buffer_length < std.math.maxInt(@TypeOf(self.buffer_length)));
+        assert(self.buffer_length < maxInt(@TypeOf(self.buffer_length)));
 
         // Check if we can add new span for input character.
         if (self.buffer_length < self.buffer_effective.len) {
