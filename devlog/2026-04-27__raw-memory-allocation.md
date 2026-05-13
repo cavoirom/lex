@@ -20,6 +20,6 @@
 
 ## Tomorrow
 
-- Add assert to `lex_add`.
-- Add C header for liblex.
+- ~~Add assert to `lex_add`~~.
+- ~~Add C header for liblex~~.
 - Add Swift tests to test memory allocation and Swift-Zig interoperate.

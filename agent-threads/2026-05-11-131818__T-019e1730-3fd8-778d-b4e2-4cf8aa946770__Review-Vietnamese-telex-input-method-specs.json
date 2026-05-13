@@ -1,0 +1,273 @@
+{
+  "v": 48,
+  "id": "T-019e1730-3fd8-778d-b4e2-4cf8aa946770",
+  "env": {
+    "initial": {
+      "trees": [
+        {
+          "uri": "file:///<redacted>/lex",
+          "displayName": "lex"
+        }
+      ],
+      "platform": {
+        "os": "darwin",
+        "client": "CLI",
+        "osVersion": "26.5",
+        "clientType": "cli",
+        "webBrowser": false,
+        "clientVersion": "0.0.1778531432-g3bd093",
+        "installationID": "<redacted>",
+        "cpuArchitecture": "arm64",
+        "deviceFingerprint": "<redacted>"
+      }
+    }
+  },
+  "meta": {
+    "executorType": "local-client",
+    "lastKnownAgentState": {
+      "state": "idle",
+      "messageID": "M-033EsQSdaZt7sFm1QmMP1c",
+      "updatedAt": "2026-05-11T13:25:13.627Z"
+    },
+    "deleted": false,
+    "createdOnServer": false,
+    "lastUserMessageAt": "2026-05-11T13:24:45.742Z",
+    "workspaceID": null,
+    "projectID": null,
+    "visibility": "private",
+    "sharedGroupIDs": [],
+    "agentMode": "smart",
+    "usesDtw": true,
+    "usesThreadActors": true
+  },
+  "title": "Review Vietnamese telex input method specs",
+  "created": 1778505498584,
+  "messages": [
+    {
+      "meta": {
+        "sentAt": 1778505502172
+      },
+      "role": "user",
+      "readAt": null,
+      "content": [
+        {
+          "text": "Review the @specs/lex-vietnamese-telex-input-method.md especially section \"Literal input characters\". Find any gaps or contradict. Then let me know",
+          "type": "text"
+        }
+      ],
+      "messageId": 1,
+      "protocolMessageID": "M-033EsGaa8vVkcK1jegLrB9"
+    },
+    {
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "tool_use"
+      },
+      "usage": {
+        "timestamp": "2026-05-11T13:18:25.933Z",
+        "inputTokens": 6,
+        "outputTokens": 140,
+        "maxInputTokens": 300000,
+        "totalInputTokens": 18298,
+        "cacheReadInputTokens": 0,
+        "cacheCreationInputTokens": 18292
+      },
+      "readAt": null,
+      "content": [
+        {
+          "type": "thinking",
+          "provider": "anthropic",
+          "thinking": " Looking at the spec file now.",
+          "finalTime": 1778505505476,
+          "signature": "<redacted>",
+          "startTime": 1778505504750,
+          "blockState": "complete"
+        },
+        {
+          "id": "TU-033EsGlxJZLyUdtDNTRv3E",
+          "name": "Read",
+          "type": "tool_use",
+          "input": {
+            "path": "/<redacted>/lex/specs/lex-vietnamese-telex-input-method.md"
+          },
+          "complete": true,
+          "blockState": "complete"
+        }
+      ],
+      "messageId": 2,
+      "protocolMessageID": "M-033EsGiTmv7Ng6mZcM1ktn"
+    },
+    {
+      "role": "user",
+      "readAt": null,
+      "content": [
+        {
+          "run": {
+            "result": {
+              "content": "1: # Lex - Vietnamese Telex input method\n2: \n3: The specification of the Lex program, a Vietnamese Telex input method.\n4: \n5: ## Vietnamese Telex Rules\n6: \n7: ### Literal input characters\n8: \n9: - When any of the follow characters added to the word, change to literal input from the new character position: `F`, `J`, `W` and their lower cases, because of Vietnamese word doesn't combined with these characters.\n10: - Literal input remains until the new word.\n11: - When the user backspaces pass before the literal point, we switch to Vietnamese input again.\n12: \n13: ### Diacritics\n14: \n15: Diacritics let a character have many variant. We only focus on character diacritics in this section.\n16: Tones have a separate section.\n17: \n18: #### Empty\n19: \n20: - Any literal alphabet character has empty diacritic by default.\n21: - Only a specific number of characters have other diacritic and it must follow the rules for those\n22:   characters.\n23: \n24: #### Circumflex\n25: \n26: - Valid for: `A` (Â), `E` (Ê), `O` (Ô) and their lower cases.\n27: \n28: #### Breve\n29: \n30: - Valid for: `A` (Ă) and its lower case.\n31: \n32: #### Horn\n33: \n34: - Valid for: `O` (Ơ), `U` (Ư) and their lower cases.\n35: \n36: #### Stroke\n37: \n38: - Valid for: `D` (Đ) and its lower case.\n39: \n40: #### Apply rules\n41: \n42: - Only apply diacritic when the immediate previous character doesn't have any diacritic (empty).\n43: - _Circumflex_, _stroke_ are triggered when user inputs the same character (ignore case) with the\n44:   existing character when that character is valid for the applying diacritic.\n45:   - `Aa` -> `Â`, `Ee` -> `Ê`, `Oo` -> `Ô`.\n46:   - `Dd` -> `Đ`.\n47: - _Breve_, _horn_ are triggered when user input `W`, `w` after the character when that character is\n48:   valid for the applying diacritic. Otherwise, treat `W`, `w` literally.\n49:   - `Aw` -> `Ă`.\n50:   - `Ow` -> `Ơ`, `Uw` -> `Ư`.\n51: - The existing character keep its case, tone.\n52: - Treat out of scope characters as literal.\n53: \n54: #### Override rules\n55: \n56: - New valid diacritic can override existing valid diacritic of the same base character.\n57:   - `Ăa` -> `Â`, `Âw` -> `Ă`.\n58:   - `Ôw` -> `Ơ`, `Ơo` -> `Ô`.\n59: - Only `A`, `O` have override rules because they have more than one possible character diacritic.\n60: - Keep tone untouched.\n61: - The existing character keep its case, tone.\n62: - Treat out of scope characters as literal.\n63: \n64: #### Cancel rules\n65: \n66: - The cancellation is triggered if and only if user inputs the character (ignore case) that would\n67:   produce the existing diacritic for the same base character of the immediate previous character.\n68: - The existing character keeps its case, tone, but the diacritic is removed.\n69:   - Circumflex: `Âa` -> `Aa`, `Ốo` -> `Óo`... and so on for other cases of the same kind.\n70:   - Breve: `Ăw` -> `Aw`.\n71:   - Horn: `Ưw` -> `Uw`... and so on for other cases of the same kind.\n72:   - Stroke: `Đd` -> `Dd`, `đD` -> `dD`.\n73: - The new character is literal, keeps its case, no tone.\n74: - Switch to literal from the new character position and the following characters. Literal input\n75:   remains until the new word.\n76:   - Existing `Â`, input `aa`, result `Aaa`.\n77: - When the user backspaces pass before the literal point, we switch to Vietnamese input again.\n78: \n79: #### Auto-fill rules\n80: \n81: - The auto-fill is only applied for `ươ` syllable immediately before the user input, when one of the\n82:   character in the syllable is missing horn: `uơ` and `ưo`.\n83: - Fill the missing _horn_ when the input is one of these character (ignore case): `C`, `I`, `M`,\n84:   `N`, `P`, `T`, `U` and their lower cases.\n85:   - Fill missing horn on `U`: `uơn` -> `ươn`.\n86:   - Fill missing horn on `O`: `ưóp` -> `ướp`.\n87: - The new input character is appended literally.\n88: - Tone and case of existing characters are preserved on the original characters.\n89: \n90: ### Tones\n91: \n92: Tones let a word have many variants, each variant has different meaning. Only the following\n93: Vietnamese vowel could have tones: `A`, `E`, `I`, `O`, `U`, `Y` and their corresponding variants.\n94: These vowel could take any tone.\n95: \n96: #### Level (ngang)\n97: \n98: - The default tone, it's the vowel without any tone mark, e.g. `A`, `Ê`, `Ơ`...and all other\n99:   corresponding variants.\n100: - If a vowel has tone mark other than level, use `Z`, `z` to reset the tone to level.\n101: \n102: #### Rising (sắc)\n103: \n104: - Example of rising tone: `Á`, `Ế`, `Ớ`...and all other corresponding variants.\n105: - Use `S`, `s` to put the rising tone to the Vietnamese vowels, e.g. `As` -> `Á`, `Ês` -> `Ế`, `Ơs`\n106:   -> `Ớ`.\n107: \n108: #### Falling (huyền)\n109: \n110: - Example of falling tone: `À`, `Ề`, `Ờ`...and all other corresponding variants.\n111: - Use `F`, `f` to put the falling tone to the Vietnamese vowels, e.g. `Af` -> `À`, `Êf` -> `Ề`, `Ơf`\n112:   -> `Ờ`.\n113: \n114: #### Dipping-rising (hỏi)\n115: \n116: - Example of dipping-rising tone: `Ả`, `Ể`, `Ở`...and all other corresponding variants.\n117: - Use `R`, `r` to put the dipping-rising tone to the Vietnamese vowels, e.g. `Ar` -> `Ả`, `Êr` ->\n118:   `Ể`, `Ơr` -> `Ở`.\n119: \n120: #### Rising-glottalized (ngã)\n121: \n122: - Example of rising-glottalized tone: `Ã`, `Ễ`, `Ỡ`...and all other corresponding variants.\n123: - Use `X`, `x` to put the rising-glottalized tone to the Vietnamese vowels, e.g. `Ax` -> `Ã`, `Êx`\n124:   -> `Ễ`, `Ơx` -> `Ỡ`.\n125: \n126: #### Falling-glottalized (nặng)\n127: \n128: - Example of falling-glottalized tone: `Ạ`, `Ệ`, `Ợ`...and all other corresponding variants.\n129: - Use `J`, `j` to put the falling-glottalized tone to the Vietnamese vowels, e.g. `Aj` -> `Ạ`, `Êj`\n130:   -> `Ệ`, `Ơj` -> `Ợ`.\n131: \n132: #### Apply rules\n133: \n134: - Only trigger apply tone when the buffer has existing characters. Otherwise, append the new\n135:   character literally.\n136: - Trigger apply tone when user inputs the trigger character for tones: `S`, `F`, `R`, `X`, `J` and\n137:   their lower cases.\n138: - _Scan pseudo-word_ to have the information for later steps.\n139: - If the pseudo-word doesn't have any vowels, append new character literally.\n140: - If the pseudo-word has at least one vowel and all of them don't have any tone (level), use _tone\n141:   position rules_ to apply the tone for the word.\n142: - If _tone position rules_ could not put tone to the pseudo-word, append new character literally.\n143: \n144: #### Cancel rules\n145: \n146: - Only trigger apply tone when the buffer has existing characters. Otherwise, append the new\n147:   character literally.\n148: - Trigger apply tone when user inputs the trigger character for tones: `S`, `F`, `R`, `X`, `J` and\n149:   their lower cases.\n150: - _Scan pseudo-word_ to have the information for later steps.\n151: - If the pseudo-word doesn't have any vowels, handle by _apply rules_.\n152: - If the pseudo-word has at least one vowel and has the tone (other than level) on vowels match with\n153:   the triggered tone. Reset that tone to level. Append new character literally.\n154: - If the new character has been appended literally, switch to literal from the new character\n155:   position and the following characters. Literal input remains until the new word.\n156: - When the user backspaces pass before the literal point, we switch to Vietnamese input again.\n157: \n158: #### Reset rules\n159: \n160: - Only trigger reset tone when the buffer has existing characters. Otherwise, append the new\n161:   character literally.\n162: - Trigger reset tone when user inputs the trigger character for reset: `Z`, `z`.\n163: - _Scan pseudo-word_ to have the information for later steps.\n164: - If the pseudo-word has at least one vowel and has tone (other than level) in one of the vowels,\n165:   change that tone to level, keep case and diacritic.\n166: - If the pseudo-word doesn't have any vowels or has at least one vowel and all of them don't have\n167:   any tone (level), append the new character literally.\n168: - If the new character has been appended literally, switch to literal from the new character\n169:   position and the following characters. Literal input remains until the new word.\n170: - When the user backspaces pass before the literal point, we switch to Vietnamese input again.\n171: \n172: #### Override rules\n173: \n174: - Only trigger override tone when the buffer has existing characters. Otherwise, append the new\n175:   character literally.\n176: - Trigger apply tone when user inputs the trigger character for tones: `S`, `F`, `R`, `X`, `J` and\n177:   their lower cases.\n178: - _Scan pseudo-word_ to have the information for later steps.\n179: - If the pseudo-word doesn't have any vowels, handle by _apply rules_.\n180: - If the pseudo-word has at least one vowel and has the tone (other than level) on vowels different\n181:   from the triggered tone, reset that tone to level, use _tone position rules_ to apply new tone for\n182:   the word. The override tone is always successful.\n183: \n184: #### Scan pseudo-word\n185: \n186: - Scan pseudo-word is a process to get the information needed from the existing characters to put\n187:   the tone in the correct position.\n188: - The existing characters must not be empty.\n189: - Iterate backward from the last existing character (the new input is the tone trigger character).\n190: - If a vowel is found first, continue go backward until scanned the first consonant (singular) or no\n191:   character to scan, then stop.\n192: - If a consonant is found first, continue go backward until found the first vowel, then continue go\n193:   backward until scanned the first consonant (singular) or no character to scan, then stop.\n194: - After iterated, a context have been formed either (in the left to right order, not the reverse)\n195:   `<consonants>`, `<vowels><consonants>`, `<consonant><vowels><consonants>`, `<vowels>` or\n196:   `<consonant><vowels>`.\n197: \n198: #### Tone position rules\n199: \n200: The process of applying tone to a word go through many steps:\n201: \n202: - Focus on the `<vowels>` in peusdo-word, it could be one vowel but could be multiple vowels, the\n203:   tone will be applied on one of these vowels.\n204: - Exceptions:\n205:   - Word exactly `QU` (and their lower cases), could not put tone, this is a consonant only.\n206: - If one vowel, put the tone on that vowel.\n207: - If multiple vowels, follow these rules, priority from top down:\n208:   - Vowels has `Ơ` (and its lower case), put on `Ơ`.\n209:   - Vowels has one any of `Ê`, `Â`, `Ô`, `Ă`, `Ư` (and their lower cases), put on the listed vowels,\n210:     prioritize the first to the last in the list.\n211:   - Word start with `GI`, `QU` (and their lower cases) and has more vowels, put on next vowel, `I` /\n212:     `U` count as part of the consonant.\n213:   - Vowels exactly `OA`, `OE`, `OO`, `UY` (and their lower cases), put on first vowel.\n214:   - Vowels start with `OA`, `OE`, `OO`, `UY` (and their lower cases) and has more vowels or\n215:     consonants, put on second vowel.\n216:   - Otherwise, put on first vowel.\n217: - Preserve case and diacritic on existing vowels.\n218: - Could not put tone for other cases.",
+              "absolutePath": "/<redacted>/lex/specs/lex-vietnamese-telex-input-method.md"
+            },
+            "status": "done",
+            "progress": {},
+            "trackFiles": [
+              "file:///<redacted>/lex/specs/lex-vietnamese-telex-input-method.md"
+            ]
+          },
+          "type": "tool_result",
+          "toolUseID": "TU-033EsGlxJZLyUdtDNTRv3E"
+        }
+      ],
+      "messageId": 3,
+      "protocolMessageID": "M-033EsGnlu75g5U5C7FZRUn"
+    },
+    {
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "end_turn"
+      },
+      "usage": {
+        "timestamp": "2026-05-11T13:19:10.196Z",
+        "inputTokens": 6,
+        "outputTokens": 2903,
+        "maxInputTokens": 300000,
+        "totalInputTokens": 23119,
+        "cacheReadInputTokens": 15773,
+        "cacheCreationInputTokens": 7340
+      },
+      "readAt": null,
+      "content": [
+        {
+          "type": "thinking",
+          "provider": "anthropic",
+          "thinking": " I'm looking at the \"Literal input characters\" section to identify gaps and contradictions in the spec. The trigger characters F, J, and W (plus lowercase versions) initiate literal input mode that persists until a new word begins, and backspacing past the literal point reverts to Vietnamese input. I'm noticing a contradiction with W—the spec says it triggers literal input for a specific reason, but that reasoning seems incomplete. Z also falls through to literal mode when it can't reset a tone, even though it's not in the explicit literal-trigger list. There are similar gaps around word boundaries, when W triggers breve versus literal mode, and how S/R/X can become literal despite only F/J/W being listed as literal triggers. The rationale given—that Vietnamese words don't combine with these characters—doesn't hold up since these are actually Telex triggers, not literal letters.",
+          "finalTime": 1778505530983,
+          "signature": "<redacted>",
+          "startTime": 1778505508085,
+          "blockState": "complete"
+        },
+        {
+          "text": "Findings on \"Literal input characters\" (lines 7–11):\n\n**Contradictions**\n\n1. **`F`, `J`, `W` listed as literal triggers conflict with their real Telex roles.**\n   - Line 9 says `F`, `J`, `W` (and lower cases) switch to literal \"because Vietnamese word doesn't combined with these characters.\"\n   - But `F`/`f` is the falling-tone trigger ([line 111](file:///<redacted>/lex/specs/lex-vietnamese-telex-input-method.md#L111)), `J`/`j` is the falling-glottalized-tone trigger ([line 129](file:///<redacted>/lex/specs/lex-vietnamese-telex-input-method.md#L129)), and `W`/`w` is the breve/horn trigger ([lines 47–50](file:///<redacted>/lex/specs/lex-vietnamese-telex-input-method.md#L47-L50)). They are not \"uncombinable\" — they are the very mechanism of Telex input.\n   - The rationale string is wrong, and the rule as written would prevent any tone or breve/horn from ever applying.\n\n2. **`Aw` example contradicts the literal rule.**\n   - Line 49 produces `Aw` -> `Ă`, but Section 7 says the moment `w` arrives, the engine must switch to literal — which would yield `Aw`, not `Ă`. The interaction order (\"try diacritic/tone first, fall back to literal\") is never stated.\n\n**Gaps**\n\n3. **No definition of \"new word\".** Lines 10–11 and the cancel/reset rules ([lines 75, 156, 170](file:///<redacted>/lex/specs/lex-vietnamese-telex-input-method.md#L75)) all say literal mode \"remains until the new word\", but the spec never defines what terminates a word (space? punctuation? any non-letter? Enter?).\n\n4. **Incomplete list of paths into literal mode.** Section 7 names only `F`, `J`, `W` as literal triggers, but literal mode is also entered by:\n   - Failed tone application — [line 142](file:///<redacted>/lex/specs/lex-vietnamese-telex-input-method.md#L142) (so `S`, `R`, `X` can also become literal).\n   - Tone cancel — [lines 154–155](file:///<redacted>/lex/specs/lex-vietnamese-telex-input-method.md#L154-L155).\n   - Tone reset (`Z`/`z`) failure — [lines 168–169](file:///<redacted>/lex/specs/lex-vietnamese-telex-input-method.md#L168-L169).\n   - Diacritic cancel — [lines 73–75](file:///<redacted>/lex/specs/lex-vietnamese-telex-input-method.md#L73-L75).\n   Section 7 should either enumerate these, or be reframed as \"any character that cannot be interpreted as a Telex action becomes literal\".\n\n5. **Backspace semantics underspecified.** Line 11 says backspacing \"pass before the literal point\" re-enables Vietnamese input, but does not say:\n   - Whether the character at the literal point itself is part of the literal region.\n   - What happens with multiple stacked literal points within the same word (e.g., a cancel-induced literal followed by another `F`).\n   - Whether deletion via means other than backspace (selection delete, cursor move + delete) follows the same rule.\n\n6. **\"From the new character position\" is ambiguous.** It is unclear whether the triggering character itself is literal or only subsequent characters. Examples elsewhere (e.g., `Aaa` from existing `Â` + `aa` on [line 76](file:///<redacted>/lex/specs/lex-vietnamese-telex-input-method.md#L76)) imply the trigger is literal, but Section 7 should state it explicitly.\n\n7. **Case scope wording.** Line 9 says \"`F`, `J` and `W` and their lower cases\"; the rest of the spec uses the more standard \"(ignore case)\". Harmonizing the phrasing avoids ambiguity.",
+          "type": "text",
+          "finalTime": 1778505550108,
+          "startTime": 1778505530984,
+          "blockState": "complete"
+        }
+      ],
+      "messageId": 4,
+      "turnElapsedMs": 47954,
+      "protocolMessageID": "M-033EsGnwWwHjv8xKpz1b5D"
+    },
+    {
+      "meta": {
+        "sentAt": 1778505687363
+      },
+      "role": "user",
+      "readAt": null,
+      "content": [
+        {
+          "text": "You mis-understood the spec (but this is the good sight, I need to rephrase), my intention is if the F and others input but don't trigger any tone, e.g. at the start of the word, then we switch to literal input because no Vietnamese word use them (formally). The tone apply rules is higher priority.",
+          "type": "text"
+        }
+      ],
+      "messageId": 5,
+      "protocolMessageID": "M-033EsLNE0cm8pnTItATsXs"
+    },
+    {
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "end_turn"
+      },
+      "usage": {
+        "timestamp": "2026-05-11T13:22:10.961Z",
+        "inputTokens": 6,
+        "outputTokens": 3021,
+        "maxInputTokens": 300000,
+        "totalInputTokens": 26112,
+        "cacheReadInputTokens": 15773,
+        "cacheCreationInputTokens": 10333
+      },
+      "readAt": null,
+      "content": [
+        {
+          "type": "thinking",
+          "provider": "anthropic",
+          "thinking": " I'm understanding the priority structure now—tone and diacritic rules take precedence, and F, J, W only function as literal fallbacks when they can't apply as tone markers. Let me identify where the contradictions arise so we can clarify the rules.\n\nThe key gaps are: the spec doesn't explicitly state the priority order (try diacritic/tone first, then fall back to literal), \"new word\" isn't formally defined, and there's a distinction I'm missing between non-Vietnamese characters like F, J, W, Z (which switch to literal mode entirely when they fail) versus Vietnamese consonants like S, R, X (which append literally but keep the system in Vietnamese mode, allowing subsequent characters to form valid words). I need to clarify the distinction between appending a character literally within the current buffer versus switching to literal mode for the remainder of the word—S/R/X just append, while F/J/W/Z trigger a full mode switch. There's also a gap in the apply rules path where F/J fail to find a vowel: the spec says to append literally but doesn't explicitly state whether to switch to literal mode, which contradicts Section 7. I should also nail down what \"new word\" means, clarify backspace behavior, and specify whether the trigger character itself falls within the literal region.",
+          "finalTime": 1778505713705,
+          "signature": "<redacted>",
+          "startTime": 1778505690240,
+          "blockState": "complete"
+        },
+        {
+          "text": "Got it. With the corrected intent — \"tone/diacritic rules win; the literal switch only fires when `F`/`J`/`W` (and `Z`) cannot perform their Telex role\" — most of contradictions #1 and #2 dissolve. Remaining issues to address when rephrasing:\n\n**Contradictions / inconsistencies**\n\n1. **Priority is implicit.** Section 7 must explicitly say: try the diacritic/tone rules first; only if the character produces no Telex effect, switch to literal mode. Without this, [line 49](file:///<redacted>/lex/specs/lex-vietnamese-telex-input-method.md#L49) (`Aw -> Ă`) reads as a contradiction with Section 7.\n\n2. **`Z` is a literal-trigger but not listed.** [Lines 168–169](file:///<redacted>/lex/specs/lex-vietnamese-telex-input-method.md#L168-L169) say a failed `Z`/`z` reset switches to literal mode — same rationale as `F`/`J`/`W` (not formally a Vietnamese letter). Section 7 omits it.\n\n3. **\"Append literally\" ≠ \"switch to literal mode\".** The spec uses both phrasings without distinction:\n   - [Line 142](file:///<redacted>/lex/specs/lex-vietnamese-telex-input-method.md#L142) (failed tone *Apply*): \"append new character literally\" — no mode switch stated.\n   - [Lines 154–155](file:///<redacted>/lex/specs/lex-vietnamese-telex-input-method.md#L154-L155) (failed tone *Cancel*): \"append literally\" *and* switch to literal mode.\n   For `F`/`J`, the Apply path also needs to switch to literal mode (per Section 7's intent), but [line 142](file:///<redacted>/lex/specs/lex-vietnamese-telex-input-method.md#L142) does not say so. For `S`/`R`/`X` (which are formal Vietnamese letters), the Apply path should *not* switch to literal mode. The two cases need to be split.\n\n4. **Cancel rules conflate `S`/`R`/`X` with `F`/`J`.** [Lines 144–156](file:///<redacted>/lex/specs/lex-vietnamese-telex-input-method.md#L144-L156) make every tone cancel switch to literal mode. But cancelling `Ás` -> `As` should keep the buffer in Vietnamese mode (`s` is a valid Vietnamese consonant), while `Àf` -> `Af` should switch to literal. The rule should branch on whether the trigger char is formally Vietnamese.\n\n**Gaps**\n\n5. **\"New word\" is never defined.** Used in Sections 7, diacritic Cancel ([line 75](file:///<redacted>/lex/specs/lex-vietnamese-telex-input-method.md#L75)), tone Cancel ([line 156](file:///<redacted>/lex/specs/lex-vietnamese-telex-input-method.md#L156)), tone Reset ([line 170](file:///<redacted>/lex/specs/lex-vietnamese-telex-input-method.md#L170)). Need to specify the boundary (space, punctuation, newline, cursor jump?).\n\n6. **Backspace semantics underspecified.** [Line 11](file:///<redacted>/lex/specs/lex-vietnamese-telex-input-method.md#L11) doesn't say:\n   - Whether the trigger character itself is inside or outside the literal region.\n   - Behaviour when several literal-switch points stack inside one word (e.g., diacritic-cancel literal followed by an `F`).\n   - Whether non-backspace deletion (cursor move + delete, selection delete) is treated identically.\n\n7. **\"From the new character position\" is ambiguous.** Confirm explicitly that the triggering char itself is literal, consistent with the `Aaa` example on [line 76](file:///<redacted>/lex/specs/lex-vietnamese-telex-input-method.md#L76).\n\n8. **Casing wording mismatch.** [Line 9](file:///<redacted>/lex/specs/lex-vietnamese-telex-input-method.md#L9) uses \"and their lower cases\" while the rest of the spec uses \"(ignore case)\". Pick one.\n\n9. **Rationale wording.** \"because of Vietnamese word doesn't combined with these characters\" should be reframed as: these letters do not appear in formal Vietnamese spelling, so when they fall through the Telex rules they signal that the user is no longer typing a Vietnamese word.",
+          "type": "text",
+          "finalTime": 1778505730863,
+          "startTime": 1778505713706,
+          "blockState": "complete"
+        }
+      ],
+      "messageId": 6,
+      "turnElapsedMs": 43521,
+      "protocolMessageID": "M-033EsLPKF5YOM17bJ8JzD0"
+    },
+    {
+      "meta": {
+        "sentAt": 1778505885742
+      },
+      "role": "user",
+      "readAt": null,
+      "content": [
+        {
+          "text": "- I exclude `Z` because of some word use z, e.g. Dzũng, Hồ Dzếnh.\n- Cancel rules are the different cases.",
+          "type": "text"
+        }
+      ],
+      "messageId": 7,
+      "protocolMessageID": "M-033EsQOOCU6pj0UGidP2DD"
+    },
+    {
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "end_turn"
+      },
+      "usage": {
+        "timestamp": "2026-05-11T13:25:13.120Z",
+        "inputTokens": 6,
+        "outputTokens": 1824,
+        "maxInputTokens": 300000,
+        "totalInputTokens": 29182,
+        "cacheReadInputTokens": 26106,
+        "cacheCreationInputTokens": 3070
+      },
+      "readAt": null,
+      "content": [
+        {
+          "type": "thinking",
+          "provider": "anthropic",
+          "thinking": " The user is clarifying that Z is intentionally excluded from the literal-trigger set because Vietnamese names use it, so the literal-trigger set is just F, J, W. They're also noting that cancel rules work differently than I thought — they're not about letter-specific branching but rather always switch to literal mode regardless of which letter triggers them. I need to reconsider how the cancel rules actually function.",
+          "finalTime": 1778505902435,
+          "signature": "<redacted>",
+          "startTime": 1778505890615,
+          "blockState": "complete"
+        },
+        {
+          "text": "Understood. Removing #2 and #4. Final list of issues to address when rephrasing:\n\n**Contradictions / inconsistencies**\n\n1. **Priority is implicit.** Section 7 must explicitly state: tone/diacritic rules are tried first; only when `F`/`J`/`W` produce no Telex effect does the literal-mode switch fire. Without this, [line 49](file:///<redacted>/lex/specs/lex-vietnamese-telex-input-method.md#L49) (`Aw -> Ă`) reads as a contradiction with Section 7.\n\n2. **\"Append literally\" ≠ \"switch to literal mode\" for the Apply path.** The tone *Apply* rules at [line 142](file:///<redacted>/lex/specs/lex-vietnamese-telex-input-method.md#L142) only say \"append new character literally\" with no mode switch. For `F`/`J` (in the literal-trigger set) the Apply path must also switch to literal mode, while for `S`/`R`/`X` (formal Vietnamese letters) it must not. The two cases need to be split, mirroring how Section 7 already distinguishes them.\n\n**Gaps**\n\n3. **\"New word\" is never defined.** Used in Sections 7, diacritic Cancel ([line 75](file:///<redacted>/lex/specs/lex-vietnamese-telex-input-method.md#L75)), tone Cancel ([line 156](file:///<redacted>/lex/specs/lex-vietnamese-telex-input-method.md#L156)), tone Reset ([line 170](file:///<redacted>/lex/specs/lex-vietnamese-telex-input-method.md#L170)). Specify the boundary (space, punctuation, newline, cursor jump?).\n\n4. **Backspace semantics underspecified.** [Line 11](file:///<redacted>/lex/specs/lex-vietnamese-telex-input-method.md#L11) doesn't say:\n   - Whether the trigger character itself is inside or outside the literal region.\n   - Behaviour when several literal-switch points stack inside one word (e.g., diacritic-cancel literal followed by an `F`).\n   - Whether non-backspace deletion (cursor move + delete, selection delete) is treated identically.\n\n5. **\"From the new character position\" is ambiguous.** Confirm explicitly that the triggering char itself is literal, consistent with the `Aaa` example on [line 76](file:///<redacted>/lex/specs/lex-vietnamese-telex-input-method.md#L76).\n\n6. **Casing wording mismatch.** [Line 9](file:///<redacted>/lex/specs/lex-vietnamese-telex-input-method.md#L9) uses \"and their lower cases\" while the rest of the spec uses \"(ignore case)\". Pick one.\n\n7. **Rationale wording.** \"because of Vietnamese word doesn't combined with these characters\" should be reframed as: these letters do not appear in formal Vietnamese spelling, so when they fall through the Telex rules they signal that the user is no longer typing a Vietnamese word. (Document the `Z` exception explicitly so future readers understand why it is *not* in the set.)",
+          "type": "text",
+          "finalTime": 1778505913041,
+          "startTime": 1778505902437,
+          "blockState": "complete"
+        }
+      ],
+      "messageId": 8,
+      "turnElapsedMs": 27315,
+      "protocolMessageID": "M-033EsQSdaZt7sFm1QmMP1c"
+    }
+  ],
+  "agentMode": "smart",
+  "nextMessageId": 9,
+  "creatorUserID": "<redacted>",
+  "updatedAt": "2026-05-11T13:24:45.742Z"
+}
