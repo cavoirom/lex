@@ -82,19 +82,41 @@ const Span = struct {
         return .{ .base = base, .diacritic = diacritic, .tone = tone };
     }
 
+    // Compare only base character, ignore case and other aspects.
+    fn equals_base_ignore_case(self: *const Span, base: u8) bool {
+        // Base must be alphabet letters.
+        assert(std.ascii.isAlphabetic(base));
+
+        return std.ascii.toUpper(self.base) == std.ascii.toUpper(base);
+    }
+
     // Compare the span with a base character (ignore case) and diacritic, tone is ignored.
-    fn equals_ignore_case_and_tone(self: Span, base: u8, diacritic: Diacritic) bool {
+    fn equals_ignore_case_and_tone(self: *const Span, base: u8, diacritic: Diacritic) bool {
         // Base must be alphabet letters.
         assert(std.ascii.isAlphabetic(base));
 
         return std.ascii.toUpper(self.base) == std.ascii.toUpper(base) and self.diacritic == diacritic;
     }
 
-    // Compare only base character, ignore other aspects.
-    fn equals_base(self: Span, base: u8) bool {
+    // Compare the Span base (ignore case), diacritic, tone.
+    fn equals_ignore_case(self: *const Span, base: u8, diacritic: Diacritic, tone: Tone) bool {
         // Base must be alphabet letters.
+        assert(std.ascii.isAlphabetic(base));
 
-        return std.ascii.toUpper(self.base) == std.ascii.toUpper(base);
+        return std.ascii.toUpper(self.base) == std.ascii.toUpper(base) and self.diacritic == diacritic and self.tone == tone;
+    }
+
+    // Check if the Span.base is vowel or not.
+    fn is_vowel(self: *const Span) bool {
+        return switch (std.ascii.toUpper(self.base)) {
+            'A', 'E', 'I', 'O', 'U', 'Y' => true,
+            else => false,
+        };
+    }
+
+    // Check if the Span.base is consonant or not.
+    fn is_consonant(self: *const Span) bool {
+        return !self.is_vowel();
     }
 };
 
@@ -207,6 +229,24 @@ const InputMode = enum(u8) {
     telex,
 };
 
+// Information about a range of character for tone positioning.
+const Pseudoword = struct {
+    // The start position of the word on State.buffer_effective.
+    start: u8,
+    // The end position of the word on State.buffer_effective.
+    end: u8,
+    // The start position of the vowels on State.buffer_effective.
+    vowels_start: ?u8,
+    // The end position of the vowels on State.buffer_effective.
+    vowels_end: ?u8,
+    // The length of the word.
+    length: u8,
+
+    fn has_vowels(self: *const Pseudoword) bool {
+        return self.vowels_start != null and self.vowels_end != null;
+    }
+};
+
 const State = struct {
     // The effective buffer to process Vietnamese input. we will skip processing if the buffer
     // longer than 16.
@@ -236,9 +276,6 @@ const State = struct {
         // Only allow a-zA-Z.
         assert(std.ascii.isAlphabetic(c));
 
-        // The buffer_modification index must be inbound of the buffer_effective.
-        assert(self.buffer_modification_index == null or (self.buffer_modification_index.? < self.buffer_effective.len and self.buffer_modification_index.? < self.buffer_length));
-
         // Input mode must be either .literal or .telex.
         assert(self.mode == .literal or self.mode == .telex);
 
@@ -261,6 +298,9 @@ const State = struct {
         // 1. must be within buffer_effective length in Vietnamese input.
         // 2. could be more than buffer_effective in literal input.
         assert(self.buffer_length <= self.buffer_effective.len or self.mode == .literal or self.literal_index != null);
+
+        // Reset buffer_modification_index to start the new action.
+        self.buffer_modification_index = null;
 
         switch (c) {
             'A', 'a' => {
@@ -294,7 +334,7 @@ const State = struct {
                     self.literal_index = self.buffer_length;
                     // Append literal 'A' or 'a'.
                     self.append_literal(c);
-                } else if (!self.buffer_effective_last().equals_base(c)) {
+                } else if (!self.buffer_effective_last().equals_base_ignore_case(c)) {
                     // 6. Append literal when previous span is not 'A', 'a' and its variants.
                     self.append_literal(c);
                     // No modification.
@@ -358,7 +398,7 @@ const State = struct {
                     self.literal_index = self.buffer_length;
                     // Append literal 'D' or 'd'.
                     self.append_literal(c);
-                } else if (!self.buffer_effective_last().equals_base(c)) {
+                } else if (!self.buffer_effective_last().equals_base_ignore_case(c)) {
                     // 5. Append literal when previous span is not 'D', 'd' and its variants.
                     self.append_literal(c);
                     // No modification.
@@ -392,7 +432,7 @@ const State = struct {
                     self.literal_index = self.buffer_length;
                     // Append literal 'E' or 'e'.
                     self.append_literal(c);
-                } else if (!self.buffer_effective_last().equals_base(c)) {
+                } else if (!self.buffer_effective_last().equals_base_ignore_case(c)) {
                     // 5. Append literal when previous span is not 'E', 'e' and its variants.
                     self.append_literal(c);
                     // No modification.
@@ -401,7 +441,55 @@ const State = struct {
                     unreachable;
                 }
             },
-            'F', 'f' => {}, // falling.
+            'F', 'f' => input_f: { // falling.
+                if (self.literal_index != null or self.mode == .literal or self.buffer_length == 0) {
+                    // 1. Enable literal input when literal_index is set or on literal mode. The
+                    // literal_index is also set when the word starts with non-Vietnamese onsets.
+                    // 2. Append literal because no previous span existed. Continue Vietnamese
+                    // processing on next input.
+                    // 3. No previous character, append literally.
+                    self.append_literal(c);
+                    // Set modification index to null because we didn't modify any existing span.
+                    self.buffer_modification_index = null;
+                    // Set literal_index because 'F' doesn't appear in formal Vietnamese spelling.
+                    if (self.literal_index == null) {
+                        self.literal_index = self.buffer_length - 1;
+                    }
+                    break :input_f;
+                }
+
+                const word = self.pseudoword();
+
+                if (!word.has_vowels()) {
+                    // 4. Pseudoword doesn't have any vowels, append literally.
+                    self.append_literal(c);
+                    // Set modification index to null because we didn't modify any existing span.
+                    self.buffer_modification_index = null;
+                    // Set literal_index because 'F' doesn't appear in formal Vietnamese spelling.
+                    if (self.literal_index == null) {
+                        self.literal_index = self.buffer_length - 1;
+                    }
+                    break :input_f;
+                }
+
+                // From here, the word has vowels, but doesn't mean appliceable for all cases.
+                if (word.has_vowels() and word.length == 2 and self.buffer_effective[word.start].equals_base_ignore_case('Q') and self.buffer_effective[word.end].equals_ignore_case('U', .empty, .level)) {
+                    // 5. Exact 'QU', 'U' is a part of the consonant, append literally.
+                    self.append_literal(c);
+                    // Set modification index to null because we didn't modify any existing span.
+                    self.buffer_modification_index = null;
+                    // Set literal_index because 'F' doesn't appear in formal Vietnamese spelling.
+                    if (self.literal_index == null) {
+                        self.literal_index = self.buffer_length - 1;
+                    }
+                    break :input_f;
+                }
+
+                // TODO: handle apply tone.
+
+                // TODO: remove this when complete the implementation for this branch.
+                unreachable;
+            },
             'I', 'i' => {
                 if (self.literal_index != null or self.mode == .literal or self.buffer_length < 2) {
                     // 1. Enable literal input when literal_index is set or on literal mode. The
@@ -432,7 +520,55 @@ const State = struct {
                     self.buffer_modification_index = null;
                 }
             }, // fill missing diacritic, e.g. người.
-            'J', 'j' => {}, // falling_glottalized.
+            'J', 'j' => input_j: {
+                if (self.literal_index != null or self.mode == .literal or self.buffer_length == 0) {
+                    // 1. Enable literal input when literal_index is set or on literal mode. The
+                    // literal_index is also set when the word starts with non-Vietnamese onsets.
+                    // 2. Append literal because no previous span existed. Continue Vietnamese
+                    // processing on next input.
+                    // 3. No previous character, append literally.
+                    self.append_literal(c);
+                    // Set modification index to null because we didn't modify any existing span.
+                    self.buffer_modification_index = null;
+                    // Set literal_index because 'J' doesn't appear in formal Vietnamese spelling.
+                    if (self.literal_index == null) {
+                        self.literal_index = self.buffer_length - 1;
+                    }
+                    break :input_j;
+                }
+
+                const word = self.pseudoword();
+
+                if (!word.has_vowels()) {
+                    // 4. Pseudoword doesn't have any vowels, append literally.
+                    self.append_literal(c);
+                    // Set modification index to null because we didn't modify any existing span.
+                    self.buffer_modification_index = null;
+                    // Set literal_index because 'J' doesn't appear in formal Vietnamese spelling.
+                    if (self.literal_index == null) {
+                        self.literal_index = self.buffer_length - 1;
+                    }
+                    break :input_j;
+                }
+
+                // From here, the word has vowels, but doesn't mean appliceable for all cases.
+                if (word.has_vowels() and word.length == 2 and self.buffer_effective[word.start].equals_base_ignore_case('Q') and self.buffer_effective[word.end].equals_base_ignore_case('U')) {
+                    // 5. Exact 'QU', 'U' is a part of the consonant, append literally.
+                    self.append_literal(c);
+                    // Set modification index to null because we didn't modify any existing span.
+                    self.buffer_modification_index = null;
+                    // Set literal_index because 'J' doesn't appear in formal Vietnamese spelling.
+                    if (self.literal_index == null) {
+                        self.literal_index = self.buffer_length - 1;
+                    }
+                    break :input_j;
+                }
+
+                // TODO: handle apply tone.
+
+                // TODO: remove this when complete the implementation for this branch.
+                unreachable;
+            }, // falling_glottalized.
             'M', 'm' => {
                 if (self.literal_index != null or self.mode == .literal or self.buffer_length < 2) {
                     // 1. Enable literal input when literal_index is set or on literal mode. The
@@ -524,7 +660,7 @@ const State = struct {
                     self.literal_index = self.buffer_length;
                     // Append literal 'O' or 'o'.
                     self.append_literal(c);
-                } else if (!self.buffer_effective_last().equals_base(c)) {
+                } else if (!self.buffer_effective_last().equals_base_ignore_case(c)) {
                     // 6. Append literal when previous span is not 'O', 'o' and its variants.
                     self.append_literal(c);
                     // No modification.
@@ -564,7 +700,71 @@ const State = struct {
                 }
             }, // fill missing diacritic, e.g. cướp.
             'R', 'r' => {}, // dipping_rising.
-            'S', 's' => {}, // rising.
+            'S', 's' => input_s: { // rising.
+                if (self.literal_index != null or self.mode == .literal or self.buffer_length == 0) {
+                    // 1. Enable literal input when literal_index is set or on literal mode. The
+                    // literal_index is also set when the word starts with non-Vietnamese onsets
+                    // 2. Append literal because no previous span existed. Continue Vietnamese
+                    // processing on next input.
+                    // 3. No previous character, append literally.
+                    self.append_literal(c);
+                    // Set modification index to null because we didn't modify any existing span.
+                    self.buffer_modification_index = null;
+                    break :input_s;
+                }
+
+                const word = self.pseudoword();
+
+                if (!word.has_vowels()) {
+                    // 4. Pseudoword doesn't have any vowels, append literally.
+                    self.append_literal(c);
+                    // Set modification index to null because we didn't modify any existing span.
+                    self.buffer_modification_index = null;
+                    break :input_s;
+                }
+
+                // From here, the word has vowels, but doesn't mean appliceable for all cases.
+                if (word.length == 2 and self.buffer_effective[word.start].equals_base_ignore_case('Q') and self.buffer_effective[word.end].equals_ignore_case('U', .empty, .level)) {
+                    // 5. Exact 'QU', 'U' is a part of the consonant, append literally.
+                    self.append_literal(c);
+                    // Set modification index to null because we didn't modify any existing span.
+                    self.buffer_modification_index = null;
+                    break :input_s;
+                }
+
+                // Find tone position.
+                const vowels_start = word.vowels_start.?;
+                const vowels_end = word.vowels_end.?;
+                var tone_index: ?u8 = null;
+                for (vowels_start..(vowels_end + 1)) |index| {
+                    if (self.buffer_effective[index].tone != .level) {
+                        // Expect maximum 1 tone (other than level) in the vowels.
+                        assert(tone_index == null);
+                        tone_index = @intCast(index);
+                    }
+                }
+
+                if (tone_index == null) {
+                    // No tone, apply tone directly.
+                    self.apply_tone(word, .rising);
+                } else if (self.buffer_effective[tone_index.?].tone != .rising) {
+                    // Override other tone to rising.
+                    // Reset tone.
+                    self.reset_tone(word);
+                    // Apply tone.
+                    self.apply_tone(word, .rising);
+                } else if (self.buffer_effective[tone_index.?].tone == .rising) {
+                    // Cancel tone.
+                    // Reset tone.
+                    self.reset_tone(word);
+                    // Start literal input from this position.
+                    self.literal_index = self.buffer_length;
+                    // Append literal 'S', 's'.
+                    self.append_literal(c);
+                } else {
+                    unreachable;
+                }
+            },
             'T', 't' => {
                 if (self.literal_index != null or self.mode == .literal or self.buffer_length < 2) {
                     // 1. Enable literal input when literal_index is set or on literal mode. The
@@ -633,6 +833,10 @@ const State = struct {
                     self.append_literal(c);
                     // Set modification index to null because we didn't modify any existing span.
                     self.buffer_modification_index = null;
+                    // Set literal_index because 'W' doesn't appear in formal Vietnamese spelling.
+                    if (self.literal_index == null) {
+                        self.literal_index = self.buffer_length - 1;
+                    }
                 } else if (self.buffer_effective_last().equals_ignore_case_and_tone('A', .empty)) {
                     // 4. Previous span is 'A', 'a', apply breve.
                     const span_previous = self.buffer_effective[self.buffer_length - 1];
@@ -698,6 +902,10 @@ const State = struct {
                     self.append_literal(c);
                     // Set modification index to null because we didn't modify any existing span.
                     self.buffer_modification_index = null;
+                    // Set literal_index because 'W' doesn't appear in formal Vietnamese spelling.
+                    if (self.literal_index == null) {
+                        self.literal_index = self.buffer_length - 1;
+                    }
                 } else {
                     unreachable;
                 }
@@ -716,6 +924,9 @@ const State = struct {
         if (self.mode == .literal) {
             assert(self.literal_index == null);
         }
+
+        // The buffer_modification index must be inbound of the buffer_effective.
+        assert(self.buffer_modification_index == null or (self.buffer_modification_index.? < self.buffer_effective.len and self.buffer_modification_index.? < self.buffer_length));
     }
 
     // Append literal character when possible. Then inclease the buffer_length.
@@ -746,6 +957,216 @@ const State = struct {
         assert(self.buffer_length > 0 and self.buffer_length <= self.buffer_effective.len);
 
         return self.buffer_effective[self.buffer_length - 1];
+    }
+
+    // Return the pseudoword when scan backward the buffer_effective.
+    fn pseudoword(self: *State) Pseudoword {
+        // Only scan when buffer has characters and doesn't exceed buffer_effective length.
+        assert(self.buffer_length > 0 and self.buffer_length <= self.buffer_effective.len);
+
+        // Scan the buffer_effective backward.
+        var word_start: ?u8 = null;
+        var vowels_start: ?u8 = null;
+        var vowels_end: ?u8 = null;
+        var index: u8 = self.buffer_length;
+        while (index > 0) {
+            index -= 1;
+            const sp = self.buffer_effective[index];
+            const is_vowel = sp.is_vowel();
+            const is_consonant = !is_vowel;
+
+            // Found vowel for the first time, mark end of vowels.
+            if (is_vowel and vowels_end == null) {
+                vowels_end = index;
+
+                if (index == 0) {
+                    vowels_start = index;
+                    word_start = index;
+                    break;
+                }
+            } else if (is_consonant and vowels_end != null and vowels_start == null) {
+                // Found consonant after the vowels (reverse).
+                // 1. Set the previous index to vowels_start.
+                vowels_start = index + 1;
+                // 2. Set the current index to word_start.
+                word_start = index;
+                break;
+            } else if (index == 0 and is_vowel and vowels_end != null and vowels_start == null) {
+                // Vowel found, but could not find consonant until the beginning of the buffer.
+                // Set the current index to both vowels_start and word_start.
+                vowels_start = index;
+                word_start = index;
+                break;
+            } else if (index == 0 and is_consonant and vowels_end == null and vowels_start == null) {
+                // No vowels found, only consonants.
+                word_start = index;
+                break;
+            }
+        }
+        const word_end: u8 = self.buffer_length - 1;
+
+        // word_start must always have valid values.
+        assert(word_start != null);
+        assert(word_start.? <= word_end);
+
+        // vowels_start and vowels_end must be coupled.
+        if (vowels_start) |v_start| {
+            assert(vowels_end != null);
+            const v_end = vowels_end.?;
+
+            // The order of the vowels start / end must be correct.
+            assert(v_start <= v_end);
+
+            // The vowels must be within the word start / end boundary.
+            assert(word_start.? <= v_start);
+            assert(v_end <= word_end);
+        } else {
+            assert(vowels_end == null);
+        }
+
+        return .{
+            .start = word_start.?,
+            .end = word_end,
+            .vowels_start = vowels_start,
+            .vowels_end = vowels_end,
+            .length = word_end - word_start.? + 1,
+        };
+    }
+
+    fn apply_tone(self: *State, word: Pseudoword, tone: Tone) void {
+        // The word must have vowels.
+        assert(word.has_vowels());
+
+        // Exclude 'QU' because we treat them as consonant.
+        if (word.length == 2) {
+            assert(!(self.buffer_effective[word.start].equals_base_ignore_case('Q') and self.buffer_effective[word.end].equals_base_ignore_case('U')));
+        }
+
+        // Existing vowels have level tone.
+        // Note: the end is exclusive.
+        for (word.vowels_start.?..(word.vowels_end.? + 1)) |i| {
+            assert(self.buffer_effective[i].tone == .level);
+        }
+
+        // Tone must not be level.
+        assert(tone != .level);
+
+        const vowels_start = word.vowels_start.?;
+        const vowels_end = word.vowels_end.?;
+
+        // One vowel, put tone on this vowel.
+        if (vowels_start == vowels_end) {
+            const vowel = self.buffer_effective[vowels_start];
+            self.buffer_effective[vowels_start] = Span.init_diacritic_tone(vowel.base, vowel.diacritic, tone);
+            self.buffer_modification_index = vowels_start;
+            return;
+        }
+
+        // Indicator for 'Ơ', highest priority.
+        var o_horn_index: ?u8 = null;
+        // Special group 'Ê', 'Â', 'Ô', 'Ă', 'Ư'
+        // Multiple vowels, scan the vowels to determine the cases.
+        var vowel_special_index: ?u8 = null;
+
+        // Special consonant: `GI`, `QU`.
+        var consonant_special_start_exists: bool = false;
+        if (self.buffer_effective[word.start].equals_base_ignore_case('G') and self.buffer_effective[word.start + 1].equals_base_ignore_case('I')) {
+            consonant_special_start_exists = true;
+        } else if (self.buffer_effective[word.start].equals_base_ignore_case('Q') and self.buffer_effective[word.start + 1].equals_ignore_case_and_tone('U', .empty)) {
+            consonant_special_start_exists = true;
+        }
+
+        var index: u8 = vowels_end + 1;
+        while (index > vowels_start) {
+            index -= 1;
+
+            const sp = self.buffer_effective[index];
+            if (sp.equals_ignore_case_and_tone('O', .horn)) {
+                o_horn_index = index;
+                // Because 'Ơ' has highest priority, we can stop processing.
+                break;
+            }
+
+            // Special group.
+            if (vowel_special_index == null and sp.equals_ignore_case_and_tone('E', .circumflex)) {
+                vowel_special_index = index;
+            } else if (vowel_special_index == null and sp.equals_ignore_case_and_tone('A', .circumflex)) {
+                vowel_special_index = index;
+            } else if (vowel_special_index == null and sp.equals_ignore_case_and_tone('O', .circumflex)) {
+                vowel_special_index = index;
+            } else if (vowel_special_index == null and sp.equals_ignore_case_and_tone('A', .breve)) {
+                vowel_special_index = index;
+            } else if (vowel_special_index == null and sp.equals_ignore_case_and_tone('U', .horn)) {
+                vowel_special_index = index;
+            }
+        }
+
+        // Tone position for multiple vowels.
+        var tone_index = vowels_start;
+        if (o_horn_index) |i| {
+            // 'Ơ', highest priority.
+            tone_index = i;
+        } else if (vowel_special_index) |i| {
+            // Special group.
+            tone_index = i;
+        } else if (consonant_special_start_exists) {
+            // 'GI', 'QU', skip the first vowel because it's 'I', 'U', put tone on next vowel.
+            tone_index = vowels_start + 1;
+        } else if ((vowels_end - vowels_start) == 1 and vowels_end == word.end and self.buffer_effective[vowels_start].equals_ignore_case_and_tone('O', .empty) and self.buffer_effective[vowels_end].equals_ignore_case_and_tone('A', .empty)) {
+            // Exact 'OA', put tone on first vowel.
+            tone_index = vowels_start;
+        } else if ((vowels_end - vowels_start) == 1 and vowels_end == word.end and self.buffer_effective[vowels_start].equals_ignore_case_and_tone('O', .empty) and self.buffer_effective[vowels_end].equals_ignore_case_and_tone('E', .empty)) {
+            // Exact 'OE', put tone on first vowel.
+            tone_index = vowels_start;
+        } else if ((vowels_end - vowels_start) == 1 and vowels_end == word.end and self.buffer_effective[vowels_start].equals_ignore_case_and_tone('O', .empty) and self.buffer_effective[vowels_end].equals_ignore_case_and_tone('O', .empty)) {
+            // Exact 'OO', put tone on first vowel.
+            tone_index = vowels_start;
+        } else if ((vowels_end - vowels_start) == 1 and vowels_end == word.end and self.buffer_effective[vowels_start].equals_ignore_case_and_tone('U', .empty) and self.buffer_effective[vowels_end].equals_ignore_case_and_tone('Y', .empty)) {
+            // Exact 'UY', put tone on first vowel.
+            tone_index = vowels_start;
+        } else if ((vowels_end - vowels_start) >= 1 and self.buffer_effective[vowels_start].equals_ignore_case_and_tone('O', .empty) and self.buffer_effective[vowels_start + 1].equals_ignore_case_and_tone('A', .empty)) {
+            // 'OA' with ending characters, put tone on second vowel.
+            tone_index = vowels_start + 1;
+        } else if ((vowels_end - vowels_start) >= 1 and self.buffer_effective[vowels_start].equals_ignore_case_and_tone('O', .empty) and self.buffer_effective[vowels_start + 1].equals_ignore_case_and_tone('E', .empty)) {
+            // 'OE' with ending characters, put tone on second vowel.
+            tone_index = vowels_start + 1;
+        } else if ((vowels_end - vowels_start) >= 1 and self.buffer_effective[vowels_start].equals_ignore_case_and_tone('O', .empty) and self.buffer_effective[vowels_start + 1].equals_ignore_case_and_tone('O', .empty)) {
+            // 'OO' with ending characters, put tone on second vowel.
+            tone_index = vowels_start + 1;
+        } else if ((vowels_end - vowels_start) >= 1 and self.buffer_effective[vowels_start].equals_ignore_case_and_tone('U', .empty) and self.buffer_effective[vowels_start + 1].equals_ignore_case_and_tone('Y', .empty)) {
+            // 'UY' with ending characters, put tone on second vowel.
+            tone_index = vowels_start + 1;
+        } else {
+            // Other cases, put on first vowel.
+            tone_index = vowels_start;
+        }
+
+        const sp = self.buffer_effective[tone_index];
+        self.buffer_effective[tone_index] = Span.init_diacritic_tone(sp.base, sp.diacritic, tone);
+
+        // Set buffer_modification_index to the earliest modification.
+        if (self.buffer_modification_index == null or tone_index < self.buffer_modification_index.?) {
+            self.buffer_modification_index = tone_index;
+        }
+
+        assert(self.buffer_modification_index != null);
+    }
+
+    // Reset all tone in vowels to level. If word has no tone, this function is no-op.
+    fn reset_tone(self: *State, word: Pseudoword) void {
+        // The word must have vowels.
+        assert(word.has_vowels());
+
+        for (word.vowels_start.?..(word.vowels_end.? + 1)) |index| {
+            const sp = self.buffer_effective[index];
+            if (sp.tone != .level) {
+                // Set buffer_modification_index to the earliest modification.
+                if (self.buffer_modification_index == null or index < self.buffer_modification_index.?) {
+                    self.buffer_modification_index = @intCast(index);
+                }
+                self.buffer_effective[index] = Span.init_diacritic_tone(sp.base, sp.diacritic, .level);
+            }
+        }
     }
 
     fn backspace(self: *State) void {
@@ -1589,6 +2010,514 @@ test "expect State.add auto-fill missing horn at buffer_effective boundary" {
         // The trigger character at index 16 is out of buffer_effective range,
         // so append_literal does not write a span there. We only assert the
         // bookkeeping fields above.
+    }
+}
+
+test "expect State.add switch to literal input when append F, J, W (ignore cases) on empty buffer" {
+    // Arrange
+    const inputs = [_]u8{ 'F', 'f', 'J', 'j', 'W', 'w' };
+
+    for (inputs) |c| {
+        var state: State = undefined;
+        state.init();
+        state.mode = .telex;
+
+        // Act
+        state.add(c);
+
+        // Assert
+        try expectEqual(1, state.buffer_length);
+        try expectEqual(null, state.buffer_modification_index);
+        try expectEqual(0, state.literal_index);
+        try expectEqual(.telex, state.mode);
+
+        const sp = state.buffer_effective[0];
+        try expectEqual(c, sp.base);
+        try expectEqual(.empty, sp.diacritic);
+        try expectEqual(.level, sp.tone);
+    }
+}
+
+test "expect State.add switch to literal input when append W (ignore cases) on character outside diacritic scope" {
+    // Arrange
+    const Case = struct { base: u8, diacritic: Diacritic };
+    const cases = [_]Case{
+        .{ .base = 'b', .diacritic = .empty },
+        .{ .base = 'B', .diacritic = .empty },
+        .{ .base = 'e', .diacritic = .empty },
+        .{ .base = 'E', .diacritic = .empty },
+        .{ .base = 'i', .diacritic = .empty },
+        .{ .base = 'I', .diacritic = .empty },
+        .{ .base = 'y', .diacritic = .empty },
+        .{ .base = 'Y', .diacritic = .empty },
+        .{ .base = 'e', .diacritic = .circumflex },
+        .{ .base = 'E', .diacritic = .circumflex },
+        .{ .base = 'd', .diacritic = .stroke },
+        .{ .base = 'D', .diacritic = .stroke },
+    };
+
+    const inputs = [_]u8{ 'W', 'w' };
+
+    for (cases) |c| {
+        for (inputs) |input| {
+            var state: State = undefined;
+            state.init();
+            state.mode = .telex;
+            state.buffer_effective[0] = Span.init_diacritic(c.base, c.diacritic);
+            state.buffer_length = 1;
+
+            // Act
+            state.add(input);
+
+            // Assert
+            try expectEqual(2, state.buffer_length);
+            try expectEqual(null, state.buffer_modification_index);
+            try expectEqual(1, state.literal_index);
+            try expectEqual(.telex, state.mode);
+
+            const sp_previous = state.buffer_effective[0];
+            try expectEqual(c.base, sp_previous.base);
+            try expectEqual(c.diacritic, sp_previous.diacritic);
+            try expectEqual(.level, sp_previous.tone);
+
+            const sp_new = state.buffer_effective[1];
+            try expectEqual(input, sp_new.base);
+            try expectEqual(.empty, sp_new.diacritic);
+            try expectEqual(.level, sp_new.tone);
+        }
+    }
+}
+
+test "expect State.add switch to literal input when append F, J (ignore cases) on word without placeable tone" {
+    const inputs = [_]u8{ 'F', 'f', 'J', 'j' };
+
+    // Sub-block A: single-consonant pseudo-word (no vowel).
+    const SingleCase = struct { base: u8 };
+    const single_cases = [_]SingleCase{
+        .{ .base = 'b' },
+        .{ .base = 'B' },
+    };
+
+    for (single_cases) |c| {
+        for (inputs) |input| {
+            var state: State = undefined;
+            state.init();
+            state.mode = .telex;
+            state.buffer_effective[0] = Span.init(c.base);
+            state.buffer_length = 1;
+
+            // Act
+            state.add(input);
+
+            // Assert
+            try expectEqual(2, state.buffer_length);
+            try expectEqual(null, state.buffer_modification_index);
+            try expectEqual(1, state.literal_index);
+            try expectEqual(.telex, state.mode);
+
+            const sp_previous = state.buffer_effective[0];
+            try expectEqual(c.base, sp_previous.base);
+            try expectEqual(.empty, sp_previous.diacritic);
+            try expectEqual(.level, sp_previous.tone);
+
+            const sp_new = state.buffer_effective[1];
+            try expectEqual(input, sp_new.base);
+            try expectEqual(.empty, sp_new.diacritic);
+            try expectEqual(.level, sp_new.tone);
+        }
+    }
+
+    // Sub-block B: multi-consonant pseudo-word (no vowel) and QU exception.
+    const PairCase = struct { base0: u8, base1: u8 };
+    const pair_cases = [_]PairCase{
+        // Multi-consonant clusters.
+        .{ .base0 = 'n', .base1 = 'g' },
+        .{ .base0 = 't', .base1 = 'r' },
+        .{ .base0 = 'p', .base1 = 'h' },
+        .{ .base0 = 'k', .base1 = 'h' },
+        .{ .base0 = 'g', .base1 = 'h' },
+        // QU exception (mixed cases).
+        .{ .base0 = 'q', .base1 = 'u' },
+        .{ .base0 = 'q', .base1 = 'U' },
+        .{ .base0 = 'Q', .base1 = 'u' },
+        .{ .base0 = 'Q', .base1 = 'U' },
+    };
+
+    for (pair_cases) |c| {
+        for (inputs) |input| {
+            var state: State = undefined;
+            state.init();
+            state.mode = .telex;
+            state.buffer_effective[0] = Span.init(c.base0);
+            state.buffer_effective[1] = Span.init(c.base1);
+            state.buffer_length = 2;
+
+            // Act
+            state.add(input);
+
+            // Assert
+            try expectEqual(3, state.buffer_length);
+            try expectEqual(null, state.buffer_modification_index);
+            try expectEqual(2, state.literal_index);
+            try expectEqual(.telex, state.mode);
+
+            const sp_previous0 = state.buffer_effective[0];
+            try expectEqual(c.base0, sp_previous0.base);
+            try expectEqual(.empty, sp_previous0.diacritic);
+            try expectEqual(.level, sp_previous0.tone);
+
+            const sp_previous1 = state.buffer_effective[1];
+            try expectEqual(c.base1, sp_previous1.base);
+            try expectEqual(.empty, sp_previous1.diacritic);
+            try expectEqual(.level, sp_previous1.tone);
+
+            const sp_new = state.buffer_effective[2];
+            try expectEqual(input, sp_new.base);
+            try expectEqual(.empty, sp_new.diacritic);
+            try expectEqual(.level, sp_new.tone);
+        }
+    }
+}
+
+test "expect State.apply_tone places tone at the correct vowel for every non-level tone" {
+    // Arrange. Each case seeds buffer_effective directly with .level vowels,
+    // builds a Pseudoword by hand (so this test stays independent from the
+    // pseudo-word scanner and the State.add dispatch), and calls apply_tone.
+    // Every case is iterated across all non-level tones to verify the tone
+    // value is preserved on the targeted vowel and no other span is touched.
+    const SeedSpan = struct { base: u8, diacritic: Diacritic = .empty };
+    const Case = struct {
+        seeds: []const SeedSpan,
+        word_start: u8,
+        word_end: u8,
+        vowels_start: u8,
+        vowels_end: u8,
+        expected_index: u8,
+    };
+    const cases = [_]Case{
+        // Single vowel placement (vowels only).
+        .{ .seeds = &.{.{ .base = 'a' }}, .word_start = 0, .word_end = 0, .vowels_start = 0, .vowels_end = 0, .expected_index = 0 },
+        .{ .seeds = &.{.{ .base = 'A' }}, .word_start = 0, .word_end = 0, .vowels_start = 0, .vowels_end = 0, .expected_index = 0 },
+        // Single vowel with leading consonant.
+        .{ .seeds = &.{ .{ .base = 'b' }, .{ .base = 'a' } }, .word_start = 0, .word_end = 1, .vowels_start = 1, .vowels_end = 1, .expected_index = 1 },
+        // Single vowel with trailing consonant.
+        .{ .seeds = &.{ .{ .base = 'a' }, .{ .base = 'n' } }, .word_start = 0, .word_end = 1, .vowels_start = 0, .vowels_end = 0, .expected_index = 0 },
+        // Single vowel with leading and trailing consonant.
+        .{ .seeds = &.{ .{ .base = 'b' }, .{ .base = 'a' }, .{ .base = 'n' } }, .word_start = 0, .word_end = 2, .vowels_start = 1, .vowels_end = 1, .expected_index = 1 },
+
+        // Exact OA / OE / OO / UY -> first vowel.
+        .{ .seeds = &.{ .{ .base = 'o' }, .{ .base = 'a' } }, .word_start = 0, .word_end = 1, .vowels_start = 0, .vowels_end = 1, .expected_index = 0 },
+        .{ .seeds = &.{ .{ .base = 'o' }, .{ .base = 'e' } }, .word_start = 0, .word_end = 1, .vowels_start = 0, .vowels_end = 1, .expected_index = 0 },
+        .{ .seeds = &.{ .{ .base = 'o' }, .{ .base = 'o' } }, .word_start = 0, .word_end = 1, .vowels_start = 0, .vowels_end = 1, .expected_index = 0 },
+        .{ .seeds = &.{ .{ .base = 'u' }, .{ .base = 'y' } }, .word_start = 0, .word_end = 1, .vowels_start = 0, .vowels_end = 1, .expected_index = 0 },
+        // Exact OA / OE / OO / UY with leading consonant -> first vowel.
+        .{ .seeds = &.{ .{ .base = 'h' }, .{ .base = 'o' }, .{ .base = 'a' } }, .word_start = 0, .word_end = 2, .vowels_start = 1, .vowels_end = 2, .expected_index = 1 },
+        .{ .seeds = &.{ .{ .base = 'h' }, .{ .base = 'u' }, .{ .base = 'y' } }, .word_start = 0, .word_end = 2, .vowels_start = 1, .vowels_end = 2, .expected_index = 1 },
+
+        // Extended OA / OE / OO / UY (trailing consonant) -> second vowel.
+        .{ .seeds = &.{ .{ .base = 'o' }, .{ .base = 'a' }, .{ .base = 'n' } }, .word_start = 0, .word_end = 2, .vowels_start = 0, .vowels_end = 1, .expected_index = 1 },
+        .{ .seeds = &.{ .{ .base = 'u' }, .{ .base = 'y' }, .{ .base = 'n' } }, .word_start = 0, .word_end = 2, .vowels_start = 0, .vowels_end = 1, .expected_index = 1 },
+        .{ .seeds = &.{ .{ .base = 'h' }, .{ .base = 'o' }, .{ .base = 'a' }, .{ .base = 'n' } }, .word_start = 0, .word_end = 3, .vowels_start = 1, .vowels_end = 2, .expected_index = 2 },
+        .{ .seeds = &.{ .{ .base = 'h' }, .{ .base = 'u' }, .{ .base = 'y' }, .{ .base = 'n' }, .{ .base = 'h' } }, .word_start = 0, .word_end = 4, .vowels_start = 1, .vowels_end = 2, .expected_index = 2 },
+        .{ .seeds = &.{ .{ .base = 'x' }, .{ .base = 'o' }, .{ .base = 'o' }, .{ .base = 'n' }, .{ .base = 'g' } }, .word_start = 0, .word_end = 4, .vowels_start = 1, .vowels_end = 2, .expected_index = 2 },
+        // Extended OA / OE / UY (more vowels) -> second vowel.
+        .{ .seeds = &.{ .{ .base = 'x' }, .{ .base = 'o' }, .{ .base = 'a' }, .{ .base = 'y' } }, .word_start = 0, .word_end = 3, .vowels_start = 1, .vowels_end = 3, .expected_index = 2 },
+
+        // GI / QU consonant-vowel special: tone on next vowel.
+        .{ .seeds = &.{ .{ .base = 'g' }, .{ .base = 'i' }, .{ .base = 'a' } }, .word_start = 0, .word_end = 2, .vowels_start = 1, .vowels_end = 2, .expected_index = 2 },
+        .{ .seeds = &.{ .{ .base = 'q' }, .{ .base = 'u' }, .{ .base = 'a' } }, .word_start = 0, .word_end = 2, .vowels_start = 1, .vowels_end = 2, .expected_index = 2 },
+        .{ .seeds = &.{ .{ .base = 'g' }, .{ .base = 'i' }, .{ .base = 'a' }, .{ .base = 'n' } }, .word_start = 0, .word_end = 3, .vowels_start = 1, .vowels_end = 2, .expected_index = 2 },
+        .{ .seeds = &.{ .{ .base = 'q' }, .{ .base = 'u' }, .{ .base = 'a' }, .{ .base = 'n' } }, .word_start = 0, .word_end = 3, .vowels_start = 1, .vowels_end = 2, .expected_index = 2 },
+
+        // Ơ has the highest priority among the special vowels.
+        .{ .seeds = &.{ .{ .base = 'u' }, .{ .base = 'o', .diacritic = .horn }, .{ .base = 'p' } }, .word_start = 0, .word_end = 2, .vowels_start = 0, .vowels_end = 1, .expected_index = 1 },
+        // Special diacritic priority Ê / Â / Ô / Ă / Ư -- the rightmost listed
+        // vowel wins per the right-to-left scan.
+        .{ .seeds = &.{ .{ .base = 't' }, .{ .base = 'i' }, .{ .base = 'e', .diacritic = .circumflex }, .{ .base = 'n' } }, .word_start = 0, .word_end = 3, .vowels_start = 1, .vowels_end = 2, .expected_index = 2 },
+        .{ .seeds = &.{ .{ .base = 'd' }, .{ .base = 'a', .diacritic = .circumflex }, .{ .base = 'u' } }, .word_start = 0, .word_end = 2, .vowels_start = 1, .vowels_end = 2, .expected_index = 1 },
+        .{ .seeds = &.{ .{ .base = 't' }, .{ .base = 'u' }, .{ .base = 'o', .diacritic = .circumflex }, .{ .base = 'n' } }, .word_start = 0, .word_end = 3, .vowels_start = 1, .vowels_end = 2, .expected_index = 2 },
+        .{ .seeds = &.{ .{ .base = 'l' }, .{ .base = 'o' }, .{ .base = 'a', .diacritic = .breve }, .{ .base = 't' } }, .word_start = 0, .word_end = 3, .vowels_start = 1, .vowels_end = 2, .expected_index = 2 },
+        .{ .seeds = &.{ .{ .base = 't' }, .{ .base = 'u', .diacritic = .horn }, .{ .base = 'u' } }, .word_start = 0, .word_end = 2, .vowels_start = 1, .vowels_end = 2, .expected_index = 1 },
+
+        // Default multi-vowel fallback (no special, no GI/QU, no OA/OE/OO/UY) -> first vowel.
+        .{ .seeds = &.{ .{ .base = 'i' }, .{ .base = 'a' } }, .word_start = 0, .word_end = 1, .vowels_start = 0, .vowels_end = 1, .expected_index = 0 },
+    };
+
+    const tones = [_]Tone{ .rising, .falling, .dipping_rising, .rising_glottalized, .falling_glottalized };
+
+    for (cases) |c| {
+        for (tones) |tone| {
+            var state: State = undefined;
+            state.init();
+            state.mode = .telex;
+            for (c.seeds, 0..) |s, i| {
+                state.buffer_effective[i] = Span.init_diacritic_tone(s.base, s.diacritic, .level);
+            }
+            state.buffer_length = @intCast(c.seeds.len);
+
+            const word: Pseudoword = .{
+                .start = c.word_start,
+                .end = c.word_end,
+                .vowels_start = c.vowels_start,
+                .vowels_end = c.vowels_end,
+                .length = c.word_end - c.word_start + 1,
+            };
+
+            // Act
+            state.apply_tone(word, tone);
+
+            // Assert: tone is applied in place; buffer length, literal_index, and
+            // mode are unaffected; buffer_modification_index points at the modified
+            // vowel.
+            try expectEqual(@as(u8, @intCast(c.seeds.len)), state.buffer_length);
+            try expectEqual(@as(?u8, c.expected_index), state.buffer_modification_index);
+            try expectEqual(null, state.literal_index);
+            try expectEqual(.telex, state.mode);
+
+            // The targeted vowel takes the tone; every other span keeps base,
+            // diacritic, and stays at .level.
+            for (c.seeds, 0..) |s, i| {
+                const sp = state.buffer_effective[i];
+                try expectEqual(s.base, sp.base);
+                try expectEqual(s.diacritic, sp.diacritic);
+                const expected_tone: Tone = if (i == @as(usize, c.expected_index)) tone else .level;
+                try expectEqual(expected_tone, sp.tone);
+            }
+        }
+    }
+}
+
+test "expect State.apply_tone updates buffer_modification_index to the earliest position" {
+    // Arrange. Cover the three bookkeeping branches for buffer_modification_index:
+    //   - initially null -> set to the tone position.
+    //   - existing index later than the tone position -> updated to tone position.
+    //   - existing index earlier than the tone position -> kept unchanged.
+    // The seeded word is `tien` (t, i, ê, n) so the tone lands at index 2 (Ê).
+    const Case = struct {
+        initial_modification_index: ?u8,
+        expected_modification_index: u8,
+    };
+    const cases = [_]Case{
+        .{ .initial_modification_index = null, .expected_modification_index = 2 },
+        .{ .initial_modification_index = 3, .expected_modification_index = 2 },
+        .{ .initial_modification_index = 1, .expected_modification_index = 1 },
+    };
+
+    for (cases) |c| {
+        var state: State = undefined;
+        state.init();
+        state.mode = .telex;
+        state.buffer_effective[0] = Span.init('t');
+        state.buffer_effective[1] = Span.init('i');
+        state.buffer_effective[2] = Span.init_diacritic('e', .circumflex);
+        state.buffer_effective[3] = Span.init('n');
+        state.buffer_length = 4;
+        state.buffer_modification_index = c.initial_modification_index;
+
+        const word: Pseudoword = .{
+            .start = 0,
+            .end = 3,
+            .vowels_start = 1,
+            .vowels_end = 2,
+            .length = 4,
+        };
+
+        // Act
+        state.apply_tone(word, .rising);
+
+        // Assert
+        try expectEqual(@as(?u8, c.expected_modification_index), state.buffer_modification_index);
+        try expectEqual(.rising, state.buffer_effective[2].tone);
+        try expectEqual(.level, state.buffer_effective[1].tone);
+    }
+}
+
+test "expect State.add apply rising tone for representative cases" {
+    // Arrange
+    // This test only proves State.add trigger the pseudo-word scanner and to apply tone.
+    // Exhaustive positioning rules live in the State.apply_tone tests; here we keep one
+    // representative cases.
+    const SeedSpan = struct { base: u8, diacritic: Diacritic = .empty };
+    const Case = struct {
+        seeds: []const SeedSpan,
+        trigger: u8,
+        expected_index: u8,
+    };
+    const cases = [_]Case{
+        // Lowercase trigger, single vowel.
+        .{ .seeds = &.{.{ .base = 'a' }}, .trigger = 's', .expected_index = 0 },
+        // Uppercase trigger, single vowel.
+        .{ .seeds = &.{.{ .base = 'A' }}, .trigger = 'S', .expected_index = 0 },
+        // Simple consonant + single vowel.
+        .{ .seeds = &.{ .{ .base = 'b' }, .{ .base = 'a' } }, .trigger = 's', .expected_index = 1 },
+        // Multi-vowel run (exact OA -> first vowel).
+        .{ .seeds = &.{ .{ .base = 'h' }, .{ .base = 'o' }, .{ .base = 'a' } }, .trigger = 's', .expected_index = 1 },
+        // Trailing-suffix pseudo-word (only the last syllable receives the tone).
+        .{ .seeds = &.{ .{ .base = 'v' }, .{ .base = 'a' }, .{ .base = 'n' }, .{ .base = 'h' }, .{ .base = 'o' }, .{ .base = 'a' } }, .trigger = 's', .expected_index = 4 },
+    };
+
+    for (cases) |c| {
+        var state: State = undefined;
+        state.init();
+        state.mode = .telex;
+        for (c.seeds, 0..) |s, i| {
+            state.buffer_effective[i] = Span.init_diacritic_tone(s.base, s.diacritic, .level);
+        }
+        state.buffer_length = @intCast(c.seeds.len);
+
+        // Act
+        state.add(c.trigger);
+
+        // Assert: the trigger character is NOT appended; the rising tone lands
+        // on the expected vowel and bookkeeping fields stay clean.
+        try expectEqual(@as(u8, @intCast(c.seeds.len)), state.buffer_length);
+        try expectEqual(@as(?u8, c.expected_index), state.buffer_modification_index);
+        try expectEqual(null, state.literal_index);
+        try expectEqual(.telex, state.mode);
+
+        for (c.seeds, 0..) |s, i| {
+            const sp = state.buffer_effective[i];
+            try expectEqual(s.base, sp.base);
+            try expectEqual(s.diacritic, sp.diacritic);
+            const expected_tone: Tone = if (i == @as(usize, c.expected_index)) .rising else .level;
+            try expectEqual(expected_tone, sp.tone);
+        }
+    }
+}
+
+test "expect State.add overrides an existing non-rising tone with rising" {
+    // Arrange. Seed `tìê` (t, i with falling, ê). The existing falling tone
+    // sits on `i` (index 1); the override path must reset it and place rising
+    // on `ê` (index 2, the special vowel). This proves State.add orchestrates
+    // reset_tone followed by apply_tone for the override branch.
+    var state: State = undefined;
+    state.init();
+    state.mode = .telex;
+    state.buffer_effective[0] = Span.init('t');
+    state.buffer_effective[1] = Span.init_diacritic_tone('i', .empty, .falling);
+    state.buffer_effective[2] = Span.init_diacritic('e', .circumflex);
+    state.buffer_length = 3;
+
+    // Act
+    state.add('s');
+
+    // Assert. Trigger character must not be appended; `ì` becomes `i`; rising
+    // lands on `ê`. buffer_modification_index tracks the earliest modified
+    // span (index 1, where the falling tone was reset).
+    try expectEqual(@as(u8, 3), state.buffer_length);
+    try expectEqual(@as(?u8, 1), state.buffer_modification_index);
+    try expectEqual(null, state.literal_index);
+    try expectEqual(.telex, state.mode);
+
+    try expectEqual(@as(u8, 't'), state.buffer_effective[0].base);
+    try expectEqual(.empty, state.buffer_effective[0].diacritic);
+    try expectEqual(.level, state.buffer_effective[0].tone);
+
+    try expectEqual(@as(u8, 'i'), state.buffer_effective[1].base);
+    try expectEqual(.empty, state.buffer_effective[1].diacritic);
+    try expectEqual(.level, state.buffer_effective[1].tone);
+
+    try expectEqual(@as(u8, 'e'), state.buffer_effective[2].base);
+    try expectEqual(.circumflex, state.buffer_effective[2].diacritic);
+    try expectEqual(.rising, state.buffer_effective[2].tone);
+}
+
+test "expect State.pseudoword will scan and provide pseudoword correctly" {
+    // Arrange. Each case seeds buffer_effective directly, then asks the
+    // pseudo-word scanner for structural indexes only. Cases with a leading
+    // consonant include multiple consonant characters to verify that the scan
+    // includes only the consonant immediately before the vowel run.
+    const Case = struct {
+        seeds: []const Span,
+        word_start: u8,
+        word_end: u8,
+        vowels_start: ?u8,
+        vowels_end: ?u8,
+        length: u8,
+    };
+    const cases = [_]Case{
+        // Vowels only.
+        .{ .seeds = &.{.{ .base = 'a' }}, .word_start = 0, .word_end = 0, .vowels_start = 0, .vowels_end = 0, .length = 1 },
+        .{ .seeds = &.{ .{ .base = 'O' }, .{ .base = 'A' } }, .word_start = 0, .word_end = 1, .vowels_start = 0, .vowels_end = 1, .length = 2 },
+        .{ .seeds = &.{ .{ .base = 'u' }, .{ .base = 'y' } }, .word_start = 0, .word_end = 1, .vowels_start = 0, .vowels_end = 1, .length = 2 },
+
+        // Multiple consonants before vowels.
+        .{ .seeds = &.{ .{ .base = 't' }, .{ .base = 'r' }, .{ .base = 'a' } }, .word_start = 1, .word_end = 2, .vowels_start = 2, .vowels_end = 2, .length = 2 },
+        .{ .seeds = &.{ .{ .base = 'k' }, .{ .base = 'h' }, .{ .base = 'o' }, .{ .base = 'a' } }, .word_start = 1, .word_end = 3, .vowels_start = 2, .vowels_end = 3, .length = 3 },
+        .{ .seeds = &.{ .{ .base = 't' }, .{ .base = 'h' }, .{ .base = 'u' }, .{ .base = 'y' } }, .word_start = 1, .word_end = 3, .vowels_start = 2, .vowels_end = 3, .length = 3 },
+        .{ .seeds = &.{ .{ .base = 'n' }, .{ .base = 'g' }, .{ .base = 'i' }, .{ .base = 'a' } }, .word_start = 1, .word_end = 3, .vowels_start = 2, .vowels_end = 3, .length = 3 },
+        .{ .seeds = &.{ .{ .base = 's' }, .{ .base = 'q' }, .{ .base = 'u' }, .{ .base = 'a' } }, .word_start = 1, .word_end = 3, .vowels_start = 2, .vowels_end = 3, .length = 3 },
+
+        // Vowels with trailing consonants.
+        .{ .seeds = &.{ .{ .base = 'a' }, .{ .base = 'n' } }, .word_start = 0, .word_end = 1, .vowels_start = 0, .vowels_end = 0, .length = 2 },
+        .{ .seeds = &.{ .{ .base = 'o' }, .{ .base = 'a' }, .{ .base = 'n' } }, .word_start = 0, .word_end = 2, .vowels_start = 0, .vowels_end = 1, .length = 3 },
+        .{ .seeds = &.{ .{ .base = 'u' }, .{ .base = 'y' }, .{ .base = 'n' }, .{ .base = 'h' } }, .word_start = 0, .word_end = 3, .vowels_start = 0, .vowels_end = 1, .length = 4 },
+
+        // Multiple consonants before vowels and trailing consonants.
+        .{ .seeds = &.{ .{ .base = 't' }, .{ .base = 'r' }, .{ .base = 'a' }, .{ .base = 'n' } }, .word_start = 1, .word_end = 3, .vowels_start = 2, .vowels_end = 2, .length = 3 },
+        .{ .seeds = &.{ .{ .base = 'k' }, .{ .base = 'h' }, .{ .base = 'o' }, .{ .base = 'a' }, .{ .base = 'n' } }, .word_start = 1, .word_end = 4, .vowels_start = 2, .vowels_end = 3, .length = 4 },
+        .{ .seeds = &.{ .{ .base = 's' }, .{ .base = 'q' }, .{ .base = 'u' }, .{ .base = 'a' }, .{ .base = 'n' } }, .word_start = 1, .word_end = 4, .vowels_start = 2, .vowels_end = 3, .length = 4 },
+        .{ .seeds = &.{ .{ .base = 'n' }, .{ .base = 'g' }, .{ .base = 'i' }, .{ .base = 'a' }, .{ .base = 'n' } }, .word_start = 1, .word_end = 4, .vowels_start = 2, .vowels_end = 3, .length = 4 },
+        .{ .seeds = &.{ .{ .base = 't' }, .{ .base = 'h' }, .{ .base = 'u' }, .{ .base = 'y' }, .{ .base = 'n' }, .{ .base = 'h' } }, .word_start = 1, .word_end = 5, .vowels_start = 2, .vowels_end = 3, .length = 5 },
+
+        // Vowels with diacritics are still classified by their base letters.
+        .{ .seeds = &.{ .{ .base = 't' }, .{ .base = 'r' }, .{ .base = 'u' }, .{ .base = 'o', .diacritic = .horn }, .{ .base = 'p' } }, .word_start = 1, .word_end = 4, .vowels_start = 2, .vowels_end = 3, .length = 4 },
+        .{ .seeds = &.{ .{ .base = 't' }, .{ .base = 'h' }, .{ .base = 'i' }, .{ .base = 'e', .diacritic = .circumflex }, .{ .base = 'n' } }, .word_start = 1, .word_end = 4, .vowels_start = 2, .vowels_end = 3, .length = 4 },
+        .{ .seeds = &.{ .{ .base = 't' }, .{ .base = 'r' }, .{ .base = 'a', .diacritic = .circumflex }, .{ .base = 'u' } }, .word_start = 1, .word_end = 3, .vowels_start = 2, .vowels_end = 3, .length = 3 },
+        .{ .seeds = &.{ .{ .base = 'c' }, .{ .base = 'h' }, .{ .base = 'o' }, .{ .base = 'a', .diacritic = .breve }, .{ .base = 't' } }, .word_start = 1, .word_end = 4, .vowels_start = 2, .vowels_end = 3, .length = 4 },
+        .{ .seeds = &.{ .{ .base = 't' }, .{ .base = 'r' }, .{ .base = 'u', .diacritic = .horn }, .{ .base = 'u' } }, .word_start = 1, .word_end = 3, .vowels_start = 2, .vowels_end = 3, .length = 3 },
+
+        // Only the trailing pseudo-word is returned.
+        .{ .seeds = &.{ .{ .base = 't' }, .{ .base = 'h' }, .{ .base = 'e' }, .{ .base = 't' }, .{ .base = 'h' }, .{ .base = 'u' }, .{ .base = 'y' } }, .word_start = 4, .word_end = 6, .vowels_start = 5, .vowels_end = 6, .length = 3 },
+        .{ .seeds = &.{ .{ .base = 'v' }, .{ .base = 'a' }, .{ .base = 'n' }, .{ .base = 't' }, .{ .base = 'h' }, .{ .base = 'o' }, .{ .base = 'a' } }, .word_start = 4, .word_end = 6, .vowels_start = 5, .vowels_end = 6, .length = 3 },
+        .{ .seeds = &.{ .{ .base = 'b' }, .{ .base = 'a' }, .{ .base = 'o' }, .{ .base = 's' }, .{ .base = 'q' }, .{ .base = 'u' }, .{ .base = 'a' }, .{ .base = 'n' } }, .word_start = 4, .word_end = 7, .vowels_start = 5, .vowels_end = 6, .length = 4 },
+        .{ .seeds = &.{ .{ .base = 'b' }, .{ .base = 'o' }, .{ .base = 'n' }, .{ .base = 'g' }, .{ .base = 'i' }, .{ .base = 'a' }, .{ .base = 'n' } }, .word_start = 3, .word_end = 6, .vowels_start = 4, .vowels_end = 5, .length = 4 },
+
+        // No-vowel suffixes return null vowel bounds.
+        .{ .seeds = &.{.{ .base = 'b' }}, .word_start = 0, .word_end = 0, .vowels_start = null, .vowels_end = null, .length = 1 },
+        .{ .seeds = &.{ .{ .base = 't' }, .{ .base = 'r' } }, .word_start = 0, .word_end = 1, .vowels_start = null, .vowels_end = null, .length = 2 },
+        .{ .seeds = &.{ .{ .base = 'S' }, .{ .base = 'T' }, .{ .base = 'R' } }, .word_start = 0, .word_end = 2, .vowels_start = null, .vowels_end = null, .length = 3 },
+        .{ .seeds = &.{ .{ .base = 'd', .diacritic = .stroke }, .{ .base = 'r' } }, .word_start = 0, .word_end = 1, .vowels_start = null, .vowels_end = null, .length = 2 },
+
+        // Full effective buffer boundary.
+        .{ .seeds = &.{ .{ .base = 'b' }, .{ .base = 'c' }, .{ .base = 'd' }, .{ .base = 'f' }, .{ .base = 'g' }, .{ .base = 'h' }, .{ .base = 'j' }, .{ .base = 'k' }, .{ .base = 'l' }, .{ .base = 'm' }, .{ .base = 'n' }, .{ .base = 'p' }, .{ .base = 't' }, .{ .base = 'h' }, .{ .base = 'u' }, .{ .base = 'y' } }, .word_start = 13, .word_end = 15, .vowels_start = 14, .vowels_end = 15, .length = 3 },
+
+        // Near effective buffer boundary.
+        // 15 characters.
+        .{ .seeds = &.{ .{ .base = 'c' }, .{ .base = 'd' }, .{ .base = 'f' }, .{ .base = 'g' }, .{ .base = 'h' }, .{ .base = 'j' }, .{ .base = 'k' }, .{ .base = 'l' }, .{ .base = 'm' }, .{ .base = 'n' }, .{ .base = 'p' }, .{ .base = 't' }, .{ .base = 'h' }, .{ .base = 'u' }, .{ .base = 'y' } }, .word_start = 12, .word_end = 14, .vowels_start = 13, .vowels_end = 14, .length = 3 },
+    };
+
+    for (cases) |c| {
+        var state: State = undefined;
+        state.init();
+        state.mode = .telex;
+        for (c.seeds, 0..) |s, i| {
+            state.buffer_effective[i] = Span.init_diacritic_tone(s.base, s.diacritic, s.tone);
+        }
+        state.buffer_length = @intCast(c.seeds.len);
+
+        // Act
+        const pseudoword = state.pseudoword();
+
+        // Assert
+        try expectEqual(c.word_start, pseudoword.start);
+        try expectEqual(c.word_end, pseudoword.end);
+        try expectEqual(c.vowels_start, pseudoword.vowels_start);
+        try expectEqual(c.vowels_end, pseudoword.vowels_end);
+        try expectEqual(c.length, pseudoword.length);
+        try expectEqual(c.word_end - c.word_start + 1, pseudoword.length);
+
+        try expectEqual(@as(u8, @intCast(c.seeds.len)), state.buffer_length);
+        try expectEqual(null, state.buffer_modification_index);
+        try expectEqual(null, state.literal_index);
+        try expectEqual(.telex, state.mode);
+
+        for (c.seeds, 0..) |s, i| {
+            const sp = state.buffer_effective[i];
+            try expectEqual(s.base, sp.base);
+            try expectEqual(s.diacritic, sp.diacritic);
+            try expectEqual(s.tone, sp.tone);
+        }
     }
 }
 

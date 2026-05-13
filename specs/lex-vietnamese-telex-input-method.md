@@ -4,6 +4,15 @@ The specification of the Lex program, a Vietnamese Telex input method.
 
 ## Vietnamese Telex Rules
 
+### Literal input characters
+
+- When any of the follow characters added to the word, change to literal input from the new
+  character position: `F`, `J`, `W` (ignore cases), because these characters don't appear in formal
+  Vietnamese spelling. `Z` existing in Vietnamese word such as _Dzũng_, _Hồ Dzếnh_
+- Literal input remains until the new word.
+- When the user backspaces pass before the literal point, we switch to Vietnamese input again.
+- This rule is lower priority than diacritics and tones rules.
+
 ### Diacritics
 
 Diacritics let a character have many variant. We only focus on character diacritics in this section.
@@ -199,9 +208,9 @@ The process of applying tone to a word go through many steps:
   - Word exactly `QU` (and their lower cases), could not put tone, this is a consonant only.
 - If one vowel, put the tone on that vowel.
 - If multiple vowels, follow these rules, priority from top down:
-  - Vowels has `Ơ` (and its lower case), put on `Ơ`.
-  - Vowels has one any of `Ê`, `Â`, `Ô`, `Ă`, `Ư` (and their lower cases), put on the listed vowels,
-    prioritize the first to the last in the list.
+  - Vowels has `Ơ` (and its lower case), put on the rightmost `Ơ`.
+  - Vowels has one any of `Ê`, `Â`, `Ô`, `Ă`, `Ư` (and their lower cases), put on the rightmost
+    listed vowel found by the reverse scan.
   - Word start with `GI`, `QU` (and their lower cases) and has more vowels, put on next vowel, `I` /
     `U` count as part of the consonant.
   - Vowels exactly `OA`, `OE`, `OO`, `UY` (and their lower cases), put on first vowel.

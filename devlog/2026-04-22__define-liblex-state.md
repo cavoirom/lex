@@ -47,4 +47,4 @@ The name of diacritics and tones were taken from Wikipedia:
 
 ## Tomorrow
 
-- Write `init_diacritic` and tests.
+- ~~Write `init_diacritic` and tests~~.
