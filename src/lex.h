@@ -1,5 +1,5 @@
-#ifndef LIBLEX_H
-#define LIBLEX_H
+#ifndef LEX_H
+#define LEX_H
 
 #include <stddef.h>
 #include <stdint.h>
@@ -28,4 +28,4 @@ void lex_backspace(void *state);
 }
 #endif
 
-#endif // LIBLEX_H
+#endif // LEX_H
