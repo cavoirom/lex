@@ -489,10 +489,38 @@ const State = struct {
                     break :input_f;
                 }
 
-                // TODO: handle apply tone.
+                // Find tone position.
+                const vowels_start = word.vowels_start.?;
+                const vowels_end = word.vowels_end.?;
+                var tone_index: ?u8 = null;
+                for (vowels_start..(vowels_end + 1)) |index| {
+                    if (self.buffer_effective[index].tone != .level) {
+                        // Expect maximum 1 tone (other than level) in the vowels.
+                        assert(tone_index == null);
+                        tone_index = @intCast(index);
+                    }
+                }
 
-                // TODO: remove this when complete the implementation for this branch.
-                unreachable;
+                if (tone_index == null) {
+                    // No tone, apply tone directly.
+                    self.apply_tone(word, .falling);
+                } else if (self.buffer_effective[tone_index.?].tone != .falling) {
+                    // Override other tone to falling.
+                    // Reset tone.
+                    self.reset_tone(word, tone_index.?);
+                    // Apply tone.
+                    self.apply_tone(word, .falling);
+                } else if (self.buffer_effective[tone_index.?].tone == .falling) {
+                    // Cancel tone.
+                    // Reset tone.
+                    self.reset_tone(word, tone_index.?);
+                    // Start literal input from this position.
+                    self.literal_index = self.buffer_length;
+                    // Append literal 'F', 'f'.
+                    self.append_literal(c);
+                } else {
+                    unreachable;
+                }
             },
             'I', 'i' => {
                 if (self.literal_index != null or self.mode == .literal or self.buffer_length < 2) {
@@ -568,10 +596,38 @@ const State = struct {
                     break :input_j;
                 }
 
-                // TODO: handle apply tone.
+                // Find tone position.
+                const vowels_start = word.vowels_start.?;
+                const vowels_end = word.vowels_end.?;
+                var tone_index: ?u8 = null;
+                for (vowels_start..(vowels_end + 1)) |index| {
+                    if (self.buffer_effective[index].tone != .level) {
+                        // Expect maximum 1 tone (other than level) in the vowels.
+                        assert(tone_index == null);
+                        tone_index = @intCast(index);
+                    }
+                }
 
-                // TODO: remove this when complete the implementation for this branch.
-                unreachable;
+                if (tone_index == null) {
+                    // No tone, apply tone directly.
+                    self.apply_tone(word, .falling_glottalized);
+                } else if (self.buffer_effective[tone_index.?].tone != .falling_glottalized) {
+                    // Override other tone to falling_glottalized.
+                    // Reset tone.
+                    self.reset_tone(word, tone_index.?);
+                    // Apply tone.
+                    self.apply_tone(word, .falling_glottalized);
+                } else if (self.buffer_effective[tone_index.?].tone == .falling_glottalized) {
+                    // Cancel tone.
+                    // Reset tone.
+                    self.reset_tone(word, tone_index.?);
+                    // Start literal input from this position.
+                    self.literal_index = self.buffer_length;
+                    // Append literal 'J', 'j'.
+                    self.append_literal(c);
+                } else {
+                    unreachable;
+                }
             }, // falling_glottalized.
             'M', 'm' => {
                 if (self.literal_index != null or self.mode == .literal or self.buffer_length < 2) {
@@ -703,7 +759,70 @@ const State = struct {
                     self.buffer_modification_index = null;
                 }
             }, // fill missing diacritic, e.g. cướp.
-            'R', 'r' => {}, // dipping_rising.
+            'R', 'r' => input_r: { // dipping_rising.
+                if (self.literal_index != null or self.mode == .literal or self.buffer_length == 0) {
+                    // 1. Enable literal input when literal_index is set or on literal mode. The
+                    // literal_index is also set when the word starts with non-Vietnamese onsets
+                    // 3. No previous character, append literally.
+                    self.append_literal(c);
+                    // Set modification index to null because we didn't modify any existing span.
+                    self.buffer_modification_index = null;
+                    break :input_r;
+                }
+
+                const word = self.pseudoword();
+
+                if (!word.has_vowels()) {
+                    // 4. Pseudoword doesn't have any vowels, append literally.
+                    self.append_literal(c);
+                    // Set modification index to null because we didn't modify any existing span.
+                    self.buffer_modification_index = null;
+                    self.buffer_modification_index = null;
+                    break :input_r;
+                }
+
+                // From here, the word has vowels, but doesn't mean appliceable for all cases.
+                if (word.length == 2 and self.buffer_effective[word.start].equals_ignore_case_diacritic_tone('Q') and self.buffer_effective[word.end].equals_ignore_case('U', .empty, .level)) {
+                    // 5. Exact 'QU', 'U' is a part of the consonant, append literally.
+                    self.append_literal(c);
+                    // Set modification index to null because we didn't modify any existing span.
+                    self.buffer_modification_index = null;
+                    break :input_r;
+                }
+
+                // Find tone position.
+                const vowels_start = word.vowels_start.?;
+                const vowels_end = word.vowels_end.?;
+                var tone_index: ?u8 = null;
+                for (vowels_start..(vowels_end + 1)) |index| {
+                    if (self.buffer_effective[index].tone != .level) {
+                        // Expect maximum 1 tone (other than level) in the vowels.
+                        assert(tone_index == null);
+                        tone_index = @intCast(index);
+                    }
+                }
+
+                if (tone_index == null) {
+                    // No tone, apply tone directly.
+                    self.apply_tone(word, .dipping_rising);
+                } else if (self.buffer_effective[tone_index.?].tone != .dipping_rising) {
+                    // Override other tone to dipping_rising.
+                    // Reset tone.
+                    self.reset_tone(word, tone_index.?);
+                    // Apply tone.
+                    self.apply_tone(word, .dipping_rising);
+                } else if (self.buffer_effective[tone_index.?].tone == .dipping_rising) {
+                    // Cancel tone.
+                    // Reset tone.
+                    self.reset_tone(word, tone_index.?);
+                    // Start literal input from this position.
+                    self.literal_index = self.buffer_length;
+                    // Append literal 'R', 'r'.
+                    self.append_literal(c);
+                } else {
+                    unreachable;
+                }
+            },
             'S', 's' => input_s: { // rising.
                 if (self.literal_index != null or self.mode == .literal or self.buffer_length == 0) {
                     // 1. Enable literal input when literal_index is set or on literal mode. The
@@ -914,7 +1033,71 @@ const State = struct {
                     unreachable;
                 }
             },
-            'X', 'x' => {}, // rising_glottalized.
+            'X', 'x' => input_x: { // rising_glottalized.
+                if (self.literal_index != null or self.mode == .literal or self.buffer_length == 0) {
+                    // 1. Enable literal input when literal_index is set or on literal mode. The
+                    // literal_index is also set when the word starts with non-Vietnamese onsets
+                    // 2. Append literal because no previous span existed. Continue Vietnamese
+                    // processing on next input.
+                    // 3. No previous character, append literally.
+                    self.append_literal(c);
+                    // Set modification index to null because we didn't modify any existing span.
+                    self.buffer_modification_index = null;
+                    break :input_x;
+                }
+
+                const word = self.pseudoword();
+
+                if (!word.has_vowels()) {
+                    // 4. Pseudoword doesn't have any vowels, append literally.
+                    self.append_literal(c);
+                    // Set modification index to null because we didn't modify any existing span.
+                    self.buffer_modification_index = null;
+                    break :input_x;
+                }
+
+                // From here, the word has vowels, but doesn't mean appliceable for all cases.
+                if (word.length == 2 and self.buffer_effective[word.start].equals_ignore_case_diacritic_tone('Q') and self.buffer_effective[word.end].equals_ignore_case('U', .empty, .level)) {
+                    // 5. Exact 'QU', 'U' is a part of the consonant, append literally.
+                    self.append_literal(c);
+                    // Set modification index to null because we didn't modify any existing span.
+                    self.buffer_modification_index = null;
+                    break :input_x;
+                }
+
+                // Find tone position.
+                const vowels_start = word.vowels_start.?;
+                const vowels_end = word.vowels_end.?;
+                var tone_index: ?u8 = null;
+                for (vowels_start..(vowels_end + 1)) |index| {
+                    if (self.buffer_effective[index].tone != .level) {
+                        // Expect maximum 1 tone (other than level) in the vowels.
+                        assert(tone_index == null);
+                        tone_index = @intCast(index);
+                    }
+                }
+
+                if (tone_index == null) {
+                    // No tone, apply tone directly.
+                    self.apply_tone(word, .rising_glottalized);
+                } else if (self.buffer_effective[tone_index.?].tone != .rising_glottalized) {
+                    // Override other tone to rising_glottalized.
+                    // Reset tone.
+                    self.reset_tone(word, tone_index.?);
+                    // Apply tone.
+                    self.apply_tone(word, .rising_glottalized);
+                } else if (self.buffer_effective[tone_index.?].tone == .rising_glottalized) {
+                    // Cancel tone.
+                    // Reset tone.
+                    self.reset_tone(word, tone_index.?);
+                    // Start literal input from this position.
+                    self.literal_index = self.buffer_length;
+                    // Append literal 'X', 'x'.
+                    self.append_literal(c);
+                } else {
+                    unreachable;
+                }
+            },
             'Z', 'z' => input_z: {
                 if (self.buffer_length == 0 and self.mode == .telex) {
                     assert(self.literal_index == null);
@@ -2471,223 +2654,259 @@ test "expect State.apply_tone updates buffer_modification_index to the earliest 
     }
 }
 
-test "expect State.add apply rising tone for representative cases" {
-    // Arrange
-    // This test only proves State.add trigger the pseudo-word scanner and to apply tone.
-    // Exhaustive positioning rules live in the State.apply_tone tests; here we keep one
-    // representative cases.
+test "expect State.add applies non-level tones for representative cases" {
+    // Arrange. This test only proves State.add triggers the pseudo-word scanner and applies the
+    // requested non-level tone. Exhaustive positioning rules live in the State.apply_tone tests.
+    const TriggerCase = enum { lower, upper };
+    const ToneCase = struct {
+        tone: Tone,
+        lower_trigger: u8,
+        upper_trigger: u8,
+    };
     const SeedSpan = struct { base: u8, diacritic: Diacritic = .empty };
     const Case = struct {
         seeds: []const SeedSpan,
-        trigger: u8,
+        trigger_case: TriggerCase,
         expected_index: u8,
+    };
+    const tone_cases = [_]ToneCase{
+        .{ .tone = .rising, .lower_trigger = 's', .upper_trigger = 'S' },
+        .{ .tone = .falling, .lower_trigger = 'f', .upper_trigger = 'F' },
+        .{ .tone = .dipping_rising, .lower_trigger = 'r', .upper_trigger = 'R' },
+        .{ .tone = .rising_glottalized, .lower_trigger = 'x', .upper_trigger = 'X' },
+        .{ .tone = .falling_glottalized, .lower_trigger = 'j', .upper_trigger = 'J' },
     };
     const cases = [_]Case{
         // Lowercase trigger, single vowel.
-        .{ .seeds = &.{.{ .base = 'a' }}, .trigger = 's', .expected_index = 0 },
+        .{ .seeds = &.{.{ .base = 'a' }}, .trigger_case = .lower, .expected_index = 0 },
         // Uppercase trigger, single vowel.
-        .{ .seeds = &.{.{ .base = 'A' }}, .trigger = 'S', .expected_index = 0 },
+        .{ .seeds = &.{.{ .base = 'A' }}, .trigger_case = .upper, .expected_index = 0 },
         // Simple consonant + single vowel.
-        .{ .seeds = &.{ .{ .base = 'b' }, .{ .base = 'a' } }, .trigger = 's', .expected_index = 1 },
+        .{ .seeds = &.{ .{ .base = 'b' }, .{ .base = 'a' } }, .trigger_case = .lower, .expected_index = 1 },
         // Multi-vowel run (exact OA -> first vowel).
-        .{ .seeds = &.{ .{ .base = 'h' }, .{ .base = 'o' }, .{ .base = 'a' } }, .trigger = 's', .expected_index = 1 },
+        .{ .seeds = &.{ .{ .base = 'h' }, .{ .base = 'o' }, .{ .base = 'a' } }, .trigger_case = .lower, .expected_index = 1 },
         // Trailing-suffix pseudo-word (only the last syllable receives the tone).
-        .{ .seeds = &.{ .{ .base = 'v' }, .{ .base = 'a' }, .{ .base = 'n' }, .{ .base = 'h' }, .{ .base = 'o' }, .{ .base = 'a' } }, .trigger = 's', .expected_index = 4 },
+        .{ .seeds = &.{ .{ .base = 'v' }, .{ .base = 'a' }, .{ .base = 'n' }, .{ .base = 'h' }, .{ .base = 'o' }, .{ .base = 'a' } }, .trigger_case = .lower, .expected_index = 4 },
     };
 
-    for (cases) |c| {
-        var state: State = undefined;
-        state.init();
-        state.mode = .telex;
-        for (c.seeds, 0..) |s, i| {
-            state.buffer_effective[i] = Span.init_diacritic_tone(s.base, s.diacritic, .level);
-        }
-        state.buffer_length = @intCast(c.seeds.len);
+    for (tone_cases) |tone_case| {
+        for (cases) |c| {
+            var state: State = undefined;
+            state.init();
+            state.mode = .telex;
+            for (c.seeds, 0..) |s, i| {
+                state.buffer_effective[i] = Span.init_diacritic_tone(s.base, s.diacritic, .level);
+            }
+            state.buffer_length = @intCast(c.seeds.len);
 
-        // Act
-        state.add(c.trigger);
+            const trigger = switch (c.trigger_case) {
+                .lower => tone_case.lower_trigger,
+                .upper => tone_case.upper_trigger,
+            };
 
-        // Assert: the trigger character is NOT appended; the rising tone lands
-        // on the expected vowel and bookkeeping fields stay clean.
-        try expectEqual(@as(u8, @intCast(c.seeds.len)), state.buffer_length);
-        try expectEqual(@as(?u8, c.expected_index), state.buffer_modification_index);
-        try expectEqual(null, state.literal_index);
-        try expectEqual(.telex, state.mode);
+            // Act
+            state.add(trigger);
 
-        for (c.seeds, 0..) |s, i| {
-            const sp = state.buffer_effective[i];
-            try expectEqual(s.base, sp.base);
-            try expectEqual(s.diacritic, sp.diacritic);
-            const expected_tone: Tone = if (i == @as(usize, c.expected_index)) .rising else .level;
-            try expectEqual(expected_tone, sp.tone);
+            // Assert: the trigger character is NOT appended; the requested tone lands on the
+            // expected vowel and bookkeeping fields stay clean.
+            try expectEqual(@as(u8, @intCast(c.seeds.len)), state.buffer_length);
+            try expectEqual(@as(?u8, c.expected_index), state.buffer_modification_index);
+            try expectEqual(null, state.literal_index);
+            try expectEqual(.telex, state.mode);
+
+            for (c.seeds, 0..) |s, i| {
+                const sp = state.buffer_effective[i];
+                try expectEqual(s.base, sp.base);
+                try expectEqual(s.diacritic, sp.diacritic);
+                const expected_tone: Tone = if (i == @as(usize, c.expected_index))
+                    tone_case.tone
+                else
+                    .level;
+                try expectEqual(expected_tone, sp.tone);
+            }
         }
     }
 }
 
-test "expect State.add overrides an existing non-rising tone with rising" {
-    // Arrange. Seed `tìê` (t, i with falling, ê). The existing falling tone
-    // sits on `i` (index 1); the override path must reset it and place rising
-    // on `ê` (index 2, the special vowel). This proves State.add orchestrates
-    // reset_tone followed by apply_tone for the override branch.
-    var state: State = undefined;
-    state.init();
-    state.mode = .telex;
-    state.buffer_effective[0] = Span.init('t');
-    state.buffer_effective[1] = Span.init_diacritic_tone('i', .empty, .falling);
-    state.buffer_effective[2] = Span.init_diacritic('e', .circumflex);
-    state.buffer_length = 3;
+test "expect State.add overrides an existing different non-level tone" {
+    // Arrange. Seed `t?ê` (t, i with an existing non-level tone, ê). The existing tone sits on `i`
+    // (index 1); the override path must reset it and place the requested tone on `ê` (index 2,
+    // the special vowel). This proves State.add orchestrates reset_tone followed by apply_tone.
+    const ToneCase = struct {
+        tone: Tone,
+        trigger: u8,
+        existing_tone: Tone,
+    };
+    const tone_cases = [_]ToneCase{
+        .{ .tone = .rising, .trigger = 's', .existing_tone = .falling },
+        .{ .tone = .falling, .trigger = 'f', .existing_tone = .rising },
+        .{ .tone = .dipping_rising, .trigger = 'r', .existing_tone = .rising },
+        .{ .tone = .rising_glottalized, .trigger = 'x', .existing_tone = .rising },
+        .{ .tone = .falling_glottalized, .trigger = 'j', .existing_tone = .rising },
+    };
 
-    // Act
-    state.add('s');
+    for (tone_cases) |tone_case| {
+        var state: State = undefined;
+        state.init();
+        state.mode = .telex;
+        state.buffer_effective[0] = Span.init('t');
+        state.buffer_effective[1] = Span.init_diacritic_tone('i', .empty, tone_case.existing_tone);
+        state.buffer_effective[2] = Span.init_diacritic('e', .circumflex);
+        state.buffer_length = 3;
 
-    // Assert. Trigger character must not be appended; `ì` becomes `i`; rising
-    // lands on `ê`. buffer_modification_index tracks the earliest modified
-    // span (index 1, where the falling tone was reset).
-    try expectEqual(@as(u8, 3), state.buffer_length);
-    try expectEqual(@as(?u8, 1), state.buffer_modification_index);
-    try expectEqual(null, state.literal_index);
-    try expectEqual(.telex, state.mode);
+        // Act
+        state.add(tone_case.trigger);
 
-    try expectEqual(@as(u8, 't'), state.buffer_effective[0].base);
-    try expectEqual(.empty, state.buffer_effective[0].diacritic);
-    try expectEqual(.level, state.buffer_effective[0].tone);
+        // Assert. Trigger character must not be appended; the existing non-level tone becomes
+        // level; the requested tone lands on `ê`. buffer_modification_index tracks the earliest
+        // modified span (index 1, where the existing tone was reset).
+        try expectEqual(@as(u8, 3), state.buffer_length);
+        try expectEqual(@as(?u8, 1), state.buffer_modification_index);
+        try expectEqual(null, state.literal_index);
+        try expectEqual(.telex, state.mode);
 
-    try expectEqual(@as(u8, 'i'), state.buffer_effective[1].base);
-    try expectEqual(.empty, state.buffer_effective[1].diacritic);
-    try expectEqual(.level, state.buffer_effective[1].tone);
+        try expectEqual(@as(u8, 't'), state.buffer_effective[0].base);
+        try expectEqual(.empty, state.buffer_effective[0].diacritic);
+        try expectEqual(.level, state.buffer_effective[0].tone);
 
-    try expectEqual(@as(u8, 'e'), state.buffer_effective[2].base);
-    try expectEqual(.circumflex, state.buffer_effective[2].diacritic);
-    try expectEqual(.rising, state.buffer_effective[2].tone);
+        try expectEqual(@as(u8, 'i'), state.buffer_effective[1].base);
+        try expectEqual(.empty, state.buffer_effective[1].diacritic);
+        try expectEqual(.level, state.buffer_effective[1].tone);
+
+        try expectEqual(@as(u8, 'e'), state.buffer_effective[2].base);
+        try expectEqual(.circumflex, state.buffer_effective[2].diacritic);
+        try expectEqual(tone_case.tone, state.buffer_effective[2].tone);
+    }
 }
 
-test "expect State.add cancels an existing rising tone for representative cases and switch to literal input" {
-    // Arrange. This test only proves State.add takes the cancellation arm of the 'S','s' handler:
-    // reset the existing rising tone to level (preserving base case + diacritic), append the trigger
-    // literally, set literal_index to the pre-append buffer_length, and stay in .telex mode.
+test "expect State.add cancels an existing matching non-level tone for representative cases and switches to literal input" {
+    // Arrange. This test proves State.add takes the cancellation arm for each non-level tone:
+    // reset the existing matching tone to level (preserving base case + diacritic), append the
+    // trigger literally, set literal_index to the pre-append buffer_length, and stay in .telex.
     // Tone-position rules are NOT re-evaluated here; they are covered by State.apply_tone tests.
+    const TriggerCase = enum { lower, upper };
+    const ToneCase = struct {
+        tone: Tone,
+        lower_trigger: u8,
+        upper_trigger: u8,
+    };
+    const SeedSpan = struct { base: u8, diacritic: Diacritic = .empty };
     const Case = struct {
-        seeds: []const Span,
-        trigger: u8,
-        // Absolute buffer index of the seeded vowel that carries the existing rising tone, which
+        seeds: []const SeedSpan,
+        trigger_case: TriggerCase,
+        // Absolute buffer index of the seeded vowel that carries the existing matching tone, which
         // is also the expected buffer_modification_index after cancellation.
         expected_modification_index: u8,
     };
+    const tone_cases = [_]ToneCase{
+        .{ .tone = .rising, .lower_trigger = 's', .upper_trigger = 'S' },
+        .{ .tone = .falling, .lower_trigger = 'f', .upper_trigger = 'F' },
+        .{ .tone = .dipping_rising, .lower_trigger = 'r', .upper_trigger = 'R' },
+        .{ .tone = .rising_glottalized, .lower_trigger = 'x', .upper_trigger = 'X' },
+        .{ .tone = .falling_glottalized, .lower_trigger = 'j', .upper_trigger = 'J' },
+    };
     const cases = [_]Case{
-        // Lowercase trigger, single plain vowel: á + s.
+        // Lowercase trigger, single plain vowel.
         .{
-            .seeds = &.{Span.init_diacritic_tone('a', .empty, .rising)},
-            .trigger = 's',
+            .seeds = &.{.{ .base = 'a' }},
+            .trigger_case = .lower,
             .expected_modification_index = 0,
         },
-        // Uppercase trigger, single plain vowel: Á + S.
+        // Uppercase trigger, single plain vowel.
         .{
-            .seeds = &.{Span.init_diacritic_tone('A', .empty, .rising)},
-            .trigger = 'S',
+            .seeds = &.{.{ .base = 'A' }},
+            .trigger_case = .upper,
             .expected_modification_index = 0,
         },
-        // Consonant + plain vowel (open syllable): bá + s.
+        // Consonant + plain vowel (open syllable).
         .{
-            .seeds = &.{ Span.init('b'), Span.init_diacritic_tone('a', .empty, .rising) },
-            .trigger = 's',
+            .seeds = &.{ .{ .base = 'b' }, .{ .base = 'a' } },
+            .trigger_case = .lower,
             .expected_modification_index = 1,
         },
-        // Trailing consonant (closed syllable): bán + s. The trailing 'n' must remain untouched.
+        // Trailing consonant (closed syllable). The trailing 'n' must remain untouched.
         .{
-            .seeds = &.{
-                Span.init('b'),
-                Span.init_diacritic_tone('a', .empty, .rising),
-                Span.init('n'),
-            },
-            .trigger = 's',
+            .seeds = &.{ .{ .base = 'b' }, .{ .base = 'a' }, .{ .base = 'n' } },
+            .trigger_case = .lower,
             .expected_modification_index = 1,
         },
-        // Trailing consonant cluster: bánh + s. The trailing 'nh' cluster must remain untouched.
+        // Trailing consonant cluster. The trailing 'nh' cluster must remain untouched.
         .{
-            .seeds = &.{
-                Span.init('b'),
-                Span.init_diacritic_tone('a', .empty, .rising),
-                Span.init('n'),
-                Span.init('h'),
-            },
-            .trigger = 's',
+            .seeds = &.{ .{ .base = 'b' }, .{ .base = 'a' }, .{ .base = 'n' }, .{ .base = 'h' } },
+            .trigger_case = .lower,
             .expected_modification_index = 1,
         },
-        // Diacritic-bearing rising vowel with trailing consonant: tiến + s. Cancellation must keep
-        // the circumflex on 'ê' and only strip the tone.
+        // Diacritic-bearing vowel with trailing consonant. Cancellation must keep the circumflex.
         .{
-            .seeds = &.{
-                Span.init('t'),
-                Span.init('i'),
-                Span.init_diacritic_tone('e', .circumflex, .rising),
-                Span.init('n'),
-            },
-            .trigger = 's',
+            .seeds = &.{ .{ .base = 't' }, .{ .base = 'i' }, .{ .base = 'e', .diacritic = .circumflex }, .{ .base = 'n' } },
+            .trigger_case = .lower,
             .expected_modification_index = 2,
         },
-        // Multi-vowel representative shape: hóa + s. This case proves cancellation works on a
-        // multi-vowel pseudo-word; it does not assert anything about OA tone-placement rules.
+        // Multi-vowel representative shape. This does not assert OA tone-placement rules.
         .{
-            .seeds = &.{
-                Span.init('h'),
-                Span.init_diacritic_tone('o', .empty, .rising),
-                Span.init('a'),
-            },
-            .trigger = 's',
+            .seeds = &.{ .{ .base = 'h' }, .{ .base = 'o' }, .{ .base = 'a' } },
+            .trigger_case = .lower,
             .expected_modification_index = 1,
         },
-        // Longer buffer trailing-suffix: vanhóa + s. Only the last syllable's vowel carries rising,
+        // Longer buffer trailing-suffix. Only the last syllable's vowel carries the matching tone,
         // so cancellation lands at index 4 and earlier spans remain exactly as seeded.
         .{
-            .seeds = &.{
-                Span.init('v'),
-                Span.init('a'),
-                Span.init('n'),
-                Span.init('h'),
-                Span.init_diacritic_tone('o', .empty, .rising),
-                Span.init('a'),
-            },
-            .trigger = 's',
+            .seeds = &.{ .{ .base = 'v' }, .{ .base = 'a' }, .{ .base = 'n' }, .{ .base = 'h' }, .{ .base = 'o' }, .{ .base = 'a' } },
+            .trigger_case = .lower,
             .expected_modification_index = 4,
         },
     };
 
-    for (cases) |c| {
-        var state: State = undefined;
-        state.init();
-        state.mode = .telex;
-        for (c.seeds, 0..) |s, i| {
-            state.buffer_effective[i] = s;
+    for (tone_cases) |tone_case| {
+        for (cases) |c| {
+            var state: State = undefined;
+            state.init();
+            state.mode = .telex;
+            for (c.seeds, 0..) |s, i| {
+                const tone: Tone = if (i == @as(usize, c.expected_modification_index))
+                    tone_case.tone
+                else
+                    .level;
+                state.buffer_effective[i] = Span.init_diacritic_tone(s.base, s.diacritic, tone);
+            }
+            state.buffer_length = @intCast(c.seeds.len);
+
+            const trigger = switch (c.trigger_case) {
+                .lower => tone_case.lower_trigger,
+                .upper => tone_case.upper_trigger,
+            };
+
+            // Setup guard: prevent expected_modification_index from drifting away from seed data.
+            try expectEqual(
+                tone_case.tone,
+                state.buffer_effective[c.expected_modification_index].tone,
+            );
+
+            // Act
+            state.add(trigger);
+
+            // Assert: the trigger character is appended literally, the matching tone on the seeded
+            // vowel is reset to level, literal_index marks the new literal span, mode stays .telex.
+            try expectEqual(@as(u8, @intCast(c.seeds.len + 1)), state.buffer_length);
+            try expectEqual(@as(?u8, c.expected_modification_index), state.buffer_modification_index);
+            try expectEqual(@as(?u8, @intCast(c.seeds.len)), state.literal_index);
+            try expectEqual(.telex, state.mode);
+
+            // Every preexisting span keeps its base + diacritic; the cancelled vowel drops to level
+            // (others were already level and remain so).
+            for (c.seeds, 0..) |s, i| {
+                const sp = state.buffer_effective[i];
+                try expectEqual(s.base, sp.base);
+                try expectEqual(s.diacritic, sp.diacritic);
+                try expectEqual(.level, sp.tone);
+            }
+
+            // The appended trigger span is plain literal: same base char, no diacritic, no tone.
+            const appended = state.buffer_effective[c.seeds.len];
+            try expectEqual(trigger, appended.base);
+            try expectEqual(.empty, appended.diacritic);
+            try expectEqual(.level, appended.tone);
         }
-        state.buffer_length = @intCast(c.seeds.len);
-
-        // Setup guard: prevent expected_modification_index from drifting away from seed data.
-        try expectEqual(.rising, c.seeds[c.expected_modification_index].tone);
-
-        // Act
-        state.add(c.trigger);
-
-        // Assert: the trigger character is appended literally, the rising tone on the seeded vowel
-        // is reset to level, literal_index marks the new literal span, mode stays .telex.
-        try expectEqual(@as(u8, @intCast(c.seeds.len + 1)), state.buffer_length);
-        try expectEqual(@as(?u8, c.expected_modification_index), state.buffer_modification_index);
-        try expectEqual(@as(?u8, @intCast(c.seeds.len)), state.literal_index);
-        try expectEqual(.telex, state.mode);
-
-        // Every preexisting span keeps its base + diacritic; the cancelled vowel drops to level
-        // (others were already level and remain so).
-        for (c.seeds, 0..) |s, i| {
-            const sp = state.buffer_effective[i];
-            try expectEqual(s.base, sp.base);
-            try expectEqual(s.diacritic, sp.diacritic);
-            try expectEqual(.level, sp.tone);
-        }
-
-        // The appended trigger span is plain literal: same base char, no diacritic, no tone.
-        const appended = state.buffer_effective[c.seeds.len];
-        try expectEqual(c.trigger, appended.base);
-        try expectEqual(.empty, appended.diacritic);
-        try expectEqual(.level, appended.tone);
     }
 }
 

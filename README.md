@@ -19,9 +19,9 @@ trách nhiệm cho toàn bộ chương trình.
 
 ## Chức năng
 
-- [ ] Nhập Tiếng Việt kiểu Telex với một số tùy chỉnh:
-  - [ ] Bỏ dấu kiểu cũ: _òa_, _úy_. Ví dụ: _hòa_, _thúy_.
-  - [ ] Không bỏ dấu nếu từ bắt đầu bằng phụ âm không phải Tiếng Việt: _f_, _j_, _w_, _z_.
+- [x] Nhập Tiếng Việt kiểu Telex với một số tùy chỉnh:
+  - [x] Bỏ dấu kiểu cũ: _òa_, _úy_. Ví dụ: _hòa_, _thúy_.
+  - [x] Không bỏ dấu nếu từ bắt đầu bằng phụ âm không phải Tiếng Việt: _f_, _j_, _w_, _z_.
 - [ ] Phím tắt bật / tắt nhập Tiếng Việt: `Ctrl + Opt + Space`.
 - [ ] Phím tắt để xóa trạng thái gõ Tiếng Việt: `Ctrl (left)`.
 - [ ] Chỉ hiện biểu tượng trên thanh Menu của macOS.
@@ -31,9 +31,9 @@ trách nhiệm cho toàn bộ chương trình.
 
 - [ ] 0.1.x
   - [ ] Chỉ hiện biểu tượng trên thanh Menu của macOS.
-  - [ ] Nhập Tiếng Việt kiểu Telex với một số tùy chỉnh:
-    - [ ] Bỏ dấu kiểu cũ: _òa_, _úy_. Ví dụ: _hòa_, _thúy_.
-    - [ ] Không bỏ dấu nếu từ bắt đầu bằng phụ âm không phải Tiếng Việt: _f_, _j_, _w_, _z_.
+  - [x] Nhập Tiếng Việt kiểu Telex với một số tùy chỉnh:
+    - [x] Bỏ dấu kiểu cũ: _òa_, _úy_. Ví dụ: _hòa_, _thúy_.
+    - [x] Không bỏ dấu nếu từ bắt đầu bằng phụ âm không phải Tiếng Việt: _f_, _j_, _w_, _z_.
   - [ ] Phím tắt bật / tắt nhập Tiếng Việt: `Ctrl + Opt + Space`.
 - [ ] 0.2.x
   - [ ] Phím tắt để xóa trạng thái gõ Tiếng Việt: `Ctrl (left)`.
