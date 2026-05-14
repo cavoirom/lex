@@ -4,6 +4,7 @@
 
 - Handle literal input for F, J, W, Z.
 - Reset tone when input Z.
+- Implement all tones rules.
 
 ## Code
 
