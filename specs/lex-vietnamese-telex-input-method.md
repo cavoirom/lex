@@ -6,12 +6,15 @@ The specification of the Lex program, a Vietnamese Telex input method.
 
 ### Literal input characters
 
-- When any of the follow characters added to the word, change to literal input from the new
+- When any of the following characters start the word (when the word is empty), change to literal
+  input from the new character position: `F`, `J`, `W`, `Z` (ignore cases), because these characters
+  don't start a Vietnamese word. This rule is higher priority than diacritics and tones rules.
+- When any of the following characters are added to the word, change to literal input from the new
   character position: `F`, `J`, `W` (ignore cases), because these characters don't appear in formal
-  Vietnamese spelling. `Z` existing in Vietnamese word such as _Dzũng_, _Hồ Dzếnh_
+  Vietnamese spelling. `Z` exists in Vietnamese word such as _Dzũng_, _Hồ Dzếnh_... This rule is
+  lower priority than diacritics and tones rules.
 - Literal input remains until the new word.
 - When the user backspaces pass before the literal point, we switch to Vietnamese input again.
-- This rule is lower priority than diacritics and tones rules.
 
 ### Diacritics
 
@@ -166,10 +169,11 @@ These vowel could take any tone.
 - _Scan pseudo-word_ to have the information for later steps.
 - If the pseudo-word has at least one vowel and has tone (other than level) in one of the vowels,
   change that tone to level, keep case and diacritic.
-- If the pseudo-word doesn't have any vowels or has at least one vowel and all of them don't have
-  any tone (level), append the new character literally.
-- If the new character has been appended literally, switch to literal from the new character
-  position and the following characters. Literal input remains until the new word.
+- If the pseudo-word doesn't have any vowels, append the new character literally and remain
+  Vietnamese input to continue process Vietnamese input such as `dzu + x` -> `dzũ`.
+- If the pseudo-word has at least one vowel and all of them don't have any tone (level), append the
+  new character literally and switch to literal from the new character position and the following
+  characters. Literal input remains until the new word.
 - When the user backspaces pass before the literal point, we switch to Vietnamese input again.
 
 #### Override rules
