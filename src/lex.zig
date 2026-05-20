@@ -226,13 +226,6 @@ test "expect Span.init_diacritic_tone can construct all vowels with all tones" {
     }
 }
 
-const InputMode = enum(u8) {
-    // By pass Vietnamese input processing and append the character as is.
-    literal,
-    // Process Vietnamese input in Telex input method.
-    telex,
-};
-
 // Information about a range of character for tone positioning.
 const Pseudoword = struct {
     // The start position of the word on State.buffer_effective.
@@ -253,21 +246,21 @@ const Pseudoword = struct {
 
 const State = struct {
     // The effective buffer to process Vietnamese input. we will skip processing if the buffer
-    // longer than 16.
+    // longer than 15. The last input is always literal.
     buffer_effective: [16]Span,
     // The maximum buffer length that the engine still keeps the effective buffer, after the maximum
     // value (255), we will reset the effective buffer and this value.
     buffer_length: u8 = 0,
+    // The previous buffer length before State.add is called, used to calculate synthetic backspaces.
+    buffer_length_previous: u8 = 0,
     // Mark the earliest position (inclusive) in buffer where we modified the span, will be used to
     // calculate backspaces and replacement characters.
     buffer_modification_index: ?u8 = null,
-    // Mark the position (inclusive) in buffer where we will switch to literal mode (due to manually
-    // switch, input cancellation, exceed effective buffer). This value is only used in .telex mode
-    // and the engine is working on position on or after literal index, the engine will skip
-    // Vietnamese input processing (we only count valid numbers, null mean no literal index).
+    // Mark the position (inclusive) in buffer_effective where the engine stops Telex processing
+    // and appends the remaining composition literally. Positions before literal_index were
+    // processed as Telex, positions on or after literal_index form the "literal tail". null means
+    // the whole current buffer_effective remains Telex-processable.
     literal_index: ?u8 = null,
-    // Determine if we will process input in the specified mode (Telex) or append the character as is.
-    mode: InputMode = .literal,
 
     // Initialize the State on allocated memory.
     fn init(self: *State) void {
@@ -280,37 +273,31 @@ const State = struct {
         // Only allow a-zA-Z.
         assert(isAlphabetic(c));
 
-        // Input mode must be either .literal or .telex.
-        assert(self.mode == .literal or self.mode == .telex);
-
-        // Should never set literal_index in .literal mode.
-        if (self.mode == .literal) {
-            assert(self.literal_index == null);
-        }
-
         if (self.literal_index) |literal_index| {
-            // When literal_index is set, mode must be .telex.
-            assert(self.mode == .telex);
-            // The literal_index value must be in range null or 0 -> 16 (buffer_effective length)
-            // because we won't process Vietnamese input outside the buffer_effective.
-            assert(literal_index <= self.buffer_effective.len);
+            // The literal_index value must be in range null or 0 -> 15 (within buffer_effective)
+            // because we won't process Vietnamese input outside the buffer_effective and need the
+            // literal character for replacement composition.
+            assert(literal_index < self.buffer_effective.len);
             // The literal_index value must be less than buffer length.
             assert(literal_index < self.buffer_length);
         }
 
         // buffer_length conditions
-        // 1. must be within buffer_effective length in Vietnamese input.
-        // 2. could be more than buffer_effective in literal input.
-        assert(self.buffer_length <= self.buffer_effective.len or self.mode == .literal or self.literal_index != null);
+        // 1. must be within buffer_effective length while the whole buffer is Telex-processable.
+        // 2. could be equal or more than buffer_effective after literal_index starts the literal
+        //    tail.
+        assert(self.buffer_length < self.buffer_effective.len or self.literal_index != null);
 
         // Reset buffer_modification_index to start the new action.
         self.buffer_modification_index = null;
 
+        // Keep the buffer_length in buffer_length_previous.
+        // self.buffer_length_previous = self.buffer_length;
+
         switch (c) {
             'A', 'a' => {
-                if (self.literal_index != null or self.mode == .literal or self.buffer_length == 0) {
-                    // 1. Enable literal input when literal_index is set or on literal mode. The
-                    // literal_index is also set when the word starts with non-Vietnamese onsets.
+                if (self.literal_index != null or self.buffer_length == 0) {
+                    // 1. Append literally when literal_index is set.
                     // 2. Append literal because no previous span existed. Continue Vietnamese
                     // processing on next input.
                     self.append_literal(c);
@@ -348,9 +335,8 @@ const State = struct {
                 }
             },
             'C', 'c' => { // fill missing diacritic, e.g. cước.
-                if (self.literal_index != null or self.mode == .literal or self.buffer_length < 2) {
-                    // 1. Enable literal input when literal_index is set or on literal mode. The
-                    // literal_index is also set when the word starts with non-Vietnamese onsets.
+                if (self.literal_index != null or self.buffer_length < 2) {
+                    // 1. Append literally when literal_index is set.
                     // 2. Append literal because no previous span existed. Continue Vietnamese
                     // processing on next input.
                     // 3. Buffer is less than 2 characters to start with.
@@ -378,9 +364,8 @@ const State = struct {
                 }
             },
             'D', 'd' => { // stroke.
-                if (self.literal_index != null or self.mode == .literal or self.buffer_length == 0) {
-                    // 1. Enable literal input when literal_index is set or on literal mode. The
-                    // literal_index is also set when the word starts with non-Vietnamese onsets.
+                if (self.literal_index != null or self.buffer_length == 0) {
+                    // 1. Append literally when literal_index is set.
                     // 2. Append literal because no previous span existed. Continue Vietnamese
                     // processing on next input.
                     self.append_literal(c);
@@ -412,9 +397,8 @@ const State = struct {
                 }
             },
             'E', 'e' => {
-                if (self.literal_index != null or self.mode == .literal or self.buffer_length == 0) {
-                    // 1. Enable literal input when literal_index is set or on literal mode. The
-                    // literal_index is also set when the word starts with non-Vietnamese onsets.
+                if (self.literal_index != null or self.buffer_length == 0) {
+                    // 1. Append literally when literal_index is set.
                     // 2. Append literal because no previous span existed. Continue Vietnamese
                     // processing on next input.
                     self.append_literal(c);
@@ -446,9 +430,8 @@ const State = struct {
                 }
             },
             'F', 'f' => input_f: { // falling.
-                if (self.literal_index != null or self.mode == .literal or self.buffer_length == 0) {
-                    // 1. Enable literal input when literal_index is set or on literal mode. The
-                    // literal_index is also set when the word starts with non-Vietnamese onsets.
+                if (self.literal_index != null or self.buffer_length == 0) {
+                    // 1. Append literally when literal_index is set.
                     // 2. Append literal because no previous span existed. Continue Vietnamese
                     // processing on next input.
                     // 3. No previous character, append literally.
@@ -456,7 +439,7 @@ const State = struct {
                     // Set modification index to null because we didn't modify any existing span.
                     self.buffer_modification_index = null;
                     // Set literal_index because 'F' doesn't appear in formal Vietnamese spelling.
-                    if (self.mode == .telex and self.literal_index == null) {
+                    if (self.literal_index == null) {
                         self.literal_index = self.buffer_length - 1;
                     }
                     break :input_f;
@@ -523,9 +506,8 @@ const State = struct {
                 }
             },
             'I', 'i' => {
-                if (self.literal_index != null or self.mode == .literal or self.buffer_length < 2) {
-                    // 1. Enable literal input when literal_index is set or on literal mode. The
-                    // literal_index is also set when the word starts with non-Vietnamese onsets.
+                if (self.literal_index != null or self.buffer_length < 2) {
+                    // 1. Append literally when literal_index is set.
                     // 2. Append literal because no previous span existed. Continue Vietnamese
                     // processing on next input.
                     // 3. Buffer is less than 2 characters to start with.
@@ -553,9 +535,8 @@ const State = struct {
                 }
             }, // fill missing diacritic, e.g. người.
             'J', 'j' => input_j: {
-                if (self.literal_index != null or self.mode == .literal or self.buffer_length == 0) {
-                    // 1. Enable literal input when literal_index is set or on literal mode. The
-                    // literal_index is also set when the word starts with non-Vietnamese onsets.
+                if (self.literal_index != null or self.buffer_length == 0) {
+                    // 1. Append literally when literal_index is set.
                     // 2. Append literal because no previous span existed. Continue Vietnamese
                     // processing on next input.
                     // 3. No previous character, append literally.
@@ -563,7 +544,7 @@ const State = struct {
                     // Set modification index to null because we didn't modify any existing span.
                     self.buffer_modification_index = null;
                     // Set literal_index because 'J' doesn't appear in formal Vietnamese spelling.
-                    if (self.mode == .telex and self.literal_index == null) {
+                    if (self.literal_index == null) {
                         self.literal_index = self.buffer_length - 1;
                     }
                     break :input_j;
@@ -630,9 +611,8 @@ const State = struct {
                 }
             }, // falling_glottalized.
             'M', 'm' => {
-                if (self.literal_index != null or self.mode == .literal or self.buffer_length < 2) {
-                    // 1. Enable literal input when literal_index is set or on literal mode. The
-                    // literal_index is also set when the word starts with non-Vietnamese onsets.
+                if (self.literal_index != null or self.buffer_length < 2) {
+                    // 1. Append literally when literal_index is set.
                     // 2. Append literal because no previous span existed. Continue Vietnamese
                     // processing on next input.
                     // 3. Buffer is less than 2 characters to start with.
@@ -660,9 +640,8 @@ const State = struct {
                 }
             }, // fill missing diacritic, e.g. cườm.
             'N', 'n' => {
-                if (self.literal_index != null or self.mode == .literal or self.buffer_length < 2) {
-                    // 1. Enable literal input when literal_index is set or on literal mode. The
-                    // literal_index is also set when the word starts with non-Vietnamese onsets.
+                if (self.literal_index != null or self.buffer_length < 2) {
+                    // 1. Append literally when literal_index is set.
                     // 2. Append literal because no previous span existed. Continue Vietnamese
                     // processing on next input.
                     // 3. Buffer is less than 2 characters to start with.
@@ -690,9 +669,8 @@ const State = struct {
                 }
             }, // fill missing diacritic, e.g. cường.
             'O', 'o' => {
-                if (self.literal_index != null or self.mode == .literal or self.buffer_length == 0) {
-                    // 1. Enable literal input when literal_index is set or on literal mode. The
-                    // literal_index is also set when the word starts with non-Vietnamese onsets.
+                if (self.literal_index != null or self.buffer_length == 0) {
+                    // 1. Append literally when literal_index is set.
                     // 2. Append literal because no previous span existed. Continue Vietnamese
                     // processing on next input.
                     self.append_literal(c);
@@ -730,9 +708,8 @@ const State = struct {
                 }
             },
             'P', 'p' => {
-                if (self.literal_index != null or self.mode == .literal or self.buffer_length < 2) {
-                    // 1. Enable literal input when literal_index is set or on literal mode. The
-                    // literal_index is also set when the word starts with non-Vietnamese onsets.
+                if (self.literal_index != null or self.buffer_length < 2) {
+                    // 1. Append literally when literal_index is set.
                     // 2. Append literal because no previous span existed. Continue Vietnamese
                     // processing on next input.
                     // 3. Buffer is less than 2 characters to start with.
@@ -760,9 +737,8 @@ const State = struct {
                 }
             }, // fill missing diacritic, e.g. cướp.
             'R', 'r' => input_r: { // dipping_rising.
-                if (self.literal_index != null or self.mode == .literal or self.buffer_length == 0) {
-                    // 1. Enable literal input when literal_index is set or on literal mode. The
-                    // literal_index is also set when the word starts with non-Vietnamese onsets
+                if (self.literal_index != null or self.buffer_length == 0) {
+                    // 1. Append literally when literal_index is set.
                     // 3. No previous character, append literally.
                     self.append_literal(c);
                     // Set modification index to null because we didn't modify any existing span.
@@ -824,9 +800,8 @@ const State = struct {
                 }
             },
             'S', 's' => input_s: { // rising.
-                if (self.literal_index != null or self.mode == .literal or self.buffer_length == 0) {
-                    // 1. Enable literal input when literal_index is set or on literal mode. The
-                    // literal_index is also set when the word starts with non-Vietnamese onsets
+                if (self.literal_index != null or self.buffer_length == 0) {
+                    // 1. Append literally when literal_index is set.
                     // 2. Append literal because no previous span existed. Continue Vietnamese
                     // processing on next input.
                     // 3. No previous character, append literally.
@@ -889,9 +864,8 @@ const State = struct {
                 }
             },
             'T', 't' => {
-                if (self.literal_index != null or self.mode == .literal or self.buffer_length < 2) {
-                    // 1. Enable literal input when literal_index is set or on literal mode. The
-                    // literal_index is also set when the word starts with non-Vietnamese onsets.
+                if (self.literal_index != null or self.buffer_length < 2) {
+                    // 1. Append literally when literal_index is set.
                     // 2. Append literal because no previous span existed. Continue Vietnamese
                     // processing on next input.
                     // 3. Buffer is less than 2 characters to start with.
@@ -919,9 +893,8 @@ const State = struct {
                 }
             }, // fill missing diacritic, e.g. trượt.
             'U', 'u' => {
-                if (self.literal_index != null or self.mode == .literal or self.buffer_length < 2) {
-                    // 1. Enable literal input when literal_index is set or on literal mode. The
-                    // literal_index is also set when the word starts with non-Vietnamese onsets.
+                if (self.literal_index != null or self.buffer_length < 2) {
+                    // 1. Append literally when literal_index is set.
                     // 2. Append literal because no previous span existed. Continue Vietnamese
                     // processing on next input.
                     // 3. Buffer is less than 2 characters to start with.
@@ -949,15 +922,14 @@ const State = struct {
                 }
             }, // fill missing diacritic, e.g. hươu.
             'W', 'w' => { // breve, horn
-                if (self.literal_index != null or self.mode == .literal or self.buffer_length == 0) {
+                if (self.literal_index != null or self.buffer_length == 0) {
                     // 1. Literal index is set, stop process Vietnamese input.
-                    // 2. Literal mode.
-                    // 3. No previous character, append literally.
+                    // 2. No previous character, append literally.
                     self.append_literal(c);
                     // Set modification index to null because we didn't modify any existing span.
                     self.buffer_modification_index = null;
                     // Set literal_index because 'W' doesn't appear in formal Vietnamese spelling.
-                    if (self.mode == .telex and self.literal_index == null) {
+                    if (self.literal_index == null) {
                         self.literal_index = self.buffer_length - 1;
                     }
                 } else if (self.buffer_effective_last().equals_ignore_case_tone('A', .empty)) {
@@ -1034,9 +1006,8 @@ const State = struct {
                 }
             },
             'X', 'x' => input_x: { // rising_glottalized.
-                if (self.literal_index != null or self.mode == .literal or self.buffer_length == 0) {
-                    // 1. Enable literal input when literal_index is set or on literal mode. The
-                    // literal_index is also set when the word starts with non-Vietnamese onsets
+                if (self.literal_index != null or self.buffer_length == 0) {
+                    // 1. Append literally when literal_index is set.
                     // 2. Append literal because no previous span existed. Continue Vietnamese
                     // processing on next input.
                     // 3. No previous character, append literally.
@@ -1099,19 +1070,18 @@ const State = struct {
                 }
             },
             'Z', 'z' => input_z: {
-                if (self.buffer_length == 0 and self.mode == .telex) {
+                if (self.buffer_length == 0) {
                     assert(self.literal_index == null);
 
-                    // 1. Empty word, append literally, switch to literal input.
+                    // 1. Empty word, append literally, start the literal tail.
                     self.append_literal(c);
                     // Set modification index to null because we didn't modify any existing span.
                     self.buffer_modification_index = null;
-                    // Switch to literal input.
+                    // Start the literal tail.
                     self.literal_index = self.buffer_length - 1;
                     break :input_z;
-                } else if (self.literal_index != null or self.mode == .literal) {
+                } else if (self.literal_index != null) {
                     // 2. Literal index is set, stop process Vietnamese input.
-                    // 3. Literal mode.
                     self.append_literal(c);
                     // Set modification index to null because we didn't modify any existing span.
                     self.buffer_modification_index = null;
@@ -1146,9 +1116,9 @@ const State = struct {
                     self.reset_tone(word, i);
                     break :input_z;
                 } else {
-                    // 6. No tone to reset, append literally, switch to literal input.
+                    // 6. No tone to reset, append literally, start the literal tail.
                     self.append_literal(c);
-                    // Switch to literal input.
+                    // Start the literal tail.
                     self.literal_index = self.buffer_length - 1;
                     break :input_z;
                 }
@@ -1161,16 +1131,14 @@ const State = struct {
             },
         }
 
-        // Ensure the literal_index in valid state.
-        if (self.mode == .literal) {
-            assert(self.literal_index == null);
-        }
-
         // The buffer_modification index must be inbound of the buffer_effective.
         assert(self.buffer_modification_index == null or (self.buffer_modification_index.? < self.buffer_effective.len and self.buffer_modification_index.? < self.buffer_length));
+
+        // The buffer_length_previous must not larger than buffer_length.
+        assert(self.buffer_length_previous <= self.buffer_length);
     }
 
-    // Append literal character when possible. Then inclease the buffer_length.
+    // Append literal character when possible. Then increase the buffer_length.
     fn append_literal(self: *State, c: u8) void {
         // Only allow a-zA-Z.
         assert(isAlphabetic(c));
@@ -1182,11 +1150,11 @@ const State = struct {
             // Add character to span.
             self.buffer_effective[self.buffer_length] = Span.init(c);
         }
-        // Increase the buffer length for tracking, we will need it went handling backspace.
+        // Increase the buffer length for tracking, we will need it when handling backspace.
         self.buffer_length += 1;
 
-        // After increase, the new buffer_length may exceed the buffer_effective, set literal_index if needed.
-        if (self.mode == .telex and self.literal_index == null and self.buffer_length == self.buffer_effective.len + 1) {
+        // After increase, the new buffer_length may equal the buffer_effective, set literal_index if needed.
+        if (self.literal_index == null and self.buffer_length == self.buffer_effective.len) {
             self.literal_index = self.buffer_length - 1;
         }
     }
@@ -1194,7 +1162,7 @@ const State = struct {
     // Return the last item in buffer_effective, not valid if the buffer_length is out of range.
     fn buffer_effective_last(self: *State) Span {
         // 1. Should not work if buffer_length exceed buffer_effective.
-        // 2. Bufeer must have al least 1 character.
+        // 2. Buffer must have at least 1 character.
         assert(self.buffer_length > 0 and self.buffer_length <= self.buffer_effective.len);
 
         return self.buffer_effective[self.buffer_length - 1];
@@ -1413,13 +1381,10 @@ const State = struct {
         // buffer_length must be positive for backspace.
         assert(self.buffer_length > 0);
 
-        // Input mode must be either .literal or .telex.
-        assert(self.mode == .literal or self.mode == .telex);
-
         if (self.literal_index) |literal_index| {
-            // Input mode must be .telex when literal_index is set.
-            assert(self.mode == .telex);
-            // literal_index must be within buffer range when set.
+            // literal_index must be within buffer_effective range when set.
+            assert(literal_index < self.buffer_effective.len);
+            // literal_index must be less than buffer_length.
             assert(literal_index < self.buffer_length);
         }
 
@@ -1432,13 +1397,40 @@ const State = struct {
             self.literal_index = null;
         }
     }
+
+    // Calculate how many backspaces are needed to completely replace the existing characters to
+    // make them match with the new state.
+    fn calculate_synthetic_backspaces(self: *State) u8 {
+        assert(self.buffer_modification_index == null or (self.buffer_modification_index.? < self.buffer_length_previous));
+
+        if (self.buffer_modification_index) |buffer_modification_index| {
+            return self.buffer_length_previous - buffer_modification_index;
+        } else {
+            return 0;
+        }
+    }
+
+    // Compose UTF-16 string replacement for the synthetic events. It could be multiple characters
+    // or one literal character.
+    // fn compose_utf16_string_replacement(self: *State) []u8 {
+    //     unreachable;
+    // }
+
+    // Indicate if the buffer_effective is full.
+    fn buffer_effective_full(self: *State) bool {
+        if (self.buffer_length < self.buffer_effective.len) {
+            return false;
+        } else {
+            assert(self.literal_index != null and self.literal_index.? < self.buffer_effective.len);
+            return true;
+        }
+    }
 };
 
 test "expect State.add handles non-Telex characters less than 1 character of the buffer_effective length" {
     // Arrange
     var state: State = undefined;
     state.init();
-    state.mode = .telex;
 
     // 15 characters.
     const input_sequence = "bbbbbqqqqqbbbbb";
@@ -1453,10 +1445,8 @@ test "expect State.add handles non-Telex characters less than 1 character of the
     try expectEqual(15, state.buffer_length);
     // Because we don't modify any existing character since the last input, expect null.
     try expectEqual(null, state.buffer_modification_index);
-    // Because we didn't exceed the buffer_affective, don't set literal_index.
+    // Because we didn't exceed the buffer_effective, don't set literal_index.
     try expectEqual(null, state.literal_index);
-    // Don't touch on input mode.
-    try expectEqual(.telex, state.mode);
     // Verify every the spans, must exactly the same with the input.
     for (input_sequence, 0..) |c, i| {
         const sp = state.buffer_effective[i];
@@ -1466,11 +1456,10 @@ test "expect State.add handles non-Telex characters less than 1 character of the
     }
 }
 
-test "expect State.add handles non-Telex characters fit the buffer_effective length" {
+test "expect State.add handles non-Telex characters fill the last slot" {
     // Arrange
     var state: State = undefined;
     state.init();
-    state.mode = .telex;
 
     // 16 characters.
     const input_sequence = "bbbbbqqqqqbbbbbq";
@@ -1485,10 +1474,8 @@ test "expect State.add handles non-Telex characters fit the buffer_effective len
     try expectEqual(16, state.buffer_length);
     // Because we don't modify any existing character since the last input, expect null.
     try expectEqual(null, state.buffer_modification_index);
-    // Because we didn't exceed the buffer_affective, don't set literal_index.
-    try expectEqual(null, state.literal_index);
-    // Don't touch on input mode.
-    try expectEqual(.telex, state.mode);
+    // Because we fill the last slot, start literal input from the last slot.
+    try expectEqual(15, state.literal_index);
     // Verify every the spans, must exactly the same with the input.
     for (input_sequence, 0..) |c, i| {
         const sp = state.buffer_effective[i];
@@ -1502,7 +1489,6 @@ test "expect State.add handles non-Telex characters just exceed the buffer_effec
     // Arrange
     var state: State = undefined;
     state.init();
-    state.mode = .telex;
 
     // 17.
     const input_sequence = "bbbbbqqqqqbbbbbqq";
@@ -1517,10 +1503,8 @@ test "expect State.add handles non-Telex characters just exceed the buffer_effec
     try expectEqual(17, state.buffer_length);
     // Because we don't modify any existing character since the last input, expect null.
     try expectEqual(null, state.buffer_modification_index);
-    // Because the input exceed the buffer_effective, we set literal_index after the last effective spans (16).
-    try expectEqual(16, state.literal_index);
-    // Don't touch on input mode.
-    try expectEqual(.telex, state.mode);
+    // Because the input exceed the buffer_effective, keep literal_index at the last slot.
+    try expectEqual(15, state.literal_index);
     // Verify every the spans, must exactly the same with the input.
     for (input_sequence[0..16], 0..) |c, i| {
         const sp = state.buffer_effective[i];
@@ -1534,7 +1518,6 @@ test "expect State.add adds a literally because it's the start of the buffer" {
     // Arrange
     var state: State = undefined;
     state.init();
-    state.mode = .telex;
 
     // Act
     state.add('a');
@@ -1543,7 +1526,6 @@ test "expect State.add adds a literally because it's the start of the buffer" {
     try expectEqual(1, state.buffer_length);
     try expectEqual(null, state.buffer_modification_index);
     try expectEqual(null, state.literal_index);
-    try expectEqual(.telex, state.mode);
 
     const sp = state.buffer_effective[0];
     try expectEqual('a', sp.base);
@@ -1551,14 +1533,13 @@ test "expect State.add adds a literally because it's the start of the buffer" {
     try expectEqual(.level, sp.tone);
 }
 
-test "expect State.add start literal input when the new input just exceeds buffer_effective" {
+test "expect State.add start literal input when the new input fills the last slot" {
     // Arrange
     var state: State = undefined;
     state.init();
-    state.mode = .telex;
 
-    // input 16 characters.
-    for ("bbbbbqqqqqbbbbbq") |c| {
+    // input 15 characters.
+    for ("bbbbbqqqqqbbbbb") |c| {
         state.add(c);
     }
 
@@ -1566,10 +1547,47 @@ test "expect State.add start literal input when the new input just exceeds buffe
     state.add('a');
 
     // Assert
+    try expectEqual(16, state.buffer_length);
+    try expectEqual(null, state.buffer_modification_index);
+    try expectEqual(15, state.literal_index);
+
+    const sp = state.buffer_effective[15];
+    try expectEqual(@as(u8, 'a'), sp.base);
+    try expectEqual(.empty, sp.diacritic);
+    try expectEqual(.level, sp.tone);
+}
+
+test "expect State.add does not process Telex after filling the last slot" {
+    // Arrange
+    var state: State = undefined;
+    state.init();
+
+    for (0..15) |i| {
+        state.buffer_effective[i] = Span.init('b');
+    }
+    state.buffer_effective[15] = Span.init('a');
+    state.buffer_length = 16;
+    state.literal_index = 15;
+
+    // Act
+    state.add('a');
+
+    // Assert
     try expectEqual(17, state.buffer_length);
     try expectEqual(null, state.buffer_modification_index);
-    try expectEqual(16, state.literal_index);
-    try expectEqual(.telex, state.mode);
+    try expectEqual(15, state.literal_index);
+
+    for (0..15) |i| {
+        const sp = state.buffer_effective[i];
+        try expectEqual(@as(u8, 'b'), sp.base);
+        try expectEqual(.empty, sp.diacritic);
+        try expectEqual(.level, sp.tone);
+    }
+
+    const sp = state.buffer_effective[15];
+    try expectEqual(@as(u8, 'a'), sp.base);
+    try expectEqual(.empty, sp.diacritic);
+    try expectEqual(.level, sp.tone);
 }
 
 test "expect State.add apply circumflex for valid cases" {
@@ -1596,7 +1614,6 @@ test "expect State.add apply circumflex for valid cases" {
         for (tones) |t| {
             var state: State = undefined;
             state.init();
-            state.mode = .telex;
             state.buffer_effective[0] = Span.init_diacritic_tone(c.vowel, .empty, t);
             state.buffer_length = 1;
 
@@ -1607,7 +1624,6 @@ test "expect State.add apply circumflex for valid cases" {
             try expectEqual(1, state.buffer_length);
             try expectEqual(0, state.buffer_modification_index);
             try expectEqual(null, state.literal_index);
-            try expectEqual(.telex, state.mode);
 
             const sp = state.buffer_effective[0];
             try expectEqual(c.vowel, sp.base);
@@ -1633,7 +1649,6 @@ test "expect State.add apply breve for valid cases" {
         for (tones) |t| {
             var state: State = undefined;
             state.init();
-            state.mode = .telex;
             state.buffer_effective[0] = Span.init_diacritic_tone(c.vowel, .empty, t);
             state.buffer_length = 1;
 
@@ -1644,7 +1659,6 @@ test "expect State.add apply breve for valid cases" {
             try expectEqual(1, state.buffer_length);
             try expectEqual(0, state.buffer_modification_index);
             try expectEqual(null, state.literal_index);
-            try expectEqual(.telex, state.mode);
 
             const sp = state.buffer_effective[0];
             try expectEqual(c.vowel, sp.base);
@@ -1674,7 +1688,6 @@ test "expect State.add apply horn for valid cases" {
         for (tones) |t| {
             var state: State = undefined;
             state.init();
-            state.mode = .telex;
             state.buffer_effective[0] = Span.init_diacritic_tone(c.vowel, .empty, t);
             state.buffer_length = 1;
 
@@ -1685,7 +1698,6 @@ test "expect State.add apply horn for valid cases" {
             try expectEqual(1, state.buffer_length);
             try expectEqual(0, state.buffer_modification_index);
             try expectEqual(null, state.literal_index);
-            try expectEqual(.telex, state.mode);
 
             const sp = state.buffer_effective[0];
             try expectEqual(c.vowel, sp.base);
@@ -1708,7 +1720,6 @@ test "expect State.add apply stroke for valid cases" {
     for (cases) |c| {
         var state: State = undefined;
         state.init();
-        state.mode = .telex;
         state.buffer_effective[0] = Span.init_diacritic_tone(c.consonant, .empty, .level);
         state.buffer_length = 1;
 
@@ -1719,7 +1730,6 @@ test "expect State.add apply stroke for valid cases" {
         try expectEqual(1, state.buffer_length);
         try expectEqual(0, state.buffer_modification_index);
         try expectEqual(null, state.literal_index);
-        try expectEqual(.telex, state.mode);
 
         const sp = state.buffer_effective[0];
         try expectEqual(c.consonant, sp.base);
@@ -1760,7 +1770,6 @@ test "expect State.add override existing diacritic with the new diacritic for va
         for (tones) |t| {
             var state: State = undefined;
             state.init();
-            state.mode = .telex;
             state.buffer_effective[0] = Span.init_diacritic_tone(c.vowel, c.start_diacritic, t);
             state.buffer_length = 1;
 
@@ -1771,7 +1780,6 @@ test "expect State.add override existing diacritic with the new diacritic for va
             try expectEqual(1, state.buffer_length);
             try expectEqual(0, state.buffer_modification_index);
             try expectEqual(null, state.literal_index);
-            try expectEqual(.telex, state.mode);
 
             const sp = state.buffer_effective[0];
             try expectEqual(c.vowel, sp.base);
@@ -1823,7 +1831,6 @@ test "expect State.add cancel existing diacritic for valid cases" {
         for (tones) |t| {
             var state: State = undefined;
             state.init();
-            state.mode = .telex;
             state.buffer_effective[0] = Span.init_diacritic_tone(c.vowel, c.start_diacritic, t);
             state.buffer_length = 1;
 
@@ -1834,7 +1841,6 @@ test "expect State.add cancel existing diacritic for valid cases" {
             try expectEqual(2, state.buffer_length);
             try expectEqual(0, state.buffer_modification_index);
             try expectEqual(1, state.literal_index);
-            try expectEqual(.telex, state.mode);
 
             const sp_previous = state.buffer_effective[0];
             try expectEqual(c.vowel, sp_previous.base);
@@ -1860,7 +1866,6 @@ test "expect State.add cancel existing diacritic for valid cases" {
     for (stroke_cases) |c| {
         var state: State = undefined;
         state.init();
-        state.mode = .telex;
         state.buffer_effective[0] = Span.init_diacritic_tone(c.consonant, .stroke, .level);
         state.buffer_length = 1;
 
@@ -1871,7 +1876,6 @@ test "expect State.add cancel existing diacritic for valid cases" {
         try expectEqual(2, state.buffer_length);
         try expectEqual(0, state.buffer_modification_index);
         try expectEqual(1, state.literal_index);
-        try expectEqual(.telex, state.mode);
 
         const sp_previous = state.buffer_effective[0];
         try expectEqual(c.consonant, sp_previous.base);
@@ -1889,7 +1893,6 @@ test "expect State.add cancel existing diacritic will switch to literal for the 
     // Arrange
     var state: State = undefined;
     state.init();
-    state.mode = .telex;
     state.buffer_effective[0] = Span.init_diacritic_tone('A', .circumflex, .level);
     state.buffer_length = 1;
 
@@ -1902,7 +1905,6 @@ test "expect State.add cancel existing diacritic will switch to literal for the 
     try expectEqual(2, state.buffer_length);
     try expectEqual(0, state.buffer_modification_index);
     try expectEqual(1, state.literal_index);
-    try expectEqual(.telex, state.mode);
 
     try expectEqual(@as(u8, 'A'), state.buffer_effective[0].base);
     try expectEqual(.empty, state.buffer_effective[0].diacritic);
@@ -1920,7 +1922,6 @@ test "expect State.add cancel existing diacritic will switch to literal for the 
     try expectEqual(3, state.buffer_length);
     try expectEqual(null, state.buffer_modification_index);
     try expectEqual(1, state.literal_index);
-    try expectEqual(.telex, state.mode);
 
     try expectEqual(@as(u8, 'A'), state.buffer_effective[0].base);
     try expectEqual(.empty, state.buffer_effective[0].diacritic);
@@ -1942,7 +1943,6 @@ test "expect State.add cancel existing diacritic will switch to literal for the 
     try expectEqual(4, state.buffer_length);
     try expectEqual(null, state.buffer_modification_index);
     try expectEqual(1, state.literal_index);
-    try expectEqual(.telex, state.mode);
 
     try expectEqual(@as(u8, 'A'), state.buffer_effective[0].base);
     try expectEqual(.empty, state.buffer_effective[0].diacritic);
@@ -1967,7 +1967,6 @@ test "expect State.add cancel existing diacritic will switch to literal for the 
     try expectEqual(5, state.buffer_length);
     try expectEqual(null, state.buffer_modification_index);
     try expectEqual(1, state.literal_index);
-    try expectEqual(.telex, state.mode);
 
     try expectEqual(@as(u8, 'A'), state.buffer_effective[0].base);
     try expectEqual(.empty, state.buffer_effective[0].diacritic);
@@ -1997,7 +1996,6 @@ test "expect State.add cancel existing diacritic will switch to literal for the 
     try expectEqual(6, state.buffer_length);
     try expectEqual(null, state.buffer_modification_index);
     try expectEqual(1, state.literal_index);
-    try expectEqual(.telex, state.mode);
 
     try expectEqual(@as(u8, 'A'), state.buffer_effective[0].base);
     try expectEqual(.empty, state.buffer_effective[0].diacritic);
@@ -2022,6 +2020,43 @@ test "expect State.add cancel existing diacritic will switch to literal for the 
     try expectEqual(@as(u8, 'd'), state.buffer_effective[5].base);
     try expectEqual(.empty, state.buffer_effective[5].diacritic);
     try expectEqual(.level, state.buffer_effective[5].tone);
+}
+
+test "expect State.add cancel existing diacritic at the last slot boundary" {
+    // Arrange
+    var state: State = undefined;
+    state.init();
+
+    for (0..14) |i| {
+        state.buffer_effective[i] = Span.init('b');
+    }
+    state.buffer_effective[14] = Span.init_diacritic_tone('a', .circumflex, .level);
+    state.buffer_length = 15;
+
+    // Act
+    state.add('a');
+
+    // Assert
+    try expectEqual(16, state.buffer_length);
+    try expectEqual(14, state.buffer_modification_index);
+    try expectEqual(15, state.literal_index);
+
+    for (0..14) |i| {
+        const sp = state.buffer_effective[i];
+        try expectEqual(@as(u8, 'b'), sp.base);
+        try expectEqual(.empty, sp.diacritic);
+        try expectEqual(.level, sp.tone);
+    }
+
+    const sp_previous = state.buffer_effective[14];
+    try expectEqual(@as(u8, 'a'), sp_previous.base);
+    try expectEqual(.empty, sp_previous.diacritic);
+    try expectEqual(.level, sp_previous.tone);
+
+    const sp_new = state.buffer_effective[15];
+    try expectEqual(@as(u8, 'a'), sp_new.base);
+    try expectEqual(.empty, sp_new.diacritic);
+    try expectEqual(.level, sp_new.tone);
 }
 
 test "expect State.add auto-fill missing horn in valid cases" {
@@ -2068,7 +2103,6 @@ test "expect State.add auto-fill missing horn in valid cases" {
                     for (prefix_lengths) |plen| {
                         var state: State = undefined;
                         state.init();
-                        state.mode = .telex;
 
                         // Optional 'b' prefix to place the pair at index 1..2.
                         if (plen == 1) {
@@ -2090,7 +2124,6 @@ test "expect State.add auto-fill missing horn in valid cases" {
                         try expectEqual(plen + 3, state.buffer_length);
                         try expectEqual(receiving_index, state.buffer_modification_index);
                         try expectEqual(null, state.literal_index);
-                        try expectEqual(.telex, state.mode);
 
                         // Prefix, when present, must be unchanged.
                         if (plen == 1) {
@@ -2151,7 +2184,6 @@ test "expect State.add does not auto-fill horn in invalid cases" {
     for (cases) |c| {
         var state: State = undefined;
         state.init();
-        state.mode = .telex;
         state.buffer_effective[0] = Span.init_diacritic_tone(c.first_base, c.first_diacritic, .level);
         state.buffer_effective[1] = Span.init_diacritic_tone(c.second_base, c.second_diacritic, .level);
         state.buffer_length = 2;
@@ -2163,7 +2195,6 @@ test "expect State.add does not auto-fill horn in invalid cases" {
         try expectEqual(3, state.buffer_length);
         try expectEqual(null, state.buffer_modification_index);
         try expectEqual(null, state.literal_index);
-        try expectEqual(.telex, state.mode);
 
         // Both seed spans must be untouched.
         const sp_first = state.buffer_effective[0];
@@ -2184,11 +2215,10 @@ test "expect State.add does not auto-fill horn in invalid cases" {
     }
 }
 
-test "expect State.add auto-fill missing horn at buffer_effective boundary" {
-    // Arrange: place the incomplete pair at indices 14..15 so a trigger pushes
-    // total length to 17, exceeding buffer_effective. The implementation must
-    // both mutate the existing vowel and follow the overflow convention from
-    // the literal `else` arm (set literal_index to buffer_effective.len).
+test "expect State.add auto-fill missing horn at the last slot boundary" {
+    // Arrange: place the incomplete pair at indices 13..14 so a trigger fills
+    // the last slot. The implementation must both mutate the existing vowel
+    // and start literal input from the last slot.
     const Case = struct {
         first_base: u8,
         first_diacritic: Diacritic,
@@ -2197,39 +2227,36 @@ test "expect State.add auto-fill missing horn at buffer_effective boundary" {
         receiving_offset: u8,
     };
     const cases = [_]Case{
-        // uơ pattern: first vowel at index 14 receives horn.
+        // uơ pattern: first vowel at index 13 receives horn.
         .{ .first_base = 'u', .first_diacritic = .empty, .second_base = 'o', .second_diacritic = .horn, .receiving_offset = 0 },
-        // ưo pattern: second vowel at index 15 receives horn.
+        // ưo pattern: second vowel at index 14 receives horn.
         .{ .first_base = 'u', .first_diacritic = .horn, .second_base = 'o', .second_diacritic = .empty, .receiving_offset = 1 },
     };
 
     for (cases) |c| {
         var state: State = undefined;
         state.init();
-        state.mode = .telex;
 
-        // Fill indices 0..13 with literal 'b'.
-        for (0..14) |i| {
+        // Fill indices 0..12 with literal 'b'.
+        for (0..13) |i| {
             state.buffer_effective[i] = Span.init('b');
         }
-        state.buffer_effective[14] = Span.init_diacritic_tone(c.first_base, c.first_diacritic, .level);
-        state.buffer_effective[15] = Span.init_diacritic_tone(c.second_base, c.second_diacritic, .level);
-        state.buffer_length = 16;
+        state.buffer_effective[13] = Span.init_diacritic_tone(c.first_base, c.first_diacritic, .level);
+        state.buffer_effective[14] = Span.init_diacritic_tone(c.second_base, c.second_diacritic, .level);
+        state.buffer_length = 15;
 
         // Act
         state.add('n');
 
         // Assert
-        const receiving_index = 14 + c.receiving_offset;
-        try expectEqual(17, state.buffer_length);
+        const receiving_index = 13 + c.receiving_offset;
+        try expectEqual(16, state.buffer_length);
         try expectEqual(receiving_index, state.buffer_modification_index);
-        // Trigger append exceeds buffer_effective, switch to literal from the
-        // first out-of-range position (buffer_effective.len = 16).
-        try expectEqual(16, state.literal_index);
-        try expectEqual(.telex, state.mode);
+        // Trigger append fills the last slot, switch to literal from the last slot.
+        try expectEqual(15, state.literal_index);
 
-        // Prefix spans 0..13 unchanged.
-        for (0..14) |i| {
+        // Prefix spans 0..12 unchanged.
+        for (0..13) |i| {
             const sp = state.buffer_effective[i];
             try expectEqual(@as(u8, 'b'), sp.base);
             try expectEqual(.empty, sp.diacritic);
@@ -2237,19 +2264,21 @@ test "expect State.add auto-fill missing horn at buffer_effective boundary" {
         }
 
         // Both vowel spans must end with horn; case and tone preserved.
-        const sp_first = state.buffer_effective[14];
+        const sp_first = state.buffer_effective[13];
         try expectEqual(c.first_base, sp_first.base);
         try expectEqual(.horn, sp_first.diacritic);
         try expectEqual(.level, sp_first.tone);
 
-        const sp_second = state.buffer_effective[15];
+        const sp_second = state.buffer_effective[14];
         try expectEqual(c.second_base, sp_second.base);
         try expectEqual(.horn, sp_second.diacritic);
         try expectEqual(.level, sp_second.tone);
 
-        // The trigger character at index 16 is out of buffer_effective range,
-        // so append_literal does not write a span there. We only assert the
-        // bookkeeping fields above.
+        // The trigger character is appended literally at the last slot.
+        const sp_new = state.buffer_effective[15];
+        try expectEqual(@as(u8, 'n'), sp_new.base);
+        try expectEqual(.empty, sp_new.diacritic);
+        try expectEqual(.level, sp_new.tone);
     }
 }
 
@@ -2260,7 +2289,6 @@ test "expect State.add switch to literal input when append F, J, W, Z (ignore ca
     for (inputs) |c| {
         var state: State = undefined;
         state.init();
-        state.mode = .telex;
 
         // Act
         state.add(c);
@@ -2269,7 +2297,6 @@ test "expect State.add switch to literal input when append F, J, W, Z (ignore ca
         try expectEqual(1, state.buffer_length);
         try expectEqual(null, state.buffer_modification_index);
         try expectEqual(0, state.literal_index);
-        try expectEqual(.telex, state.mode);
 
         const sp = state.buffer_effective[0];
         try expectEqual(c, sp.base);
@@ -2302,7 +2329,6 @@ test "expect State.add switch to literal input when append W (ignore cases) on c
         for (inputs) |input| {
             var state: State = undefined;
             state.init();
-            state.mode = .telex;
             state.buffer_effective[0] = Span.init_diacritic(c.base, c.diacritic);
             state.buffer_length = 1;
 
@@ -2313,7 +2339,6 @@ test "expect State.add switch to literal input when append W (ignore cases) on c
             try expectEqual(2, state.buffer_length);
             try expectEqual(null, state.buffer_modification_index);
             try expectEqual(1, state.literal_index);
-            try expectEqual(.telex, state.mode);
 
             const sp_previous = state.buffer_effective[0];
             try expectEqual(c.base, sp_previous.base);
@@ -2342,7 +2367,6 @@ test "expect State.add switch to literal input when append F, J (ignore cases) o
         for (inputs) |input| {
             var state: State = undefined;
             state.init();
-            state.mode = .telex;
             state.buffer_effective[0] = Span.init(c.base);
             state.buffer_length = 1;
 
@@ -2353,7 +2377,6 @@ test "expect State.add switch to literal input when append F, J (ignore cases) o
             try expectEqual(2, state.buffer_length);
             try expectEqual(null, state.buffer_modification_index);
             try expectEqual(1, state.literal_index);
-            try expectEqual(.telex, state.mode);
 
             const sp_previous = state.buffer_effective[0];
             try expectEqual(c.base, sp_previous.base);
@@ -2387,7 +2410,6 @@ test "expect State.add switch to literal input when append F, J (ignore cases) o
         for (inputs) |input| {
             var state: State = undefined;
             state.init();
-            state.mode = .telex;
             state.buffer_effective[0] = Span.init(c.base0);
             state.buffer_effective[1] = Span.init(c.base1);
             state.buffer_length = 2;
@@ -2399,7 +2421,6 @@ test "expect State.add switch to literal input when append F, J (ignore cases) o
             try expectEqual(3, state.buffer_length);
             try expectEqual(null, state.buffer_modification_index);
             try expectEqual(2, state.literal_index);
-            try expectEqual(.telex, state.mode);
 
             const sp_previous0 = state.buffer_effective[0];
             try expectEqual(c.base0, sp_previous0.base);
@@ -2419,7 +2440,7 @@ test "expect State.add switch to literal input when append F, J (ignore cases) o
     }
 }
 
-test "expect State.add appends Z literally and stays Vietnamese when pseudo-word has no vowel" {
+test "expect State.add appends Z literally when pseudo-word has no vowel" {
     const inputs = [_]u8{ 'Z', 'z' };
 
     // Sub-block A: single-consonant pseudo-word (no vowel).
@@ -2433,7 +2454,6 @@ test "expect State.add appends Z literally and stays Vietnamese when pseudo-word
         for (inputs) |input| {
             var state: State = undefined;
             state.init();
-            state.mode = .telex;
             state.buffer_effective[0] = Span.init(c.base);
             state.buffer_length = 1;
 
@@ -2444,7 +2464,6 @@ test "expect State.add appends Z literally and stays Vietnamese when pseudo-word
             try expectEqual(2, state.buffer_length);
             try expectEqual(null, state.buffer_modification_index);
             try expectEqual(null, state.literal_index);
-            try expectEqual(.telex, state.mode);
 
             const sp_previous = state.buffer_effective[0];
             try expectEqual(c.base, sp_previous.base);
@@ -2469,7 +2488,6 @@ test "expect State.add appends Z literally and stays Vietnamese when pseudo-word
         for (inputs) |input| {
             var state: State = undefined;
             state.init();
-            state.mode = .telex;
             state.buffer_effective[0] = Span.init(c.base0);
             state.buffer_effective[1] = Span.init(c.base1);
             state.buffer_length = 2;
@@ -2481,7 +2499,6 @@ test "expect State.add appends Z literally and stays Vietnamese when pseudo-word
             try expectEqual(3, state.buffer_length);
             try expectEqual(null, state.buffer_modification_index);
             try expectEqual(null, state.literal_index);
-            try expectEqual(.telex, state.mode);
 
             const sp_previous0 = state.buffer_effective[0];
             try expectEqual(c.base0, sp_previous0.base);
@@ -2571,7 +2588,6 @@ test "expect State.apply_tone places tone at the correct vowel for every non-lev
         for (tones) |tone| {
             var state: State = undefined;
             state.init();
-            state.mode = .telex;
             for (c.seeds, 0..) |s, i| {
                 state.buffer_effective[i] = Span.init_diacritic_tone(s.base, s.diacritic, .level);
             }
@@ -2589,12 +2605,11 @@ test "expect State.apply_tone places tone at the correct vowel for every non-lev
             state.apply_tone(word, tone);
 
             // Assert: tone is applied in place; buffer length, literal_index, and
-            // mode are unaffected; buffer_modification_index points at the modified
+            // buffer_modification_index points at the modified
             // vowel.
             try expectEqual(@as(u8, @intCast(c.seeds.len)), state.buffer_length);
             try expectEqual(@as(?u8, c.expected_index), state.buffer_modification_index);
             try expectEqual(null, state.literal_index);
-            try expectEqual(.telex, state.mode);
 
             // The targeted vowel takes the tone; every other span keeps base,
             // diacritic, and stays at .level.
@@ -2628,7 +2643,6 @@ test "expect State.apply_tone updates buffer_modification_index to the earliest 
     for (cases) |c| {
         var state: State = undefined;
         state.init();
-        state.mode = .telex;
         state.buffer_effective[0] = Span.init('t');
         state.buffer_effective[1] = Span.init('i');
         state.buffer_effective[2] = Span.init_diacritic('e', .circumflex);
@@ -2693,7 +2707,6 @@ test "expect State.add applies non-level tones for representative cases" {
         for (cases) |c| {
             var state: State = undefined;
             state.init();
-            state.mode = .telex;
             for (c.seeds, 0..) |s, i| {
                 state.buffer_effective[i] = Span.init_diacritic_tone(s.base, s.diacritic, .level);
             }
@@ -2712,7 +2725,6 @@ test "expect State.add applies non-level tones for representative cases" {
             try expectEqual(@as(u8, @intCast(c.seeds.len)), state.buffer_length);
             try expectEqual(@as(?u8, c.expected_index), state.buffer_modification_index);
             try expectEqual(null, state.literal_index);
-            try expectEqual(.telex, state.mode);
 
             for (c.seeds, 0..) |s, i| {
                 const sp = state.buffer_effective[i];
@@ -2748,7 +2760,6 @@ test "expect State.add overrides an existing different non-level tone" {
     for (tone_cases) |tone_case| {
         var state: State = undefined;
         state.init();
-        state.mode = .telex;
         state.buffer_effective[0] = Span.init('t');
         state.buffer_effective[1] = Span.init_diacritic_tone('i', .empty, tone_case.existing_tone);
         state.buffer_effective[2] = Span.init_diacritic('e', .circumflex);
@@ -2763,7 +2774,6 @@ test "expect State.add overrides an existing different non-level tone" {
         try expectEqual(@as(u8, 3), state.buffer_length);
         try expectEqual(@as(?u8, 1), state.buffer_modification_index);
         try expectEqual(null, state.literal_index);
-        try expectEqual(.telex, state.mode);
 
         try expectEqual(@as(u8, 't'), state.buffer_effective[0].base);
         try expectEqual(.empty, state.buffer_effective[0].diacritic);
@@ -2782,7 +2792,7 @@ test "expect State.add overrides an existing different non-level tone" {
 test "expect State.add cancels an existing matching non-level tone for representative cases and switches to literal input" {
     // Arrange. This test proves State.add takes the cancellation arm for each non-level tone:
     // reset the existing matching tone to level (preserving base case + diacritic), append the
-    // trigger literally, set literal_index to the pre-append buffer_length, and stay in .telex.
+    // trigger literally, and set literal_index to the pre-append buffer_length.
     // Tone-position rules are NOT re-evaluated here; they are covered by State.apply_tone tests.
     const TriggerCase = enum { lower, upper };
     const ToneCase = struct {
@@ -2861,7 +2871,6 @@ test "expect State.add cancels an existing matching non-level tone for represent
         for (cases) |c| {
             var state: State = undefined;
             state.init();
-            state.mode = .telex;
             for (c.seeds, 0..) |s, i| {
                 const tone: Tone = if (i == @as(usize, c.expected_modification_index))
                     tone_case.tone
@@ -2886,11 +2895,10 @@ test "expect State.add cancels an existing matching non-level tone for represent
             state.add(trigger);
 
             // Assert: the trigger character is appended literally, the matching tone on the seeded
-            // vowel is reset to level, literal_index marks the new literal span, mode stays .telex.
+            // vowel is reset to level, and literal_index marks the new literal span.
             try expectEqual(@as(u8, @intCast(c.seeds.len + 1)), state.buffer_length);
             try expectEqual(@as(?u8, c.expected_modification_index), state.buffer_modification_index);
             try expectEqual(@as(?u8, @intCast(c.seeds.len)), state.literal_index);
-            try expectEqual(.telex, state.mode);
 
             // Every preexisting span keeps its base + diacritic; the cancelled vowel drops to level
             // (others were already level and remain so).
@@ -2910,6 +2918,43 @@ test "expect State.add cancels an existing matching non-level tone for represent
     }
 }
 
+test "expect State.add cancels an existing matching non-level tone at the last slot boundary" {
+    // Arrange
+    var state: State = undefined;
+    state.init();
+
+    for (0..14) |i| {
+        state.buffer_effective[i] = Span.init('b');
+    }
+    state.buffer_effective[14] = Span.init_diacritic_tone('a', .empty, .rising);
+    state.buffer_length = 15;
+
+    // Act
+    state.add('s');
+
+    // Assert
+    try expectEqual(16, state.buffer_length);
+    try expectEqual(14, state.buffer_modification_index);
+    try expectEqual(15, state.literal_index);
+
+    for (0..14) |i| {
+        const sp = state.buffer_effective[i];
+        try expectEqual(@as(u8, 'b'), sp.base);
+        try expectEqual(.empty, sp.diacritic);
+        try expectEqual(.level, sp.tone);
+    }
+
+    const sp_previous = state.buffer_effective[14];
+    try expectEqual(@as(u8, 'a'), sp_previous.base);
+    try expectEqual(.empty, sp_previous.diacritic);
+    try expectEqual(.level, sp_previous.tone);
+
+    const sp_new = state.buffer_effective[15];
+    try expectEqual(@as(u8, 's'), sp_new.base);
+    try expectEqual(.empty, sp_new.diacritic);
+    try expectEqual(.level, sp_new.tone);
+}
+
 test "expect State.pseudoword will scan and provide pseudoword correctly" {
     // Arrange. Each case seeds buffer_effective directly, then asks the
     // pseudo-word scanner for structural indexes only. Cases with a leading
@@ -2922,6 +2967,7 @@ test "expect State.pseudoword will scan and provide pseudoword correctly" {
         vowels_start: ?u8,
         vowels_end: ?u8,
         length: u8,
+        literal_index: ?u8 = null,
     };
     const cases = [_]Case{
         // Vowels only.
@@ -2968,7 +3014,7 @@ test "expect State.pseudoword will scan and provide pseudoword correctly" {
         .{ .seeds = &.{ .{ .base = 'd', .diacritic = .stroke }, .{ .base = 'r' } }, .word_start = 0, .word_end = 1, .vowels_start = null, .vowels_end = null, .length = 2 },
 
         // Full effective buffer boundary.
-        .{ .seeds = &.{ .{ .base = 'b' }, .{ .base = 'c' }, .{ .base = 'd' }, .{ .base = 'f' }, .{ .base = 'g' }, .{ .base = 'h' }, .{ .base = 'j' }, .{ .base = 'k' }, .{ .base = 'l' }, .{ .base = 'm' }, .{ .base = 'n' }, .{ .base = 'p' }, .{ .base = 't' }, .{ .base = 'h' }, .{ .base = 'u' }, .{ .base = 'y' } }, .word_start = 13, .word_end = 15, .vowels_start = 14, .vowels_end = 15, .length = 3 },
+        .{ .seeds = &.{ .{ .base = 'b' }, .{ .base = 'c' }, .{ .base = 'd' }, .{ .base = 'f' }, .{ .base = 'g' }, .{ .base = 'h' }, .{ .base = 'j' }, .{ .base = 'k' }, .{ .base = 'l' }, .{ .base = 'm' }, .{ .base = 'n' }, .{ .base = 'p' }, .{ .base = 't' }, .{ .base = 'h' }, .{ .base = 'u' }, .{ .base = 'y' } }, .word_start = 13, .word_end = 15, .vowels_start = 14, .vowels_end = 15, .length = 3, .literal_index = 15 },
 
         // Near effective buffer boundary.
         // 15 characters.
@@ -2978,11 +3024,11 @@ test "expect State.pseudoword will scan and provide pseudoword correctly" {
     for (cases) |c| {
         var state: State = undefined;
         state.init();
-        state.mode = .telex;
         for (c.seeds, 0..) |s, i| {
             state.buffer_effective[i] = Span.init_diacritic_tone(s.base, s.diacritic, s.tone);
         }
         state.buffer_length = @intCast(c.seeds.len);
+        state.literal_index = c.literal_index;
 
         // Act
         const pseudoword = state.pseudoword();
@@ -2997,8 +3043,7 @@ test "expect State.pseudoword will scan and provide pseudoword correctly" {
 
         try expectEqual(@as(u8, @intCast(c.seeds.len)), state.buffer_length);
         try expectEqual(null, state.buffer_modification_index);
-        try expectEqual(null, state.literal_index);
-        try expectEqual(.telex, state.mode);
+        try expectEqual(c.literal_index, state.literal_index);
 
         for (c.seeds, 0..) |s, i| {
             const sp = state.buffer_effective[i];
@@ -3013,7 +3058,6 @@ test "expect State.backspace will reduce buffer_length by 1 and won't touch lite
     // Arrange
     var state: State = undefined;
     state.init();
-    state.mode = .telex;
 
     // input 18 characters.
     for ("bbbbbqqqqqbbbbbqqq") |c| {
@@ -3026,18 +3070,16 @@ test "expect State.backspace will reduce buffer_length by 1 and won't touch lite
     // Assert
     try expectEqual(17, state.buffer_length);
     try expectEqual(null, state.buffer_modification_index);
-    try expectEqual(16, state.literal_index);
-    try expectEqual(.telex, state.mode);
+    try expectEqual(15, state.literal_index);
 }
 
 test "expect State.backspace will reduce buffer_length by 1 and unset literal_index" {
     // Arrange
     var state: State = undefined;
     state.init();
-    state.mode = .telex;
 
-    // input 17 characters so that the literal_index is set at the 17th character.
-    for ("bbbbbqqqqqbbbbbqq") |c| {
+    // input 16 characters so that the literal_index is set at the last slot.
+    for ("bbbbbqqqqqbbbbbq") |c| {
         state.add(c);
     }
 
@@ -3045,19 +3087,17 @@ test "expect State.backspace will reduce buffer_length by 1 and unset literal_in
     state.backspace();
 
     // Assert
-    try expectEqual(16, state.buffer_length);
+    try expectEqual(15, state.buffer_length);
     try expectEqual(null, state.buffer_modification_index);
     try expectEqual(null, state.literal_index);
-    try expectEqual(.telex, state.mode);
 }
 
 test "expect State.backspace will reduce buffer_length by 1 when literal_index is not set" {
     // Arrange
     var state: State = undefined;
     state.init();
-    state.mode = .telex;
 
-    // input 17 characters so that the literal_index is set at the 17th character.
+    // input 5 characters so that literal_index is not set.
     for ("bbbbb") |c| {
         state.add(c);
     }
@@ -3069,11 +3109,10 @@ test "expect State.backspace will reduce buffer_length by 1 when literal_index i
     try expectEqual(4, state.buffer_length);
     try expectEqual(null, state.buffer_modification_index);
     try expectEqual(null, state.literal_index);
-    try expectEqual(.telex, state.mode);
 }
 
 // Simple ABI wrapper for initialize allocated memory.
-export fn lex_state_init(state: *anyopaque) void {
+export fn lex_init(state: *anyopaque) void {
     // Pointer must not be null.
     assert(@intFromPtr(state) != 0);
     // Ensure the allocated memory is aligned.
@@ -3097,9 +3136,8 @@ test "expect State can be initialized by raw allocation" {
     defer std.testing.allocator.rawFree(raw_pointer[0..lex_state_size], .fromByteUnits(lex_state_alignment), @returnAddress());
 
     // Initialize state.
-    lex_state_init(raw_pointer);
+    lex_init(raw_pointer);
     const state: *align(lex_state_alignment) State = @ptrCast(@alignCast(raw_pointer));
-    state.mode = .telex;
 
     const input_sequence = "bbbbbqqqqq";
 
@@ -3113,10 +3151,8 @@ test "expect State can be initialized by raw allocation" {
     try expectEqual(10, state.buffer_length);
     // Because we don't modify any existing character since the last input, expect null.
     try expectEqual(null, state.buffer_modification_index);
-    // Because we didn't exceed the buffer_affective, don't set literal_index.
+    // Because we didn't exceed the buffer_effective, don't set literal_index.
     try expectEqual(null, state.literal_index);
-    // Don't touch on input mode.
-    try expectEqual(.telex, state.mode);
     // Verify every the spans, must exactly the same with the input.
     for (input_sequence, 0..) |c, i| {
         const sp = state.buffer_effective[i];
@@ -3146,4 +3182,24 @@ export fn lex_backspace(state: *anyopaque) void {
 
     const s: *State = @ptrCast(@alignCast(state));
     s.backspace();
+}
+
+export fn lex_calculate_synthetic_backspaces(state: *anyopaque) u8 {
+    // Pointer must not be null.
+    assert(@intFromPtr(state) != 0);
+    // Ensure the allocated memory is aligned.
+    assert(@intFromPtr(state) % @alignOf(State) == 0);
+
+    const s: *State = @ptrCast(@alignCast(state));
+    return s.calculate_synthetic_backspaces();
+}
+
+export fn lex_buffer_effective_full(state: *anyopaque) bool {
+    // Pointer must not be null.
+    assert(@intFromPtr(state) != 0);
+    // Ensure the allocated memory is aligned.
+    assert(@intFromPtr(state) % @alignOf(State) == 0);
+
+    const s: *State = @ptrCast(@alignCast(state));
+    return s.buffer_effective_full();
 }
