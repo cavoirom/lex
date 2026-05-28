@@ -7,7 +7,7 @@
 ;; Replace VERSION with actual version from cli-version.txt
 ;; Get from https://static.ampcode.com/cli/cli-version.txt
 (define amp-version
-  "0.0.1779713994-g4ef406")
+  "0.0.1779973320-g362e01")
 
 (define amp-cli
   (package
@@ -21,7 +21,7 @@
        (file-name "amp")
        ;; Calculate via `guix download https://static.ampcode.com/cli/$(curl -s https://static.ampcode.com/cli/cli-version.txt)/amp-linux-arm64`
        (sha256
-        (base32 "1adk0sdj8yikazbxrc6snhb82xzgzksnsa3bnn5mx0x3djl74b6r"))))
+        (base32 "063zm0qi8j51xss6939dx96qrm83d3mfbk7qldagja808358igak"))))
     (build-system copy-build-system)
     (arguments
      `(#:install-plan '(("amp" "bin/amp"))
