@@ -291,8 +291,8 @@ const State = struct {
         // Reset buffer_modification_index to start the new action.
         self.buffer_modification_index = null;
 
-        // Keep the buffer_length in buffer_length_previous.
-        // self.buffer_length_previous = self.buffer_length;
+        // Keep the buffer_length in buffer_length_previous for synthetic backspace calculation.
+        self.buffer_length_previous = self.buffer_length;
 
         switch (c) {
             'A', 'a' => {
@@ -1131,6 +1131,8 @@ const State = struct {
             },
         }
 
+        // The buffer_modification_index must point to a pre-existing span before add action.
+        assert(self.buffer_modification_index == null or self.buffer_modification_index.? < self.buffer_length_previous);
         // The buffer_modification index must be inbound of the buffer_effective.
         assert(self.buffer_modification_index == null or (self.buffer_modification_index.? < self.buffer_effective.len and self.buffer_modification_index.? < self.buffer_length));
 
@@ -1401,6 +1403,8 @@ const State = struct {
     // Calculate how many backspaces are needed to completely replace the existing characters to
     // make them match with the new state.
     fn calculate_synthetic_backspaces(self: *State) u8 {
+        // The previous length must have valid value.
+        assert(self.buffer_length_previous <= self.buffer_length);
         assert(self.buffer_modification_index == null or (self.buffer_modification_index.? < self.buffer_length_previous));
 
         if (self.buffer_modification_index) |buffer_modification_index| {
@@ -3109,6 +3113,183 @@ test "expect State.backspace will reduce buffer_length by 1 when literal_index i
     try expectEqual(4, state.buffer_length);
     try expectEqual(null, state.buffer_modification_index);
     try expectEqual(null, state.literal_index);
+}
+
+test "expect State.calculate_synthetic_backspaces produces correct calculations" {
+    const Case = struct {
+        live_text: []const u8,
+        buffer_length_previous: u8,
+        buffer_modification_index: ?u8,
+        literal_index: ?u8 = null,
+        expected_backspaces: u8,
+    };
+
+    const cases = [_]Case{
+        .{
+            .live_text = "abc",
+            .buffer_length_previous = 3,
+            .buffer_modification_index = null,
+            .expected_backspaces = 0,
+        },
+        .{
+            .live_text = "abcd",
+            .buffer_length_previous = 3,
+            .buffer_modification_index = null,
+            .expected_backspaces = 0,
+        },
+        .{
+            .live_text = "abc",
+            .buffer_length_previous = 3,
+            .buffer_modification_index = 2,
+            .expected_backspaces = 1,
+        },
+        .{
+            .live_text = "abcd",
+            .buffer_length_previous = 4,
+            .buffer_modification_index = 1,
+            .expected_backspaces = 3,
+        },
+        .{
+            .live_text = "abcdefghijklmnop",
+            .buffer_length_previous = 16,
+            .buffer_modification_index = 14,
+            .literal_index = 15,
+            .expected_backspaces = 2,
+        },
+    };
+
+    for (cases) |c| {
+        var state: State = undefined;
+        state.init();
+
+        for (c.live_text, 0..) |base, index| {
+            state.buffer_effective[index] = Span.init(base);
+        }
+        state.buffer_length = @intCast(c.live_text.len);
+        state.buffer_length_previous = c.buffer_length_previous;
+        state.buffer_modification_index = c.buffer_modification_index;
+        state.literal_index = c.literal_index;
+
+        try expectEqual(c.expected_backspaces, state.calculate_synthetic_backspaces());
+    }
+}
+
+test "expect State.calculate_synthetic_backspaces produces correct calculations in length-preserving retroactive edits" {
+    const Case = struct {
+        input: []const u8,
+        expected_buffer_length_previous: u8,
+        expected_buffer_length: u8,
+        expected_buffer_modification_index: ?u8,
+        expected_literal_index: ?u8 = null,
+        expected_backspaces: u8,
+    };
+
+    const cases = [_]Case{
+        .{
+            .input = "aa",
+            .expected_buffer_length_previous = 1,
+            .expected_buffer_length = 1,
+            .expected_buffer_modification_index = 0,
+            .expected_backspaces = 1,
+        },
+        .{
+            .input = "aw",
+            .expected_buffer_length_previous = 1,
+            .expected_buffer_length = 1,
+            .expected_buffer_modification_index = 0,
+            .expected_backspaces = 1,
+        },
+        .{
+            .input = "dd",
+            .expected_buffer_length_previous = 1,
+            .expected_buffer_length = 1,
+            .expected_buffer_modification_index = 0,
+            .expected_backspaces = 1,
+        },
+        .{
+            .input = "bans",
+            .expected_buffer_length_previous = 3,
+            .expected_buffer_length = 3,
+            .expected_buffer_modification_index = 1,
+            .expected_backspaces = 2,
+        },
+    };
+
+    for (cases) |c| {
+        var state: State = undefined;
+        state.init();
+
+        for (c.input) |input| {
+            state.add(input);
+        }
+
+        try expectEqual(c.expected_buffer_length_previous, state.buffer_length_previous);
+        try expectEqual(c.expected_buffer_length, state.buffer_length);
+        try expectEqual(c.expected_buffer_modification_index, state.buffer_modification_index);
+        try expectEqual(c.expected_literal_index, state.literal_index);
+        try expectEqual(c.expected_backspaces, state.calculate_synthetic_backspaces());
+    }
+}
+
+test "expect State.calculate_synthetic_backspaces produces correct calculations when modify and append in one action" {
+    const Case = struct {
+        input: []const u8,
+        expected_buffer_length_previous: u8,
+        expected_buffer_length: u8,
+        expected_buffer_modification_index: ?u8,
+        expected_literal_index: ?u8,
+        expected_backspaces: u8,
+    };
+
+    const cases = [_]Case{
+        .{
+            .input = "aaa",
+            .expected_buffer_length_previous = 1,
+            .expected_buffer_length = 2,
+            .expected_buffer_modification_index = 0,
+            .expected_literal_index = 1,
+            .expected_backspaces = 1,
+        },
+        .{
+            .input = "aww",
+            .expected_buffer_length_previous = 1,
+            .expected_buffer_length = 2,
+            .expected_buffer_modification_index = 0,
+            .expected_literal_index = 1,
+            .expected_backspaces = 1,
+        },
+        .{
+            .input = "ddd",
+            .expected_buffer_length_previous = 1,
+            .expected_buffer_length = 2,
+            .expected_buffer_modification_index = 0,
+            .expected_literal_index = 1,
+            .expected_backspaces = 1,
+        },
+        .{
+            .input = "ass",
+            .expected_buffer_length_previous = 1,
+            .expected_buffer_length = 2,
+            .expected_buffer_modification_index = 0,
+            .expected_literal_index = 1,
+            .expected_backspaces = 1,
+        },
+    };
+
+    for (cases) |c| {
+        var state: State = undefined;
+        state.init();
+
+        for (c.input) |input| {
+            state.add(input);
+        }
+
+        try expectEqual(c.expected_buffer_length_previous, state.buffer_length_previous);
+        try expectEqual(c.expected_buffer_length, state.buffer_length);
+        try expectEqual(c.expected_buffer_modification_index, state.buffer_modification_index);
+        try expectEqual(c.expected_literal_index, state.literal_index);
+        try expectEqual(c.expected_backspaces, state.calculate_synthetic_backspaces());
+    }
 }
 
 // Simple ABI wrapper for initialize allocated memory.
