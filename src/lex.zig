@@ -122,6 +122,329 @@ const Span = struct {
     fn is_consonant(self: *const Span) bool {
         return !self.is_vowel();
     }
+
+    fn to_utf16(self: *const Span) u16 {
+        assert(isAlphabetic(self.base));
+
+        // fast path, plain alphabet.
+        if (self.diacritic == .empty and self.tone == .level) {
+            return self.base;
+        }
+
+        switch (self.base) {
+            'a' => {
+                switch (self.diacritic) {
+                    .empty => {
+                        switch (self.tone) {
+                            .level => unreachable,
+                            .rising => return 0x00E1, // á.
+                            .falling => return 0x00E0, // à.
+                            .dipping_rising => return 0x1EA3, // ả.
+                            .rising_glottalized => return 0x00E3, // ã.
+                            .falling_glottalized => return 0x1EA1, // ạ.
+                        }
+                    },
+                    .breve => {
+                        switch (self.tone) {
+                            .level => return 0x0103, // ă.
+                            .rising => return 0x1EAF, // ắ.
+                            .falling => return 0x1EB1, // ằ.
+                            .dipping_rising => return 0x1EB3, // ẳ.
+                            .rising_glottalized => return 0x1EB5, // ẵ.
+                            .falling_glottalized => return 0x1EB7, // ặ.
+                        }
+                    },
+                    .circumflex => {
+                        switch (self.tone) {
+                            .level => return 0x00E2, // â.
+                            .rising => return 0x1EA5, // ấ.
+                            .falling => return 0x1EA7, // ầ.
+                            .dipping_rising => return 0x1EA9, // ẩ.
+                            .rising_glottalized => return 0x1EAB, // ẫ.
+                            .falling_glottalized => return 0x1EAD, // ậ.
+                        }
+                    },
+                    .horn, .stroke => unreachable,
+                }
+            },
+            'A' => {
+                switch (self.diacritic) {
+                    .empty => {
+                        switch (self.tone) {
+                            .level => unreachable,
+                            .rising => return 0x00C1, // Á.
+                            .falling => return 0x00C0, // À.
+                            .dipping_rising => return 0x1EA2, // Ả.
+                            .rising_glottalized => return 0x00C3, // Ã.
+                            .falling_glottalized => return 0x1EA0, // Ạ.
+                        }
+                    },
+                    .breve => {
+                        switch (self.tone) {
+                            .level => return 0x0102, // Ă.
+                            .rising => return 0x1EAE, // Ắ.
+                            .falling => return 0x1EB0, // Ằ.
+                            .dipping_rising => return 0x1EB2, // Ẳ.
+                            .rising_glottalized => return 0x1EB4, // Ẵ.
+                            .falling_glottalized => return 0x1EB6, // Ặ.
+                        }
+                    },
+                    .circumflex => {
+                        switch (self.tone) {
+                            .level => return 0x00C2, // Â.
+                            .rising => return 0x1EA4, // Ấ.
+                            .falling => return 0x1EA6, // Ầ.
+                            .dipping_rising => return 0x1EA8, // Ẩ.
+                            .rising_glottalized => return 0x1EAA, // Ẫ.
+                            .falling_glottalized => return 0x1EAC, // Ậ.
+                        }
+                    },
+                    .horn, .stroke => unreachable,
+                }
+            },
+            'd' => {
+                assert(self.diacritic == .stroke);
+                assert(self.tone == .level);
+                return 0x0111; // đ.
+            },
+            'D' => {
+                assert(self.diacritic == .stroke);
+                assert(self.tone == .level);
+                return 0x0110; // Đ.
+            },
+            'e' => {
+                switch (self.diacritic) {
+                    .empty => {
+                        switch (self.tone) {
+                            .level => unreachable,
+                            .rising => return 0x00E9, // é.
+                            .falling => return 0x00E8, // è.
+                            .dipping_rising => return 0x1EBB, // ẻ.
+                            .rising_glottalized => return 0x1EBD, // ẽ.
+                            .falling_glottalized => return 0x1EB9, // ẹ.
+                        }
+                    },
+                    .circumflex => {
+                        switch (self.tone) {
+                            .level => return 0x00EA, // ê.
+                            .rising => return 0x1EBF, // ế.
+                            .falling => return 0x1EC1, // ề.
+                            .dipping_rising => return 0x1EC3, // ể.
+                            .rising_glottalized => return 0x1EC5, // ễ.
+                            .falling_glottalized => return 0x1EC7, // ệ.
+                        }
+                    },
+                    .horn, .breve, .stroke => unreachable,
+                }
+            },
+            'E' => {
+                switch (self.diacritic) {
+                    .empty => {
+                        switch (self.tone) {
+                            .level => unreachable,
+                            .rising => return 0x00C9, // É.
+                            .falling => return 0x00C8, // È.
+                            .dipping_rising => return 0x1EBA, // Ẻ.
+                            .rising_glottalized => return 0x1EBC, // Ẽ.
+                            .falling_glottalized => return 0x1EB8, // Ẹ.
+                        }
+                    },
+                    .circumflex => {
+                        switch (self.tone) {
+                            .level => return 0x00CA, // Ê.
+                            .rising => return 0x1EBE, // Ế.
+                            .falling => return 0x1EC0, // Ề.
+                            .dipping_rising => return 0x1EC2, // Ể.
+                            .rising_glottalized => return 0x1EC4, // Ễ.
+                            .falling_glottalized => return 0x1EC6, // Ệ.
+                        }
+                    },
+                    .horn, .breve, .stroke => unreachable,
+                }
+            },
+            'i' => {
+                switch (self.diacritic) {
+                    .empty => {
+                        switch (self.tone) {
+                            .level => unreachable,
+                            .rising => return 0x00ED, // í.
+                            .falling => return 0x00EC, // ì.
+                            .dipping_rising => return 0x1EC9, // ỉ.
+                            .rising_glottalized => return 0x0129, // ĩ.
+                            .falling_glottalized => return 0x1ECB, // ị.
+                        }
+                    },
+                    .circumflex, .horn, .breve, .stroke => unreachable,
+                }
+            },
+            'I' => {
+                switch (self.diacritic) {
+                    .empty => {
+                        switch (self.tone) {
+                            .level => unreachable,
+                            .rising => return 0x00CD, // Í.
+                            .falling => return 0x00CC, // Ì.
+                            .dipping_rising => return 0x1EC8, // Ỉ.
+                            .rising_glottalized => return 0x0128, // Ĩ.
+                            .falling_glottalized => return 0x1ECA, // Ị.
+                        }
+                    },
+                    .circumflex, .horn, .breve, .stroke => unreachable,
+                }
+            },
+            'o' => {
+                switch (self.diacritic) {
+                    .empty => {
+                        switch (self.tone) {
+                            .level => unreachable,
+                            .rising => return 0x00F3, // ó.
+                            .falling => return 0x00F2, // ò.
+                            .dipping_rising => return 0x1ECF, // ỏ.
+                            .rising_glottalized => return 0x00F5, // õ.
+                            .falling_glottalized => return 0x1ECD, // ọ.
+                        }
+                    },
+                    .circumflex => {
+                        switch (self.tone) {
+                            .level => return 0x00F4, // ô.
+                            .rising => return 0x1ED1, // ố.
+                            .falling => return 0x1ED3, // ồ.
+                            .dipping_rising => return 0x1ED5, // ổ.
+                            .rising_glottalized => return 0x1ED7, // ỗ.
+                            .falling_glottalized => return 0x1ED9, // ộ.
+                        }
+                    },
+                    .horn => {
+                        switch (self.tone) {
+                            .level => return 0x01A1, // ơ.
+                            .rising => return 0x1EDB, // ớ.
+                            .falling => return 0x1EDD, // ờ.
+                            .dipping_rising => return 0x1EDF, // ở.
+                            .rising_glottalized => return 0x1EE1, // ỡ.
+                            .falling_glottalized => return 0x1EE3, // ợ.
+                        }
+                    },
+                    .breve, .stroke => unreachable,
+                }
+            },
+            'O' => {
+                switch (self.diacritic) {
+                    .empty => {
+                        switch (self.tone) {
+                            .level => unreachable,
+                            .rising => return 0x00D3, // Ó.
+                            .falling => return 0x00D2, // Ò.
+                            .dipping_rising => return 0x1ECE, // Ỏ.
+                            .rising_glottalized => return 0x00D5, // Õ.
+                            .falling_glottalized => return 0x1ECC, // Ọ.
+                        }
+                    },
+                    .circumflex => {
+                        switch (self.tone) {
+                            .level => return 0x00D4, // Ô.
+                            .rising => return 0x1ED0, // Ố.
+                            .falling => return 0x1ED2, // Ồ.
+                            .dipping_rising => return 0x1ED4, // Ổ.
+                            .rising_glottalized => return 0x1ED6, // Ỗ.
+                            .falling_glottalized => return 0x1ED8, // Ộ.
+                        }
+                    },
+                    .horn => {
+                        switch (self.tone) {
+                            .level => return 0x01A0, // Ơ.
+                            .rising => return 0x1EDA, // Ớ.
+                            .falling => return 0x1EDC, // Ờ.
+                            .dipping_rising => return 0x1EDE, // Ở.
+                            .rising_glottalized => return 0x1EE0, // Ỡ.
+                            .falling_glottalized => return 0x1EE2, // Ợ.
+                        }
+                    },
+                    .breve, .stroke => unreachable,
+                }
+            },
+            'u' => {
+                switch (self.diacritic) {
+                    .empty => {
+                        switch (self.tone) {
+                            .level => unreachable,
+                            .rising => return 0x00FA, // ú.
+                            .falling => return 0x00F9, // ù.
+                            .dipping_rising => return 0x1EE7, // ủ.
+                            .rising_glottalized => return 0x0169, // ũ.
+                            .falling_glottalized => return 0x1EE5, // ụ.
+                        }
+                    },
+                    .horn => {
+                        switch (self.tone) {
+                            .level => return 0x01B0, // ư.
+                            .rising => return 0x1EE9, // ứ.
+                            .falling => return 0x1EEB, // ừ.
+                            .dipping_rising => return 0x1EED, // ử.
+                            .rising_glottalized => return 0x1EEF, // ữ.
+                            .falling_glottalized => return 0x1EF1, // ự.
+                        }
+                    },
+                    .circumflex, .breve, .stroke => unreachable,
+                }
+            },
+            'U' => {
+                switch (self.diacritic) {
+                    .empty => {
+                        switch (self.tone) {
+                            .level => unreachable,
+                            .rising => return 0x00DA, // Ú.
+                            .falling => return 0x00D9, // Ù.
+                            .dipping_rising => return 0x1EE6, // Ủ.
+                            .rising_glottalized => return 0x0168, // Ũ.
+                            .falling_glottalized => return 0x1EE4, // Ụ.
+                        }
+                    },
+                    .horn => {
+                        switch (self.tone) {
+                            .level => return 0x01AF, // Ư.
+                            .rising => return 0x1EE8, // Ứ.
+                            .falling => return 0x1EEA, // Ừ.
+                            .dipping_rising => return 0x1EEC, // Ử.
+                            .rising_glottalized => return 0x1EEE, // Ữ.
+                            .falling_glottalized => return 0x1EF0, // Ự.
+                        }
+                    },
+                    .circumflex, .breve, .stroke => unreachable,
+                }
+            },
+            'y' => {
+                switch (self.diacritic) {
+                    .empty => {
+                        switch (self.tone) {
+                            .level => unreachable,
+                            .rising => return 0x00FD, // ý.
+                            .falling => return 0x1EF3, // ỳ.
+                            .dipping_rising => return 0x1EF7, // ỷ.
+                            .rising_glottalized => return 0x1EF9, // ỹ.
+                            .falling_glottalized => return 0x1EF5, // ỵ.
+                        }
+                    },
+                    .circumflex, .horn, .breve, .stroke => unreachable,
+                }
+            },
+            'Y' => {
+                switch (self.diacritic) {
+                    .empty => {
+                        switch (self.tone) {
+                            .level => unreachable,
+                            .rising => return 0x00DD, // Ý.
+                            .falling => return 0x1EF2, // Ỳ.
+                            .dipping_rising => return 0x1EF6, // Ỷ.
+                            .rising_glottalized => return 0x1EF8, // Ỹ.
+                            .falling_glottalized => return 0x1EF4, // Ỵ.
+                        }
+                    },
+                    .circumflex, .horn, .breve, .stroke => unreachable,
+                }
+            },
+            else => unreachable,
+        }
+    }
 };
 
 test "expect Span.init allows alphabet characters" {
@@ -226,6 +549,39 @@ test "expect Span.init_diacritic_tone can construct all vowels with all tones" {
     }
 }
 
+test "expect Span.to_utf16 produce correct UTF-16 code point" {
+    // Arrange
+    const Case = struct { base: u8, diacritic: Diacritic, tone: Tone, expected: u16 };
+    const cases = [_]Case{
+        .{ .base = 'a', .diacritic = .empty, .tone = .level, .expected = 0x0061 }, // a.
+        .{ .base = 'Z', .diacritic = .empty, .tone = .level, .expected = 0x005A }, // Z.
+        .{ .base = 'a', .diacritic = .empty, .tone = .rising, .expected = 0x00E1 }, // á.
+        .{ .base = 'i', .diacritic = .empty, .tone = .rising_glottalized, .expected = 0x0129 }, // ĩ.
+        .{ .base = 'y', .diacritic = .empty, .tone = .falling_glottalized, .expected = 0x1EF5 }, // ỵ.
+        .{ .base = 'a', .diacritic = .breve, .tone = .falling, .expected = 0x1EB1 }, // ằ.
+        .{ .base = 'a', .diacritic = .circumflex, .tone = .dipping_rising, .expected = 0x1EA9 }, // ẩ.
+        .{ .base = 'e', .diacritic = .circumflex, .tone = .falling_glottalized, .expected = 0x1EC7 }, // ệ.
+        .{ .base = 'o', .diacritic = .circumflex, .tone = .rising, .expected = 0x1ED1 }, // ố.
+        .{ .base = 'o', .diacritic = .horn, .tone = .rising_glottalized, .expected = 0x1EE1 }, // ỡ.
+        .{ .base = 'u', .diacritic = .horn, .tone = .falling, .expected = 0x1EEB }, // ừ.
+        .{ .base = 'A', .diacritic = .breve, .tone = .rising, .expected = 0x1EAE }, // Ắ.
+        .{ .base = 'E', .diacritic = .circumflex, .tone = .falling, .expected = 0x1EC0 }, // Ề.
+        .{ .base = 'O', .diacritic = .horn, .tone = .falling_glottalized, .expected = 0x1EE2 }, // Ợ.
+        .{ .base = 'U', .diacritic = .horn, .tone = .dipping_rising, .expected = 0x1EEC }, // Ử.
+        .{ .base = 'Y', .diacritic = .empty, .tone = .rising_glottalized, .expected = 0x1EF8 }, // Ỹ.
+        .{ .base = 'd', .diacritic = .stroke, .tone = .level, .expected = 0x0111 }, // đ.
+        .{ .base = 'D', .diacritic = .stroke, .tone = .level, .expected = 0x0110 }, // Đ.
+    };
+
+    for (cases) |c| {
+        // Act
+        const sp = Span.init_diacritic_tone(c.base, c.diacritic, c.tone);
+
+        // Assert
+        try expectEqual(c.expected, sp.to_utf16());
+    }
+}
+
 // Information about a range of character for tone positioning.
 const Pseudoword = struct {
     // The start position of the word on State.buffer_effective.
@@ -244,10 +600,12 @@ const Pseudoword = struct {
     }
 };
 
+const buffer_effective_length: u8 = 16;
+
 const State = struct {
     // The effective buffer to process Vietnamese input. we will skip processing if the buffer
     // longer than 15. The last input is always literal.
-    buffer_effective: [16]Span,
+    buffer_effective: [buffer_effective_length]Span,
     // The maximum buffer length that the engine still keeps the effective buffer, after the maximum
     // value (255), we will reset the effective buffer and this value.
     buffer_length: u8 = 0,
@@ -1416,9 +1774,28 @@ const State = struct {
 
     // Compose UTF-16 string replacement for the synthetic events. It could be multiple characters
     // or one literal character.
-    // fn compose_utf16_string_replacement(self: *State) []u8 {
-    //     unreachable;
-    // }
+    fn compose_utf16_string_replacement(self: *State, replacement_buffer: *[buffer_effective_length]u16, replacement_count: *u8) void {
+        // The buffer must have character.
+        assert(self.buffer_length > 0);
+        // The buffer_length must be within buffer_effective.
+        assert(self.buffer_length <= self.buffer_effective.len);
+
+        if (self.buffer_modification_index) |buffer_modification_index| {
+            // The previous action has been modified the buffer_effective.
+            // Iterate from the buffer_modification_index to compose the replacement.
+            for (buffer_modification_index..self.buffer_length) |i| {
+                replacement_buffer[i - buffer_modification_index] = self.buffer_effective[i].to_utf16();
+            }
+            // Calculate replacement_count.
+            replacement_count.* = self.buffer_length - buffer_modification_index;
+        } else {
+            // The previous action only add one character literally, no retrospect editing.
+            assert((self.buffer_length - self.buffer_length_previous) == 1);
+
+            replacement_buffer[0] = self.buffer_effective[self.buffer_length - 1].to_utf16();
+            replacement_count.* = 1;
+        }
+    }
 
     // Indicate if the buffer_effective is full.
     fn buffer_effective_full(self: *State) bool {
@@ -2528,9 +2905,8 @@ test "expect State.apply_tone places tone at the correct vowel for every non-lev
     // pseudo-word scanner and the State.add dispatch), and calls apply_tone.
     // Every case is iterated across all non-level tones to verify the tone
     // value is preserved on the targeted vowel and no other span is touched.
-    const SeedSpan = struct { base: u8, diacritic: Diacritic = .empty };
     const Case = struct {
-        seeds: []const SeedSpan,
+        seeds: []const Span,
         word_start: u8,
         word_end: u8,
         vowels_start: u8,
@@ -2539,51 +2915,51 @@ test "expect State.apply_tone places tone at the correct vowel for every non-lev
     };
     const cases = [_]Case{
         // Single vowel placement (vowels only).
-        .{ .seeds = &.{.{ .base = 'a' }}, .word_start = 0, .word_end = 0, .vowels_start = 0, .vowels_end = 0, .expected_index = 0 },
-        .{ .seeds = &.{.{ .base = 'A' }}, .word_start = 0, .word_end = 0, .vowels_start = 0, .vowels_end = 0, .expected_index = 0 },
+        .{ .seeds = &.{Span.init('a')}, .word_start = 0, .word_end = 0, .vowels_start = 0, .vowels_end = 0, .expected_index = 0 },
+        .{ .seeds = &.{Span.init('A')}, .word_start = 0, .word_end = 0, .vowels_start = 0, .vowels_end = 0, .expected_index = 0 },
         // Single vowel with leading consonant.
-        .{ .seeds = &.{ .{ .base = 'b' }, .{ .base = 'a' } }, .word_start = 0, .word_end = 1, .vowels_start = 1, .vowels_end = 1, .expected_index = 1 },
+        .{ .seeds = &.{ Span.init('b'), Span.init('a') }, .word_start = 0, .word_end = 1, .vowels_start = 1, .vowels_end = 1, .expected_index = 1 },
         // Single vowel with trailing consonant.
-        .{ .seeds = &.{ .{ .base = 'a' }, .{ .base = 'n' } }, .word_start = 0, .word_end = 1, .vowels_start = 0, .vowels_end = 0, .expected_index = 0 },
+        .{ .seeds = &.{ Span.init('a'), Span.init('n') }, .word_start = 0, .word_end = 1, .vowels_start = 0, .vowels_end = 0, .expected_index = 0 },
         // Single vowel with leading and trailing consonant.
-        .{ .seeds = &.{ .{ .base = 'b' }, .{ .base = 'a' }, .{ .base = 'n' } }, .word_start = 0, .word_end = 2, .vowels_start = 1, .vowels_end = 1, .expected_index = 1 },
+        .{ .seeds = &.{ Span.init('b'), Span.init('a'), Span.init('n') }, .word_start = 0, .word_end = 2, .vowels_start = 1, .vowels_end = 1, .expected_index = 1 },
 
         // Exact OA / OE / OO / UY -> first vowel.
-        .{ .seeds = &.{ .{ .base = 'o' }, .{ .base = 'a' } }, .word_start = 0, .word_end = 1, .vowels_start = 0, .vowels_end = 1, .expected_index = 0 },
-        .{ .seeds = &.{ .{ .base = 'o' }, .{ .base = 'e' } }, .word_start = 0, .word_end = 1, .vowels_start = 0, .vowels_end = 1, .expected_index = 0 },
-        .{ .seeds = &.{ .{ .base = 'o' }, .{ .base = 'o' } }, .word_start = 0, .word_end = 1, .vowels_start = 0, .vowels_end = 1, .expected_index = 0 },
-        .{ .seeds = &.{ .{ .base = 'u' }, .{ .base = 'y' } }, .word_start = 0, .word_end = 1, .vowels_start = 0, .vowels_end = 1, .expected_index = 0 },
+        .{ .seeds = &.{ Span.init('o'), Span.init('a') }, .word_start = 0, .word_end = 1, .vowels_start = 0, .vowels_end = 1, .expected_index = 0 },
+        .{ .seeds = &.{ Span.init('o'), Span.init('e') }, .word_start = 0, .word_end = 1, .vowels_start = 0, .vowels_end = 1, .expected_index = 0 },
+        .{ .seeds = &.{ Span.init('o'), Span.init('o') }, .word_start = 0, .word_end = 1, .vowels_start = 0, .vowels_end = 1, .expected_index = 0 },
+        .{ .seeds = &.{ Span.init('u'), Span.init('y') }, .word_start = 0, .word_end = 1, .vowels_start = 0, .vowels_end = 1, .expected_index = 0 },
         // Exact OA / OE / OO / UY with leading consonant -> first vowel.
-        .{ .seeds = &.{ .{ .base = 'h' }, .{ .base = 'o' }, .{ .base = 'a' } }, .word_start = 0, .word_end = 2, .vowels_start = 1, .vowels_end = 2, .expected_index = 1 },
-        .{ .seeds = &.{ .{ .base = 'h' }, .{ .base = 'u' }, .{ .base = 'y' } }, .word_start = 0, .word_end = 2, .vowels_start = 1, .vowels_end = 2, .expected_index = 1 },
+        .{ .seeds = &.{ Span.init('h'), Span.init('o'), Span.init('a') }, .word_start = 0, .word_end = 2, .vowels_start = 1, .vowels_end = 2, .expected_index = 1 },
+        .{ .seeds = &.{ Span.init('h'), Span.init('u'), Span.init('y') }, .word_start = 0, .word_end = 2, .vowels_start = 1, .vowels_end = 2, .expected_index = 1 },
 
         // Extended OA / OE / OO / UY (trailing consonant) -> second vowel.
-        .{ .seeds = &.{ .{ .base = 'o' }, .{ .base = 'a' }, .{ .base = 'n' } }, .word_start = 0, .word_end = 2, .vowels_start = 0, .vowels_end = 1, .expected_index = 1 },
-        .{ .seeds = &.{ .{ .base = 'u' }, .{ .base = 'y' }, .{ .base = 'n' } }, .word_start = 0, .word_end = 2, .vowels_start = 0, .vowels_end = 1, .expected_index = 1 },
-        .{ .seeds = &.{ .{ .base = 'h' }, .{ .base = 'o' }, .{ .base = 'a' }, .{ .base = 'n' } }, .word_start = 0, .word_end = 3, .vowels_start = 1, .vowels_end = 2, .expected_index = 2 },
-        .{ .seeds = &.{ .{ .base = 'h' }, .{ .base = 'u' }, .{ .base = 'y' }, .{ .base = 'n' }, .{ .base = 'h' } }, .word_start = 0, .word_end = 4, .vowels_start = 1, .vowels_end = 2, .expected_index = 2 },
-        .{ .seeds = &.{ .{ .base = 'x' }, .{ .base = 'o' }, .{ .base = 'o' }, .{ .base = 'n' }, .{ .base = 'g' } }, .word_start = 0, .word_end = 4, .vowels_start = 1, .vowels_end = 2, .expected_index = 2 },
+        .{ .seeds = &.{ Span.init('o'), Span.init('a'), Span.init('n') }, .word_start = 0, .word_end = 2, .vowels_start = 0, .vowels_end = 1, .expected_index = 1 },
+        .{ .seeds = &.{ Span.init('u'), Span.init('y'), Span.init('n') }, .word_start = 0, .word_end = 2, .vowels_start = 0, .vowels_end = 1, .expected_index = 1 },
+        .{ .seeds = &.{ Span.init('h'), Span.init('o'), Span.init('a'), Span.init('n') }, .word_start = 0, .word_end = 3, .vowels_start = 1, .vowels_end = 2, .expected_index = 2 },
+        .{ .seeds = &.{ Span.init('h'), Span.init('u'), Span.init('y'), Span.init('n'), Span.init('h') }, .word_start = 0, .word_end = 4, .vowels_start = 1, .vowels_end = 2, .expected_index = 2 },
+        .{ .seeds = &.{ Span.init('x'), Span.init('o'), Span.init('o'), Span.init('n'), Span.init('g') }, .word_start = 0, .word_end = 4, .vowels_start = 1, .vowels_end = 2, .expected_index = 2 },
         // Extended OA / OE / UY (more vowels) -> second vowel.
-        .{ .seeds = &.{ .{ .base = 'x' }, .{ .base = 'o' }, .{ .base = 'a' }, .{ .base = 'y' } }, .word_start = 0, .word_end = 3, .vowels_start = 1, .vowels_end = 3, .expected_index = 2 },
+        .{ .seeds = &.{ Span.init('x'), Span.init('o'), Span.init('a'), Span.init('y') }, .word_start = 0, .word_end = 3, .vowels_start = 1, .vowels_end = 3, .expected_index = 2 },
 
         // GI / QU consonant-vowel special: tone on next vowel.
-        .{ .seeds = &.{ .{ .base = 'g' }, .{ .base = 'i' }, .{ .base = 'a' } }, .word_start = 0, .word_end = 2, .vowels_start = 1, .vowels_end = 2, .expected_index = 2 },
-        .{ .seeds = &.{ .{ .base = 'q' }, .{ .base = 'u' }, .{ .base = 'a' } }, .word_start = 0, .word_end = 2, .vowels_start = 1, .vowels_end = 2, .expected_index = 2 },
-        .{ .seeds = &.{ .{ .base = 'g' }, .{ .base = 'i' }, .{ .base = 'a' }, .{ .base = 'n' } }, .word_start = 0, .word_end = 3, .vowels_start = 1, .vowels_end = 2, .expected_index = 2 },
-        .{ .seeds = &.{ .{ .base = 'q' }, .{ .base = 'u' }, .{ .base = 'a' }, .{ .base = 'n' } }, .word_start = 0, .word_end = 3, .vowels_start = 1, .vowels_end = 2, .expected_index = 2 },
+        .{ .seeds = &.{ Span.init('g'), Span.init('i'), Span.init('a') }, .word_start = 0, .word_end = 2, .vowels_start = 1, .vowels_end = 2, .expected_index = 2 },
+        .{ .seeds = &.{ Span.init('q'), Span.init('u'), Span.init('a') }, .word_start = 0, .word_end = 2, .vowels_start = 1, .vowels_end = 2, .expected_index = 2 },
+        .{ .seeds = &.{ Span.init('g'), Span.init('i'), Span.init('a'), Span.init('n') }, .word_start = 0, .word_end = 3, .vowels_start = 1, .vowels_end = 2, .expected_index = 2 },
+        .{ .seeds = &.{ Span.init('q'), Span.init('u'), Span.init('a'), Span.init('n') }, .word_start = 0, .word_end = 3, .vowels_start = 1, .vowels_end = 2, .expected_index = 2 },
 
         // Ơ has the highest priority among the special vowels.
-        .{ .seeds = &.{ .{ .base = 'u' }, .{ .base = 'o', .diacritic = .horn }, .{ .base = 'p' } }, .word_start = 0, .word_end = 2, .vowels_start = 0, .vowels_end = 1, .expected_index = 1 },
+        .{ .seeds = &.{ Span.init('u'), Span.init_diacritic('o', .horn), Span.init('p') }, .word_start = 0, .word_end = 2, .vowels_start = 0, .vowels_end = 1, .expected_index = 1 },
         // Special diacritic priority Ê / Â / Ô / Ă / Ư -- the rightmost listed
         // vowel wins per the right-to-left scan.
-        .{ .seeds = &.{ .{ .base = 't' }, .{ .base = 'i' }, .{ .base = 'e', .diacritic = .circumflex }, .{ .base = 'n' } }, .word_start = 0, .word_end = 3, .vowels_start = 1, .vowels_end = 2, .expected_index = 2 },
-        .{ .seeds = &.{ .{ .base = 'd' }, .{ .base = 'a', .diacritic = .circumflex }, .{ .base = 'u' } }, .word_start = 0, .word_end = 2, .vowels_start = 1, .vowels_end = 2, .expected_index = 1 },
-        .{ .seeds = &.{ .{ .base = 't' }, .{ .base = 'u' }, .{ .base = 'o', .diacritic = .circumflex }, .{ .base = 'n' } }, .word_start = 0, .word_end = 3, .vowels_start = 1, .vowels_end = 2, .expected_index = 2 },
-        .{ .seeds = &.{ .{ .base = 'l' }, .{ .base = 'o' }, .{ .base = 'a', .diacritic = .breve }, .{ .base = 't' } }, .word_start = 0, .word_end = 3, .vowels_start = 1, .vowels_end = 2, .expected_index = 2 },
-        .{ .seeds = &.{ .{ .base = 't' }, .{ .base = 'u', .diacritic = .horn }, .{ .base = 'u' } }, .word_start = 0, .word_end = 2, .vowels_start = 1, .vowels_end = 2, .expected_index = 1 },
+        .{ .seeds = &.{ Span.init('t'), Span.init('i'), Span.init_diacritic('e', .circumflex), Span.init('n') }, .word_start = 0, .word_end = 3, .vowels_start = 1, .vowels_end = 2, .expected_index = 2 },
+        .{ .seeds = &.{ Span.init('d'), Span.init_diacritic('a', .circumflex), Span.init('u') }, .word_start = 0, .word_end = 2, .vowels_start = 1, .vowels_end = 2, .expected_index = 1 },
+        .{ .seeds = &.{ Span.init('t'), Span.init('u'), Span.init_diacritic('o', .circumflex), Span.init('n') }, .word_start = 0, .word_end = 3, .vowels_start = 1, .vowels_end = 2, .expected_index = 2 },
+        .{ .seeds = &.{ Span.init('l'), Span.init('o'), Span.init_diacritic('a', .breve), Span.init('t') }, .word_start = 0, .word_end = 3, .vowels_start = 1, .vowels_end = 2, .expected_index = 2 },
+        .{ .seeds = &.{ Span.init('t'), Span.init_diacritic('u', .horn), Span.init('u') }, .word_start = 0, .word_end = 2, .vowels_start = 1, .vowels_end = 2, .expected_index = 1 },
 
         // Default multi-vowel fallback (no special, no GI/QU, no OA/OE/OO/UY) -> first vowel.
-        .{ .seeds = &.{ .{ .base = 'i' }, .{ .base = 'a' } }, .word_start = 0, .word_end = 1, .vowels_start = 0, .vowels_end = 1, .expected_index = 0 },
+        .{ .seeds = &.{ Span.init('i'), Span.init('a') }, .word_start = 0, .word_end = 1, .vowels_start = 0, .vowels_end = 1, .expected_index = 0 },
     };
 
     const tones = [_]Tone{ .rising, .falling, .dipping_rising, .rising_glottalized, .falling_glottalized };
@@ -2593,7 +2969,7 @@ test "expect State.apply_tone places tone at the correct vowel for every non-lev
             var state: State = undefined;
             state.init();
             for (c.seeds, 0..) |s, i| {
-                state.buffer_effective[i] = Span.init_diacritic_tone(s.base, s.diacritic, .level);
+                state.buffer_effective[i] = s;
             }
             state.buffer_length = @intCast(c.seeds.len);
 
@@ -2681,9 +3057,8 @@ test "expect State.add applies non-level tones for representative cases" {
         lower_trigger: u8,
         upper_trigger: u8,
     };
-    const SeedSpan = struct { base: u8, diacritic: Diacritic = .empty };
     const Case = struct {
-        seeds: []const SeedSpan,
+        seeds: []const Span,
         trigger_case: TriggerCase,
         expected_index: u8,
     };
@@ -2696,15 +3071,15 @@ test "expect State.add applies non-level tones for representative cases" {
     };
     const cases = [_]Case{
         // Lowercase trigger, single vowel.
-        .{ .seeds = &.{.{ .base = 'a' }}, .trigger_case = .lower, .expected_index = 0 },
+        .{ .seeds = &.{Span.init('a')}, .trigger_case = .lower, .expected_index = 0 },
         // Uppercase trigger, single vowel.
-        .{ .seeds = &.{.{ .base = 'A' }}, .trigger_case = .upper, .expected_index = 0 },
+        .{ .seeds = &.{Span.init('A')}, .trigger_case = .upper, .expected_index = 0 },
         // Simple consonant + single vowel.
-        .{ .seeds = &.{ .{ .base = 'b' }, .{ .base = 'a' } }, .trigger_case = .lower, .expected_index = 1 },
+        .{ .seeds = &.{ Span.init('b'), Span.init('a') }, .trigger_case = .lower, .expected_index = 1 },
         // Multi-vowel run (exact OA -> first vowel).
-        .{ .seeds = &.{ .{ .base = 'h' }, .{ .base = 'o' }, .{ .base = 'a' } }, .trigger_case = .lower, .expected_index = 1 },
+        .{ .seeds = &.{ Span.init('h'), Span.init('o'), Span.init('a') }, .trigger_case = .lower, .expected_index = 1 },
         // Trailing-suffix pseudo-word (only the last syllable receives the tone).
-        .{ .seeds = &.{ .{ .base = 'v' }, .{ .base = 'a' }, .{ .base = 'n' }, .{ .base = 'h' }, .{ .base = 'o' }, .{ .base = 'a' } }, .trigger_case = .lower, .expected_index = 4 },
+        .{ .seeds = &.{ Span.init('v'), Span.init('a'), Span.init('n'), Span.init('h'), Span.init('o'), Span.init('a') }, .trigger_case = .lower, .expected_index = 4 },
     };
 
     for (tone_cases) |tone_case| {
@@ -2712,7 +3087,7 @@ test "expect State.add applies non-level tones for representative cases" {
             var state: State = undefined;
             state.init();
             for (c.seeds, 0..) |s, i| {
-                state.buffer_effective[i] = Span.init_diacritic_tone(s.base, s.diacritic, .level);
+                state.buffer_effective[i] = s;
             }
             state.buffer_length = @intCast(c.seeds.len);
 
@@ -2804,9 +3179,8 @@ test "expect State.add cancels an existing matching non-level tone for represent
         lower_trigger: u8,
         upper_trigger: u8,
     };
-    const SeedSpan = struct { base: u8, diacritic: Diacritic = .empty };
     const Case = struct {
-        seeds: []const SeedSpan,
+        seeds: []const Span,
         trigger_case: TriggerCase,
         // Absolute buffer index of the seeded vowel that carries the existing matching tone, which
         // is also the expected buffer_modification_index after cancellation.
@@ -2822,50 +3196,50 @@ test "expect State.add cancels an existing matching non-level tone for represent
     const cases = [_]Case{
         // Lowercase trigger, single plain vowel.
         .{
-            .seeds = &.{.{ .base = 'a' }},
+            .seeds = &.{Span.init('a')},
             .trigger_case = .lower,
             .expected_modification_index = 0,
         },
         // Uppercase trigger, single plain vowel.
         .{
-            .seeds = &.{.{ .base = 'A' }},
+            .seeds = &.{Span.init('A')},
             .trigger_case = .upper,
             .expected_modification_index = 0,
         },
         // Consonant + plain vowel (open syllable).
         .{
-            .seeds = &.{ .{ .base = 'b' }, .{ .base = 'a' } },
+            .seeds = &.{ Span.init('b'), Span.init('a') },
             .trigger_case = .lower,
             .expected_modification_index = 1,
         },
         // Trailing consonant (closed syllable). The trailing 'n' must remain untouched.
         .{
-            .seeds = &.{ .{ .base = 'b' }, .{ .base = 'a' }, .{ .base = 'n' } },
+            .seeds = &.{ Span.init('b'), Span.init('a'), Span.init('n') },
             .trigger_case = .lower,
             .expected_modification_index = 1,
         },
         // Trailing consonant cluster. The trailing 'nh' cluster must remain untouched.
         .{
-            .seeds = &.{ .{ .base = 'b' }, .{ .base = 'a' }, .{ .base = 'n' }, .{ .base = 'h' } },
+            .seeds = &.{ Span.init('b'), Span.init('a'), Span.init('n'), Span.init('h') },
             .trigger_case = .lower,
             .expected_modification_index = 1,
         },
         // Diacritic-bearing vowel with trailing consonant. Cancellation must keep the circumflex.
         .{
-            .seeds = &.{ .{ .base = 't' }, .{ .base = 'i' }, .{ .base = 'e', .diacritic = .circumflex }, .{ .base = 'n' } },
+            .seeds = &.{ Span.init('t'), Span.init('i'), Span.init_diacritic('e', .circumflex), Span.init('n') },
             .trigger_case = .lower,
             .expected_modification_index = 2,
         },
         // Multi-vowel representative shape. This does not assert OA tone-placement rules.
         .{
-            .seeds = &.{ .{ .base = 'h' }, .{ .base = 'o' }, .{ .base = 'a' } },
+            .seeds = &.{ Span.init('h'), Span.init('o'), Span.init('a') },
             .trigger_case = .lower,
             .expected_modification_index = 1,
         },
         // Longer buffer trailing-suffix. Only the last syllable's vowel carries the matching tone,
         // so cancellation lands at index 4 and earlier spans remain exactly as seeded.
         .{
-            .seeds = &.{ .{ .base = 'v' }, .{ .base = 'a' }, .{ .base = 'n' }, .{ .base = 'h' }, .{ .base = 'o' }, .{ .base = 'a' } },
+            .seeds = &.{ Span.init('v'), Span.init('a'), Span.init('n'), Span.init('h'), Span.init('o'), Span.init('a') },
             .trigger_case = .lower,
             .expected_modification_index = 4,
         },
@@ -2975,61 +3349,61 @@ test "expect State.pseudoword will scan and provide pseudoword correctly" {
     };
     const cases = [_]Case{
         // Vowels only.
-        .{ .seeds = &.{.{ .base = 'a' }}, .word_start = 0, .word_end = 0, .vowels_start = 0, .vowels_end = 0, .length = 1 },
-        .{ .seeds = &.{ .{ .base = 'O' }, .{ .base = 'A' } }, .word_start = 0, .word_end = 1, .vowels_start = 0, .vowels_end = 1, .length = 2 },
-        .{ .seeds = &.{ .{ .base = 'u' }, .{ .base = 'y' } }, .word_start = 0, .word_end = 1, .vowels_start = 0, .vowels_end = 1, .length = 2 },
+        .{ .seeds = &.{Span.init('a')}, .word_start = 0, .word_end = 0, .vowels_start = 0, .vowels_end = 0, .length = 1 },
+        .{ .seeds = &.{ Span.init('O'), Span.init('A') }, .word_start = 0, .word_end = 1, .vowels_start = 0, .vowels_end = 1, .length = 2 },
+        .{ .seeds = &.{ Span.init('u'), Span.init('y') }, .word_start = 0, .word_end = 1, .vowels_start = 0, .vowels_end = 1, .length = 2 },
 
         // Multiple consonants before vowels.
-        .{ .seeds = &.{ .{ .base = 't' }, .{ .base = 'r' }, .{ .base = 'a' } }, .word_start = 1, .word_end = 2, .vowels_start = 2, .vowels_end = 2, .length = 2 },
-        .{ .seeds = &.{ .{ .base = 'k' }, .{ .base = 'h' }, .{ .base = 'o' }, .{ .base = 'a' } }, .word_start = 1, .word_end = 3, .vowels_start = 2, .vowels_end = 3, .length = 3 },
-        .{ .seeds = &.{ .{ .base = 't' }, .{ .base = 'h' }, .{ .base = 'u' }, .{ .base = 'y' } }, .word_start = 1, .word_end = 3, .vowels_start = 2, .vowels_end = 3, .length = 3 },
-        .{ .seeds = &.{ .{ .base = 'n' }, .{ .base = 'g' }, .{ .base = 'i' }, .{ .base = 'a' } }, .word_start = 1, .word_end = 3, .vowels_start = 2, .vowels_end = 3, .length = 3 },
-        .{ .seeds = &.{ .{ .base = 's' }, .{ .base = 'q' }, .{ .base = 'u' }, .{ .base = 'a' } }, .word_start = 1, .word_end = 3, .vowels_start = 2, .vowels_end = 3, .length = 3 },
+        .{ .seeds = &.{ Span.init('t'), Span.init('r'), Span.init('a') }, .word_start = 1, .word_end = 2, .vowels_start = 2, .vowels_end = 2, .length = 2 },
+        .{ .seeds = &.{ Span.init('k'), Span.init('h'), Span.init('o'), Span.init('a') }, .word_start = 1, .word_end = 3, .vowels_start = 2, .vowels_end = 3, .length = 3 },
+        .{ .seeds = &.{ Span.init('t'), Span.init('h'), Span.init('u'), Span.init('y') }, .word_start = 1, .word_end = 3, .vowels_start = 2, .vowels_end = 3, .length = 3 },
+        .{ .seeds = &.{ Span.init('n'), Span.init('g'), Span.init('i'), Span.init('a') }, .word_start = 1, .word_end = 3, .vowels_start = 2, .vowels_end = 3, .length = 3 },
+        .{ .seeds = &.{ Span.init('s'), Span.init('q'), Span.init('u'), Span.init('a') }, .word_start = 1, .word_end = 3, .vowels_start = 2, .vowels_end = 3, .length = 3 },
 
         // Vowels with trailing consonants.
-        .{ .seeds = &.{ .{ .base = 'a' }, .{ .base = 'n' } }, .word_start = 0, .word_end = 1, .vowels_start = 0, .vowels_end = 0, .length = 2 },
-        .{ .seeds = &.{ .{ .base = 'o' }, .{ .base = 'a' }, .{ .base = 'n' } }, .word_start = 0, .word_end = 2, .vowels_start = 0, .vowels_end = 1, .length = 3 },
-        .{ .seeds = &.{ .{ .base = 'u' }, .{ .base = 'y' }, .{ .base = 'n' }, .{ .base = 'h' } }, .word_start = 0, .word_end = 3, .vowels_start = 0, .vowels_end = 1, .length = 4 },
+        .{ .seeds = &.{ Span.init('a'), Span.init('n') }, .word_start = 0, .word_end = 1, .vowels_start = 0, .vowels_end = 0, .length = 2 },
+        .{ .seeds = &.{ Span.init('o'), Span.init('a'), Span.init('n') }, .word_start = 0, .word_end = 2, .vowels_start = 0, .vowels_end = 1, .length = 3 },
+        .{ .seeds = &.{ Span.init('u'), Span.init('y'), Span.init('n'), Span.init('h') }, .word_start = 0, .word_end = 3, .vowels_start = 0, .vowels_end = 1, .length = 4 },
 
         // Multiple consonants before vowels and trailing consonants.
-        .{ .seeds = &.{ .{ .base = 't' }, .{ .base = 'r' }, .{ .base = 'a' }, .{ .base = 'n' } }, .word_start = 1, .word_end = 3, .vowels_start = 2, .vowels_end = 2, .length = 3 },
-        .{ .seeds = &.{ .{ .base = 'k' }, .{ .base = 'h' }, .{ .base = 'o' }, .{ .base = 'a' }, .{ .base = 'n' } }, .word_start = 1, .word_end = 4, .vowels_start = 2, .vowels_end = 3, .length = 4 },
-        .{ .seeds = &.{ .{ .base = 's' }, .{ .base = 'q' }, .{ .base = 'u' }, .{ .base = 'a' }, .{ .base = 'n' } }, .word_start = 1, .word_end = 4, .vowels_start = 2, .vowels_end = 3, .length = 4 },
-        .{ .seeds = &.{ .{ .base = 'n' }, .{ .base = 'g' }, .{ .base = 'i' }, .{ .base = 'a' }, .{ .base = 'n' } }, .word_start = 1, .word_end = 4, .vowels_start = 2, .vowels_end = 3, .length = 4 },
-        .{ .seeds = &.{ .{ .base = 't' }, .{ .base = 'h' }, .{ .base = 'u' }, .{ .base = 'y' }, .{ .base = 'n' }, .{ .base = 'h' } }, .word_start = 1, .word_end = 5, .vowels_start = 2, .vowels_end = 3, .length = 5 },
+        .{ .seeds = &.{ Span.init('t'), Span.init('r'), Span.init('a'), Span.init('n') }, .word_start = 1, .word_end = 3, .vowels_start = 2, .vowels_end = 2, .length = 3 },
+        .{ .seeds = &.{ Span.init('k'), Span.init('h'), Span.init('o'), Span.init('a'), Span.init('n') }, .word_start = 1, .word_end = 4, .vowels_start = 2, .vowels_end = 3, .length = 4 },
+        .{ .seeds = &.{ Span.init('s'), Span.init('q'), Span.init('u'), Span.init('a'), Span.init('n') }, .word_start = 1, .word_end = 4, .vowels_start = 2, .vowels_end = 3, .length = 4 },
+        .{ .seeds = &.{ Span.init('n'), Span.init('g'), Span.init('i'), Span.init('a'), Span.init('n') }, .word_start = 1, .word_end = 4, .vowels_start = 2, .vowels_end = 3, .length = 4 },
+        .{ .seeds = &.{ Span.init('t'), Span.init('h'), Span.init('u'), Span.init('y'), Span.init('n'), Span.init('h') }, .word_start = 1, .word_end = 5, .vowels_start = 2, .vowels_end = 3, .length = 5 },
 
         // Vowels with diacritics are still classified by their base letters.
-        .{ .seeds = &.{ .{ .base = 't' }, .{ .base = 'r' }, .{ .base = 'u' }, .{ .base = 'o', .diacritic = .horn }, .{ .base = 'p' } }, .word_start = 1, .word_end = 4, .vowels_start = 2, .vowels_end = 3, .length = 4 },
-        .{ .seeds = &.{ .{ .base = 't' }, .{ .base = 'h' }, .{ .base = 'i' }, .{ .base = 'e', .diacritic = .circumflex }, .{ .base = 'n' } }, .word_start = 1, .word_end = 4, .vowels_start = 2, .vowels_end = 3, .length = 4 },
-        .{ .seeds = &.{ .{ .base = 't' }, .{ .base = 'r' }, .{ .base = 'a', .diacritic = .circumflex }, .{ .base = 'u' } }, .word_start = 1, .word_end = 3, .vowels_start = 2, .vowels_end = 3, .length = 3 },
-        .{ .seeds = &.{ .{ .base = 'c' }, .{ .base = 'h' }, .{ .base = 'o' }, .{ .base = 'a', .diacritic = .breve }, .{ .base = 't' } }, .word_start = 1, .word_end = 4, .vowels_start = 2, .vowels_end = 3, .length = 4 },
-        .{ .seeds = &.{ .{ .base = 't' }, .{ .base = 'r' }, .{ .base = 'u', .diacritic = .horn }, .{ .base = 'u' } }, .word_start = 1, .word_end = 3, .vowels_start = 2, .vowels_end = 3, .length = 3 },
+        .{ .seeds = &.{ Span.init('t'), Span.init('r'), Span.init('u'), Span.init_diacritic('o', .horn), Span.init('p') }, .word_start = 1, .word_end = 4, .vowels_start = 2, .vowels_end = 3, .length = 4 },
+        .{ .seeds = &.{ Span.init('t'), Span.init('h'), Span.init('i'), Span.init_diacritic('e', .circumflex), Span.init('n') }, .word_start = 1, .word_end = 4, .vowels_start = 2, .vowels_end = 3, .length = 4 },
+        .{ .seeds = &.{ Span.init('t'), Span.init('r'), Span.init_diacritic('a', .circumflex), Span.init('u') }, .word_start = 1, .word_end = 3, .vowels_start = 2, .vowels_end = 3, .length = 3 },
+        .{ .seeds = &.{ Span.init('c'), Span.init('h'), Span.init('o'), Span.init_diacritic('a', .breve), Span.init('t') }, .word_start = 1, .word_end = 4, .vowels_start = 2, .vowels_end = 3, .length = 4 },
+        .{ .seeds = &.{ Span.init('t'), Span.init('r'), Span.init_diacritic('u', .horn), Span.init('u') }, .word_start = 1, .word_end = 3, .vowels_start = 2, .vowels_end = 3, .length = 3 },
 
         // Only the trailing pseudo-word is returned.
-        .{ .seeds = &.{ .{ .base = 't' }, .{ .base = 'h' }, .{ .base = 'e' }, .{ .base = 't' }, .{ .base = 'h' }, .{ .base = 'u' }, .{ .base = 'y' } }, .word_start = 4, .word_end = 6, .vowels_start = 5, .vowels_end = 6, .length = 3 },
-        .{ .seeds = &.{ .{ .base = 'v' }, .{ .base = 'a' }, .{ .base = 'n' }, .{ .base = 't' }, .{ .base = 'h' }, .{ .base = 'o' }, .{ .base = 'a' } }, .word_start = 4, .word_end = 6, .vowels_start = 5, .vowels_end = 6, .length = 3 },
-        .{ .seeds = &.{ .{ .base = 'b' }, .{ .base = 'a' }, .{ .base = 'o' }, .{ .base = 's' }, .{ .base = 'q' }, .{ .base = 'u' }, .{ .base = 'a' }, .{ .base = 'n' } }, .word_start = 4, .word_end = 7, .vowels_start = 5, .vowels_end = 6, .length = 4 },
-        .{ .seeds = &.{ .{ .base = 'b' }, .{ .base = 'o' }, .{ .base = 'n' }, .{ .base = 'g' }, .{ .base = 'i' }, .{ .base = 'a' }, .{ .base = 'n' } }, .word_start = 3, .word_end = 6, .vowels_start = 4, .vowels_end = 5, .length = 4 },
+        .{ .seeds = &.{ Span.init('t'), Span.init('h'), Span.init('e'), Span.init('t'), Span.init('h'), Span.init('u'), Span.init('y') }, .word_start = 4, .word_end = 6, .vowels_start = 5, .vowels_end = 6, .length = 3 },
+        .{ .seeds = &.{ Span.init('v'), Span.init('a'), Span.init('n'), Span.init('t'), Span.init('h'), Span.init('o'), Span.init('a') }, .word_start = 4, .word_end = 6, .vowels_start = 5, .vowels_end = 6, .length = 3 },
+        .{ .seeds = &.{ Span.init('b'), Span.init('a'), Span.init('o'), Span.init('s'), Span.init('q'), Span.init('u'), Span.init('a'), Span.init('n') }, .word_start = 4, .word_end = 7, .vowels_start = 5, .vowels_end = 6, .length = 4 },
+        .{ .seeds = &.{ Span.init('b'), Span.init('o'), Span.init('n'), Span.init('g'), Span.init('i'), Span.init('a'), Span.init('n') }, .word_start = 3, .word_end = 6, .vowels_start = 4, .vowels_end = 5, .length = 4 },
 
         // No-vowel suffixes return null vowel bounds.
-        .{ .seeds = &.{.{ .base = 'b' }}, .word_start = 0, .word_end = 0, .vowels_start = null, .vowels_end = null, .length = 1 },
-        .{ .seeds = &.{ .{ .base = 't' }, .{ .base = 'r' } }, .word_start = 0, .word_end = 1, .vowels_start = null, .vowels_end = null, .length = 2 },
-        .{ .seeds = &.{ .{ .base = 'S' }, .{ .base = 'T' }, .{ .base = 'R' } }, .word_start = 0, .word_end = 2, .vowels_start = null, .vowels_end = null, .length = 3 },
-        .{ .seeds = &.{ .{ .base = 'd', .diacritic = .stroke }, .{ .base = 'r' } }, .word_start = 0, .word_end = 1, .vowels_start = null, .vowels_end = null, .length = 2 },
+        .{ .seeds = &.{Span.init('b')}, .word_start = 0, .word_end = 0, .vowels_start = null, .vowels_end = null, .length = 1 },
+        .{ .seeds = &.{ Span.init('t'), Span.init('r') }, .word_start = 0, .word_end = 1, .vowels_start = null, .vowels_end = null, .length = 2 },
+        .{ .seeds = &.{ Span.init('S'), Span.init('T'), Span.init('R') }, .word_start = 0, .word_end = 2, .vowels_start = null, .vowels_end = null, .length = 3 },
+        .{ .seeds = &.{ Span.init_diacritic('d', .stroke), Span.init('r') }, .word_start = 0, .word_end = 1, .vowels_start = null, .vowels_end = null, .length = 2 },
 
         // Full effective buffer boundary.
-        .{ .seeds = &.{ .{ .base = 'b' }, .{ .base = 'c' }, .{ .base = 'd' }, .{ .base = 'f' }, .{ .base = 'g' }, .{ .base = 'h' }, .{ .base = 'j' }, .{ .base = 'k' }, .{ .base = 'l' }, .{ .base = 'm' }, .{ .base = 'n' }, .{ .base = 'p' }, .{ .base = 't' }, .{ .base = 'h' }, .{ .base = 'u' }, .{ .base = 'y' } }, .word_start = 13, .word_end = 15, .vowels_start = 14, .vowels_end = 15, .length = 3, .literal_index = 15 },
+        .{ .seeds = &.{ Span.init('b'), Span.init('c'), Span.init('d'), Span.init('f'), Span.init('g'), Span.init('h'), Span.init('j'), Span.init('k'), Span.init('l'), Span.init('m'), Span.init('n'), Span.init('p'), Span.init('t'), Span.init('h'), Span.init('u'), Span.init('y') }, .word_start = 13, .word_end = 15, .vowels_start = 14, .vowels_end = 15, .length = 3, .literal_index = 15 },
 
         // Near effective buffer boundary.
         // 15 characters.
-        .{ .seeds = &.{ .{ .base = 'c' }, .{ .base = 'd' }, .{ .base = 'f' }, .{ .base = 'g' }, .{ .base = 'h' }, .{ .base = 'j' }, .{ .base = 'k' }, .{ .base = 'l' }, .{ .base = 'm' }, .{ .base = 'n' }, .{ .base = 'p' }, .{ .base = 't' }, .{ .base = 'h' }, .{ .base = 'u' }, .{ .base = 'y' } }, .word_start = 12, .word_end = 14, .vowels_start = 13, .vowels_end = 14, .length = 3 },
+        .{ .seeds = &.{ Span.init('c'), Span.init('d'), Span.init('f'), Span.init('g'), Span.init('h'), Span.init('j'), Span.init('k'), Span.init('l'), Span.init('m'), Span.init('n'), Span.init('p'), Span.init('t'), Span.init('h'), Span.init('u'), Span.init('y') }, .word_start = 12, .word_end = 14, .vowels_start = 13, .vowels_end = 14, .length = 3 },
     };
 
     for (cases) |c| {
         var state: State = undefined;
         state.init();
         for (c.seeds, 0..) |s, i| {
-            state.buffer_effective[i] = Span.init_diacritic_tone(s.base, s.diacritic, s.tone);
+            state.buffer_effective[i] = s;
         }
         state.buffer_length = @intCast(c.seeds.len);
         state.literal_index = c.literal_index;
@@ -3292,6 +3666,212 @@ test "expect State.calculate_synthetic_backspaces produces correct calculations 
     }
 }
 
+test "expect State.compose_utf16_string_replacement composes replacement in retrospective modification" {
+    // Arrange
+    const InputCase = struct {
+        input: []const u8,
+        expected_buffer_modification_index: u8,
+        expected_literal_index: ?u8 = null,
+        expected_replacement: []const u16,
+    };
+    const input_cases = [_]InputCase{
+        .{
+            .input = "aa",
+            .expected_buffer_modification_index = 0,
+            .expected_replacement = &.{0x00E2}, // â.
+        },
+        .{
+            .input = "bans",
+            .expected_buffer_modification_index = 1,
+            .expected_replacement = &.{ 0x00E1, 'n' }, // án.
+        },
+        .{
+            .input = "aaa",
+            .expected_buffer_modification_index = 0,
+            .expected_literal_index = 1,
+            .expected_replacement = &.{ 'a', 'a' },
+        },
+        .{
+            .input = "nuowc",
+            .expected_buffer_modification_index = 1,
+            .expected_replacement = &.{ 0x01B0, 0x01A1, 'c' }, // ươc.
+        },
+    };
+
+    for (input_cases) |c| {
+        var state: State = undefined;
+        state.init();
+
+        for (c.input) |input| {
+            state.add(input);
+        }
+
+        var replacement_buffer: [buffer_effective_length]u16 = undefined;
+        @memset(&replacement_buffer, 0xFFFF);
+        var replacement_count: u8 = 0;
+
+        // Act
+        state.compose_utf16_string_replacement(&replacement_buffer, &replacement_count);
+
+        // Assert
+        try expectEqual(c.expected_buffer_modification_index, state.buffer_modification_index);
+        try expectEqual(c.expected_literal_index, state.literal_index);
+        try expectEqual(c.expected_replacement.len, replacement_count);
+        for (c.expected_replacement, 0..) |expected_character, i| {
+            try expectEqual(expected_character, replacement_buffer[i]);
+        }
+        for (replacement_buffer[replacement_count..]) |replacement_character| {
+            try expectEqual(0xFFFF, replacement_character);
+        }
+    }
+
+    const BoundaryCase = struct {
+        first_base: u8,
+        first_diacritic: Diacritic,
+        second_base: u8,
+        second_diacritic: Diacritic,
+        expected_buffer_modification_index: u8,
+        expected_replacement: []const u16,
+    };
+    const boundary_cases = [_]BoundaryCase{
+        .{
+            .first_base = 'u',
+            .first_diacritic = .empty,
+            .second_base = 'o',
+            .second_diacritic = .horn,
+            .expected_buffer_modification_index = 13,
+            .expected_replacement = &.{ 0x01B0, 0x01A1, 'n' }, // ươn.
+        },
+        .{
+            .first_base = 'u',
+            .first_diacritic = .horn,
+            .second_base = 'o',
+            .second_diacritic = .empty,
+            .expected_buffer_modification_index = 14,
+            .expected_replacement = &.{ 0x01A1, 'n' }, // ơn.
+        },
+    };
+
+    for (boundary_cases) |c| {
+        var state: State = undefined;
+        state.init();
+
+        for (0..13) |i| {
+            state.buffer_effective[i] = Span.init('b');
+        }
+        state.buffer_effective[13] = Span.init_diacritic(c.first_base, c.first_diacritic);
+        state.buffer_effective[14] = Span.init_diacritic(c.second_base, c.second_diacritic);
+        state.buffer_length = 15;
+
+        var replacement_buffer: [buffer_effective_length]u16 = undefined;
+        @memset(&replacement_buffer, 0xFFFF);
+        var replacement_count: u8 = 0;
+
+        state.add('n');
+
+        // Act
+        state.compose_utf16_string_replacement(&replacement_buffer, &replacement_count);
+
+        // Assert
+        try expectEqual(@as(u8, 16), state.buffer_length);
+        try expectEqual(c.expected_buffer_modification_index, state.buffer_modification_index);
+        try expectEqual(15, state.literal_index);
+        try expectEqual(c.expected_replacement.len, replacement_count);
+        for (c.expected_replacement, 0..) |expected_character, i| {
+            try expectEqual(expected_character, replacement_buffer[i]);
+        }
+        for (replacement_buffer[replacement_count..]) |replacement_character| {
+            try expectEqual(0xFFFF, replacement_character);
+        }
+    }
+
+    var state: State = undefined;
+    state.init();
+
+    for (0..14) |i| {
+        state.buffer_effective[i] = Span.init('b');
+    }
+    state.buffer_effective[14] = Span.init_diacritic('a', .circumflex);
+    state.buffer_length = 15;
+
+    var replacement_buffer: [buffer_effective_length]u16 = undefined;
+    @memset(&replacement_buffer, 0xFFFF);
+    var replacement_count: u8 = 0;
+
+    state.add('a');
+
+    // Act
+    state.compose_utf16_string_replacement(&replacement_buffer, &replacement_count);
+
+    // Assert
+    try expectEqual(@as(u8, 16), state.buffer_length);
+    try expectEqual(14, state.buffer_modification_index);
+    try expectEqual(15, state.literal_index);
+    try expectEqual(2, replacement_count);
+    try expectEqual(@as(u16, 'a'), replacement_buffer[0]);
+    try expectEqual(@as(u16, 'a'), replacement_buffer[1]);
+    for (replacement_buffer[replacement_count..]) |replacement_character| {
+        try expectEqual(0xFFFF, replacement_character);
+    }
+}
+
+test "expect State.compose_utf16_string_replacement composes replacement when append literally" {
+    // Arrange
+    const Case = struct {
+        input: []const u8,
+        expected_literal_index: ?u8 = null,
+        expected_replacement: u16,
+    };
+    const cases = [_]Case{
+        .{
+            .input = "a",
+            .expected_replacement = 'a',
+        },
+        .{
+            .input = "ab",
+            .expected_replacement = 'b',
+        },
+        .{
+            .input = "dz",
+            .expected_replacement = 'z',
+        },
+        .{
+            .input = "ngZ",
+            .expected_replacement = 'Z',
+        },
+        .{
+            .input = "bbbbbqqqqqbbbbba",
+            .expected_literal_index = 15,
+            .expected_replacement = 'a',
+        },
+    };
+
+    for (cases) |c| {
+        var state: State = undefined;
+        state.init();
+
+        for (c.input) |input| {
+            state.add(input);
+        }
+
+        var replacement_buffer: [buffer_effective_length]u16 = undefined;
+        @memset(&replacement_buffer, 0xFFFF);
+        var replacement_count: u8 = 0;
+
+        // Act
+        state.compose_utf16_string_replacement(&replacement_buffer, &replacement_count);
+
+        // Assert
+        try expectEqual(null, state.buffer_modification_index);
+        try expectEqual(c.expected_literal_index, state.literal_index);
+        try expectEqual(1, replacement_count);
+        try expectEqual(c.expected_replacement, replacement_buffer[0]);
+        for (replacement_buffer[replacement_count..]) |replacement_character| {
+            try expectEqual(0xFFFF, replacement_character);
+        }
+    }
+}
+
 // Simple ABI wrapper for initialize allocated memory.
 export fn lex_init(state: *anyopaque) void {
     // Pointer must not be null.
@@ -3383,4 +3963,61 @@ export fn lex_buffer_effective_full(state: *anyopaque) bool {
 
     const s: *State = @ptrCast(@alignCast(state));
     return s.buffer_effective_full();
+}
+
+export const lex_replacement_buffer_length: usize = buffer_effective_length;
+
+// replacement_buffer capacity must exactly the lex_replacement_buffer_length.
+export fn lex_compose_utf16_string_replacement(state: *anyopaque, replacement_buffer: [*]u16, replacement_count: *u8) void {
+    // State pointer must not be null.
+    assert(@intFromPtr(state) != 0);
+    // Ensure the allocated memory is aligned.
+    assert(@intFromPtr(state) % @alignOf(State) == 0);
+
+    // Replacement buffer pointer must not be null.
+    assert(@intFromPtr(replacement_buffer) != 0);
+    // Ensure the allocated memory is aligned.
+    assert(@intFromPtr(replacement_buffer) % @alignOf([buffer_effective_length]u16) == 0);
+
+    // Replacement count pointer must not be null.
+    assert(@intFromPtr(replacement_count) != 0);
+
+    const s: *State = @ptrCast(@alignCast(state));
+    const r_buffer: *[buffer_effective_length]u16 = @ptrCast(@alignCast(replacement_buffer));
+    s.compose_utf16_string_replacement(r_buffer, replacement_count);
+}
+
+test "expect lex_compose_utf16_string_replacement accept the provided allocations and write the result to those allocations" {
+    // Arrange
+
+    // Allocate memory, only specify on this test to simulate runtime allocation.
+    const raw_pointer = std.testing.allocator.rawAlloc(lex_state_size, .fromByteUnits(lex_state_alignment), @returnAddress()) orelse return error.OutOfMemory;
+    defer std.testing.allocator.rawFree(raw_pointer[0..lex_state_size], .fromByteUnits(lex_state_alignment), @returnAddress());
+
+    // Initialize state.
+    lex_init(raw_pointer);
+
+    const replacement_buffer = try std.testing.allocator.create([lex_replacement_buffer_length]u16);
+    defer std.testing.allocator.destroy(replacement_buffer);
+    @memset(replacement_buffer, 0xFFFF);
+
+    var replacement_count: u8 = undefined;
+
+    const input_sequence = "nuowc";
+    for (input_sequence) |c| {
+        lex_add(raw_pointer, c);
+    }
+
+    // Act
+    lex_compose_utf16_string_replacement(raw_pointer, replacement_buffer, &replacement_count);
+
+    // Assert
+    try expectEqual(3, replacement_count);
+    try expectEqual(0x01B0, replacement_buffer[0]);
+    try expectEqual(0x01A1, replacement_buffer[1]);
+    try expectEqual('c', replacement_buffer[2]);
+
+    for (replacement_buffer[replacement_count..]) |replacement_character| {
+        try expectEqual(0xFFFF, replacement_character);
+    }
 }
