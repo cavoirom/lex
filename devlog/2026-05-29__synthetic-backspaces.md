@@ -3,4 +3,3 @@
 ## Goals
 
 - Improve tests and implementation for synthetic backspaces.
-

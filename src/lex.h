@@ -29,6 +29,12 @@ uint8_t lex_calculate_synthetic_backspaces(void *state);
 
 bool lex_buffer_effective_full(void *state);
 
+// Indicate the buffer_length is at the maximum limit.
+bool lex_buffer_full(void *state);
+
+// Indicate the buffer_length is zero.
+bool lex_buffer_empty(void *state);
+
 extern const size_t lex_replacement_buffer_length;
 
 // `replacement_buffer` capacity must be exactly `lex_replacement_buffer_length`.

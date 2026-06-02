@@ -1,0 +1,858 @@
+{
+  "v": 115,
+  "id": "T-019e8909-ef84-778e-92e2-f183f5e05d4a",
+  "env": {
+    "initial": {
+      "trees": [
+        {
+          "uri": "file:///<redacted>/lex",
+          "displayName": "lex"
+        }
+      ],
+      "platform": {
+        "os": "linux",
+        "client": "CLI",
+        "osVersion": "6.18.31-gnu",
+        "clientType": "cli",
+        "webBrowser": false,
+        "clientVersion": "0.0.1780306933-g944f6c",
+        "installationID": "<redacted>",
+        "cpuArchitecture": "arm64",
+        "deviceFingerprint": "<redacted>"
+      }
+    }
+  },
+  "meta": {
+    "executorType": "local-client",
+    "lastKnownAgentState": {
+      "state": "idle",
+      "messageID": "M-033RfkurhIb3mlzI7ZKnLp",
+      "updatedAt": "2026-06-03T00:11:33.792Z"
+    },
+    "deleted": false,
+    "createdOnServer": false,
+    "lastUserMessageAt": "2026-06-03T00:11:22.111Z",
+    "workspaceID": null,
+    "projectID": null,
+    "visibility": "private",
+    "sharedGroupIDs": [],
+    "agentMode": "rush",
+    "usesDtw": true,
+    "usesThreadActors": true
+  },
+  "title": "Apply self. convention to properties",
+  "created": 1780415590276,
+  "messages": [
+    {
+      "meta": {
+        "sentAt": 1780415595002
+      },
+      "role": "user",
+      "readAt": null,
+      "content": [
+        {
+          "text": "In our Swift coding conventions, we require accessing to instance property must start with `self.`. Scan all instance properties in @macos/Lex.swift and apply the convention.",
+          "type": "text"
+        }
+      ],
+      "messageId": 1,
+      "protocolMessageID": "M-033RTWfHPNWsqDEjDEBeWq"
+    },
+    {
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "tool_use"
+      },
+      "usage": {
+        "timestamp": "2026-06-02T15:53:18.241Z",
+        "inputTokens": 0,
+        "outputTokens": 128,
+        "maxInputTokens": 272000,
+        "totalInputTokens": 10210,
+        "cacheReadInputTokens": 0,
+        "cacheCreationInputTokens": 10210
+      },
+      "readAt": null,
+      "content": [
+        {
+          "id": "TU-033RTWri5RhArgBQFnNdJZ",
+          "name": "shell_command",
+          "type": "tool_use",
+          "input": {
+            "command": "grep -n \"\" macos/Lex.swift | sed -n '1,240p'",
+            "workdir": "/<redacted>/lex",
+            "timeout_ms": 10000
+          },
+          "complete": true,
+          "blockState": "complete",
+          "providerToolUseId": "call_QfINMfJjGnylRWtbKhrwpEdY"
+        },
+        {
+          "id": "TU-033RTWriZjNdgxaDpK8GQZ",
+          "name": "shell_command",
+          "type": "tool_use",
+          "input": {
+            "command": "wc -l macos/Lex.swift",
+            "workdir": "/<redacted>/lex",
+            "timeout_ms": 10000
+          },
+          "complete": true,
+          "blockState": "complete",
+          "providerToolUseId": "call_ZNoaHD7ytfM5B5zxXmL3Ax3E"
+        }
+      ],
+      "messageId": 2,
+      "protocolMessageID": "M-033RTWo6lCCD8x0xm6IVWY"
+    },
+    {
+      "role": "user",
+      "readAt": null,
+      "content": [
+        {
+          "run": {
+            "result": {
+              "output": "1:import AppKit\n2:import Carbon\n3:\n4:// Namespace: LEX!\n5:// Use for register hot key.\n6:private let toggle_input_mode_hot_key_id = EventHotKeyID(signature: OSType(0x4C455821), id: 1)\n7:// Tag: LEX!\n8:// Use for identify Lex's synthetic event when processing event tap.\n9:private let synthetic_event_source_user_data: Int64 = 0x4C455821\n10:\n11:@main\n12:struct LexApp {\n13:    static func main() {\n14:        let application = NSApplication.shared\n15:\n16:        let app_delegate = AppDelegate()\n17:        application.delegate = app_delegate\n18:\n19:        // Start as MenuBar app.\n20:        // Info.plist already has LSUIElement=true. This is a fallback if\n21:        // the app is launched without that bundle setting.\n22:        application.setActivationPolicy(.accessory)\n23:\n24:        application.run()\n25:    }\n26:}\n27:\n28:private enum InputMode {\n29:    case literal, telex\n30:}\n31:\n32:private final class LexEngine {\n33:    // The internal state of the engine. DO NOT READ.\n34:    private let state: UnsafeMutableRawPointer\n35:    // The memory to receive the replacement characters from engine.\n36:    private var replacement_buffer: [UInt16] = [UInt16](\n37:        repeating: 0,\n38:        count: Int(lex_replacement_buffer_length)\n39:    )\n40:    // The memory to receive the number of replacement characters from engine.\n41:    private var replacement_count: UInt8 = 0\n42:\n43:    init() {\n44:        // Allocate memory for engine state.\n45:        let byte_count = Int(lex_state_size)\n46:        let alignment = Int(lex_state_alignment)\n47:        let state = UnsafeMutableRawPointer.allocate(\n48:            byteCount: byte_count,\n49:            alignment: alignment\n50:        )\n51:        // Initialize the state.\n52:        lex_init(state)\n53:        self.state = state\n54:    }\n55:\n56:    deinit {\n57:        // Release the state memory.\n58:        state.deallocate()\n59:    }\n60:\n61:    func reset() {\n62:        // Reset the engine state to initial value.\n63:        lex_init(state)\n64:    }\n65:\n66:    func add(_ unicode_scalar: Unicode.Scalar) {\n67:        // TODO: should return error when not ASCII.\n68:        guard unicode_scalar.isASCII else {\n69:            return\n70:        }\n71:        lex_add(state, UInt8(unicode_scalar.value))\n72:    }\n73:\n74:    func backspace() {\n75:        if !buffer_empty() {\n76:            lex_backspace(state)\n77:        }\n78:    }\n79:\n80:    func buffer_full() -> Bool {\n81:        return lex_buffer_full(state)\n82:    }\n83:\n84:    func buffer_empty() -> Bool {\n85:        return lex_buffer_empty(state)\n86:    }\n87:\n88:    func buffer_effective_full() -> Bool {\n89:        return lex_buffer_effective_full(state)\n90:    }\n91:\n92:    func synthetic_backspaces() -> Int {\n93:        return Int(lex_calculate_synthetic_backspaces(state))\n94:    }\n95:\n96:    func compose_replacement(_ body: (UnsafeBufferPointer<UInt16>) -> Void) {\n97:        lex_compose_utf16_string_replacement(\n98:            state,\n99:            &replacement_buffer,\n100:            &replacement_count\n101:        )\n102:        let count = Int(replacement_count)\n103:        guard count > 0 else {\n104:            return\n105:        }\n106:        replacement_buffer.withUnsafeBufferPointer { buffer in\n107:            body(UnsafeBufferPointer(start: buffer.baseAddress!, count: count))\n108:        }\n109:    }\n110:}\n111:\n112:private final class AppDelegate: NSObject, NSApplicationDelegate {\n113:    fileprivate let engine = LexEngine()\n114:    private var status_item: NSStatusItem?\n115:    private let telex_image: NSImage? = {\n116:        // TODO: should remove optional.\n117:        let image = NSImage(\n118:            systemSymbolName: \"pencil\",\n119:            accessibilityDescription: \"Lex\"\n120:        )\n121:        image?.isTemplate = true\n122:        return image\n123:    }()\n124:    private let literal_image: NSImage? = {\n125:        // TODO: should remove optional.\n126:        let image = NSImage(\n127:            systemSymbolName: \"pencil.slash\",\n128:            accessibilityDescription: \"Lex\"\n129:        )\n130:        image?.isTemplate = true\n131:        return image\n132:    }()\n133:    private let telex_sound: NSSound? = NSSound(named: \"Pop\")\n134:    private let literal_sound: NSSound? = NSSound(named: \"Tink\")\n135:\n136:    private var signal_sources: [DispatchSourceSignal] = []\n137:    private var input_mode: InputMode = .telex\n138:    private var toggle_input_mode_event_handler_ref: EventHandlerRef?\n139:    private var toggle_input_mode_hot_key_ref: EventHotKeyRef?\n140:    private var toggle_input_mode_sound: NSSound?\n141:\n142:    private var event_tap: CFMachPort?\n143:    private var event_tap_run_loop_source: CFRunLoopSource?\n144:    private var synthetic_event_source: CGEventSource?\n145:\n146:    func applicationDidFinishLaunching(_ notification: Notification) {\n147:        print(\"Activated.\")\n148:        initialize_status_item()\n149:        install_signal_handler(SIGINT)\n150:        install_signal_handler(SIGTERM)\n151:        initialize_synthetic_event_source()\n152:        start_event_tap()\n153:        register_toggle_input_mode_hot_key()\n154:    }\n155:    \n156:    func applicationWillTerminate(_ notification: Notification) {\n157:        print(\"Shutting down...\")\n158:        unregister_toggle_input_mode_hot_key()\n159:        stop_event_tap()\n160:        destroy_synthetic_event_source()\n161:        destroy_status_item()\n162:        signal_sources.removeAll()\n163:    }\n164:\n165:    private func install_signal_handler(_ signal_number: Int32) {\n166:        signal(signal_number, SIG_IGN)\n167:        let source = DispatchSource.makeSignalSource(signal: signal_number, queue: .main)\n168:        source.setEventHandler {\n169:            NSApp.terminate(nil)\n170:        }\n171:        source.resume()\n172:        signal_sources.append(source)\n173:    }\n174:\n175:    private func register_toggle_input_mode_hot_key() {\n176:        let self_pointer = Unmanaged.passUnretained(self).toOpaque()\n177:        var event_type = EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyPressed))\n178:        InstallEventHandler(\n179:            GetApplicationEventTarget(),\n180:            { _, event, userData -> OSStatus in\n181:                guard let userData else {\n182:                    return OSStatus(eventNotHandledErr)\n183:                }\n184:                var hot_key_id = EventHotKeyID()\n185:                GetEventParameter(\n186:                    event!,\n187:                    EventParamName(kEventParamDirectObject),\n188:                    EventParamType(typeEventHotKeyID),\n189:                    nil,\n190:                    MemoryLayout<EventHotKeyID>.size,\n191:                    nil,\n192:                    &hot_key_id\n193:                )\n194:                if hot_key_id.signature == toggle_input_mode_hot_key_id.signature &&\n195:                        hot_key_id.id == toggle_input_mode_hot_key_id.id {\n196:                    let app_delegate = Unmanaged<AppDelegate>\n197:                        .fromOpaque(userData)\n198:                        .takeUnretainedValue()\n199:                    DispatchQueue.main.async {\n200:                        app_delegate.toggle_input_mode()\n201:                    }\n202:                }\n203:                return noErr\n204:            },\n205:            1,\n206:            &event_type,\n207:            self_pointer,\n208:            &toggle_input_mode_event_handler_ref\n209:        )\n210:        let id = toggle_input_mode_hot_key_id\n211:        RegisterEventHotKey(\n212:            UInt32(kVK_Space),\n213:            UInt32(controlKey | optionKey),\n214:            id,\n215:            GetApplicationEventTarget(),\n216:            0,\n217:            &toggle_input_mode_hot_key_ref\n218:        )\n219:    }\n220:\n221:    private func unregister_toggle_input_mode_hot_key() {\n222:        guard let toggle_input_mode_hot_key_ref else {\n223:            return\n224:        }\n225:        UnregisterEventHotKey(toggle_input_mode_hot_key_ref)\n226:        self.toggle_input_mode_hot_key_ref = nil\n227:\n228:        guard let toggle_input_mode_event_handler_ref else {\n229:            return\n230:        }\n231:        RemoveEventHandler(toggle_input_mode_event_handler_ref)\n232:        self.toggle_input_mode_event_handler_ref = nil\n233:    }\n234:\n235:    private func toggle_input_mode() {\n236:        // Change mode.\n237:        input_mode = input_mode == .telex ? .literal : .telex\n238:        status_item?.button?.image = input_mode == .telex ? telex_image : literal_image\n239:        // Reset state.\n240:        engine.reset()\n",
+              "exitCode": 0
+            },
+            "status": "done"
+          },
+          "type": "tool_result",
+          "toolUseID": "TU-033RTWri5RhArgBQFnNdJZ"
+        },
+        {
+          "run": {
+            "result": {
+              "output": "563 macos/Lex.swift\n",
+              "exitCode": 0
+            },
+            "status": "done"
+          },
+          "type": "tool_result",
+          "toolUseID": "TU-033RTWriZjNdgxaDpK8GQZ"
+        }
+      ],
+      "messageId": 3,
+      "protocolMessageID": "M-033RTWtI9RciZ8DHQNmUqF"
+    },
+    {
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "tool_use"
+      },
+      "usage": {
+        "timestamp": "2026-06-02T15:53:21.240Z",
+        "inputTokens": 0,
+        "outputTokens": 64,
+        "maxInputTokens": 272000,
+        "totalInputTokens": 12700,
+        "cacheReadInputTokens": 9728,
+        "cacheCreationInputTokens": 2972
+      },
+      "readAt": null,
+      "content": [
+        {
+          "id": "TU-033RTWvVb6DcdjKolSNJnr",
+          "name": "shell_command",
+          "type": "tool_use",
+          "input": {
+            "command": "grep -n \"\" macos/Lex.swift | sed -n '235,563p'",
+            "workdir": "/<redacted>/lex",
+            "timeout_ms": 10000
+          },
+          "complete": true,
+          "blockState": "complete",
+          "providerToolUseId": "call_ciXtPoDLkPgYg0S9quSJ6dCS"
+        }
+      ],
+      "messageId": 4,
+      "protocolMessageID": "M-033RTWtSUBSLPGNaCDInnJ"
+    },
+    {
+      "role": "user",
+      "readAt": null,
+      "content": [
+        {
+          "run": {
+            "result": {
+              "output": "235:    private func toggle_input_mode() {\n236:        // Change mode.\n237:        input_mode = input_mode == .telex ? .literal : .telex\n238:        status_item?.button?.image = input_mode == .telex ? telex_image : literal_image\n239:        // Reset state.\n240:        engine.reset()\n241:        // Play sound when toggling mode.\n242:        toggle_input_mode_sound?.stop()\n243:        toggle_input_mode_sound = input_mode == .telex ? telex_sound : literal_sound\n244:        toggle_input_mode_sound?.play()\n245:    }\n246:\n247:    private func start_event_tap() {\n248:        precondition(event_tap == nil)\n249:        precondition(event_tap_run_loop_source == nil)\n250:\n251:        let options = [ kAXTrustedCheckOptionPrompt.takeUnretainedValue(): true ] as CFDictionary\n252:        guard AXIsProcessTrustedWithOptions(options) else {\n253:            print(\"Accessibility permission required. Grant access in System Settings > Privacy & Security > Accessibility, then relaunch.\")\n254:            return\n255:        }\n256:\n257:        // TODO: we must understand the mask.\n258:        // let event_mask = (1 << CGEventType.keyDown.rawValue\n259:        //         | 1 << CGEventType.tapDisabledByTimeout.rawValue\n260:        //         | 1 << CGEventType.tapDisabledByUserInput.rawValue)\n261:        let event_mask =\n262:            (CGEventMask(1) << CGEventType.keyDown.rawValue)\n263:            | (CGEventMask(1) << CGEventType.flagsChanged.rawValue)\n264:            | (CGEventMask(1) << CGEventType.leftMouseDown.rawValue)\n265:            | (CGEventMask(1) << CGEventType.rightMouseDown.rawValue)\n266:            | (CGEventMask(1) << CGEventType.tapDisabledByTimeout.rawValue)\n267:            | (CGEventMask(1) << CGEventType.tapDisabledByUserInput.rawValue)\n268:        let self_pointer = Unmanaged.passUnretained(self).toOpaque()\n269:        guard let tap = CGEvent.tapCreate(\n270:            tap: .cgSessionEventTap,\n271:            place: .headInsertEventTap,\n272:            options: .defaultTap,\n273:            eventsOfInterest: CGEventMask(event_mask),\n274:            callback: event_tap_callback,\n275:            userInfo: self_pointer\n276:        ) else {\n277:            print(\"Failed to create event tap.\")\n278:            return\n279:        }\n280:        let run_loop_source = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, tap, 0)\n281:        event_tap = tap\n282:        event_tap_run_loop_source = run_loop_source\n283:        CFRunLoopAddSource(CFRunLoopGetCurrent(), run_loop_source, .commonModes)\n284:        CGEvent.tapEnable(tap: tap, enable: true)\n285:        print(\"Event tap started.\")\n286:    }\n287:\n288:    private func stop_event_tap() {\n289:        guard let tap = event_tap else {\n290:            return\n291:        }\n292:        CGEvent.tapEnable(tap: tap, enable: false)\n293:        if let run_loop_source = event_tap_run_loop_source {\n294:            CFRunLoopRemoveSource(CFRunLoopGetCurrent(), run_loop_source, .commonModes)\n295:        }\n296:        CFMachPortInvalidate(tap)\n297:        event_tap_run_loop_source = nil\n298:        event_tap = nil\n299:        print(\"Event tap stopped.\")\n300:    }\n301:\n302:    private func initialize_synthetic_event_source() {\n303:        precondition(synthetic_event_source == nil)\n304:        let source = CGEventSource(stateID: .privateState)\n305:        source?.userData = synthetic_event_source_user_data\n306:        synthetic_event_source = source\n307:    }\n308:\n309:    private func destroy_synthetic_event_source() {\n310:        synthetic_event_source = nil\n311:    }\n312:\n313:    private func initialize_status_item() {\n314:        precondition(status_item == nil)\n315:\n316:        let status_item = NSStatusBar.system.statusItem(\n317:            withLength: NSStatusItem.squareLength\n318:        )\n319:        self.status_item = status_item\n320:\n321:        let menu = NSMenu()\n322:\n323:        let lock_item = NSMenuItem(\n324:            title: \"Lock keyboard\",\n325:            action: #selector(lock_keyboard(_:)),\n326:            keyEquivalent: \"\"\n327:        )\n328:        lock_item.target = self\n329:        menu.addItem(lock_item)\n330:\n331:        menu.addItem(.separator())\n332:\n333:        let quit_item = NSMenuItem(\n334:            title: \"Quit\",\n335:            action: #selector(quit(_:)),\n336:            keyEquivalent: \"q\"\n337:        )\n338:        quit_item.target = self\n339:        menu.addItem(quit_item)\n340:\n341:        status_item.menu = menu\n342:        status_item.button?.image = input_mode == .telex ? telex_image : literal_image\n343:    }\n344:\n345:    private func destroy_status_item() {\n346:        guard let status_item else {\n347:            return\n348:        }\n349:\n350:        NSStatusBar.system.removeStatusItem(status_item)\n351:        self.status_item = nil\n352:    }\n353:\n354:    @objc\n355:    private func lock_keyboard(_ sender: Any?) {\n356:        // Preserve current behavior: current SwiftUI \"Lock inputs\" button is a no-op.\n357:        // If desired later, this can call toggle_input_mode().\n358:    }\n359:\n360:    @objc\n361:    private func quit(_ sender: Any?) {\n362:       NSApp.terminate(nil) \n363:    }\n364:\n365:    func get_synthetic_event_source() -> CGEventSource? {\n366:        return synthetic_event_source\n367:    }\n368:\n369:    func enable_event_tap() {\n370:        // TODO: why do we need to re-enable the tap?\n371:        guard let event_tap else {\n372:            return\n373:        }\n374:        CGEvent.tapEnable(tap: event_tap, enable: true)\n375:    }\n376:\n377:    func is_literal() -> Bool {\n378:        return input_mode == .literal\n379:    }\n380:}\n381:\n382:private func event_tap_callback(\n383:    proxy: CGEventTapProxy,\n384:    type event_type: CGEventType,\n385:    event: CGEvent,\n386:    userInfo: UnsafeMutableRawPointer?\n387:) -> Unmanaged<CGEvent>? {\n388:    // passthrough event when the event tap is inactive.\n389:    guard let userInfo else {\n390:        return Unmanaged.passUnretained(event)\n391:    }\n392:\n393:    let app_delegate = Unmanaged<AppDelegate>\n394:            .fromOpaque(userInfo)\n395:            .takeUnretainedValue()\n396:\n397:    switch event_type {\n398:        case .tapDisabledByTimeout, .tapDisabledByUserInput:\n399:            // Reset engine.\n400:            app_delegate.engine.reset()\n401:            // Re-enable tap.\n402:            app_delegate.enable_event_tap()\n403:            // Pass through event.\n404:            return Unmanaged.passUnretained(event)\n405:\n406:        case .leftMouseDown, .rightMouseDown:\n407:            // Reset engine.\n408:            app_delegate.engine.reset()\n409:            // Pass through event.\n410:            return Unmanaged.passUnretained(event)\n411:\n412:        case .flagsChanged:\n413:            // Pass through event.\n414:            // Don't reset for plain Shift / Caps Lock.\n415:            return Unmanaged.passUnretained(event)\n416:\n417:        case .keyDown:\n418:            // Handle key down.\n419:            \n420:            // Ignore Lex's synthetic events.\n421:            if event.getIntegerValueField(.eventSourceUserData) == synthetic_event_source_user_data {\n422:                return Unmanaged.passUnretained(event)\n423:            }\n424:\n425:            // passthrough event when in literal mode.\n426:            if app_delegate.is_literal() {\n427:                return Unmanaged.passUnretained(event)\n428:            }\n429:\n430:            // Get keycode to detect special key pressed.\n431:            let key_code = event.getIntegerValueField(.keyboardEventKeycode)\n432:            switch key_code {\n433:                case Int64(kVK_Delete):\n434:                    // User input backspace.\n435:                    // Call backspace action to keep buffer in sync with real input.\n436:                    app_delegate.engine.backspace()\n437:                    // Passthrough backspace.\n438:                    return Unmanaged.passUnretained(event)\n439:\n440:                default:\n441:                        // Reset state for unhandled keycode.\n442:                        // app_delegate.engine.reset()\n443:                        // return Unmanaged.passUnretained(event)\n444:                        break\n445:            }\n446:\n447:            // Detect and handle alphabetic input.\n448:            var character_count = 0\n449:                event.keyboardGetUnicodeString(\n450:                        maxStringLength: 0,\n451:                        actualStringLength: &character_count,\n452:                        unicodeString: nil\n453:                        )\n454:                guard character_count == 1 else {\n455:                    // No character, could be a special key, could not handle this case.\n456:                    app_delegate.engine.reset()\n457:                        return Unmanaged.passUnretained(event)\n458:                }\n459:\n460:            // Get Unicode character.\n461:            var character: UniChar = 0\n462:                event.keyboardGetUnicodeString(\n463:                        maxStringLength: 1,\n464:                        actualStringLength: &character_count,\n465:                        unicodeString: &character\n466:                        )\n467:                // Check if it's alphabetic.\n468:                let is_alphabetic = (character >= 65 && character <= 90)\n469:                || (character >= 97 && character <= 122)\n470:                guard is_alphabetic else {\n471:                    // No alphabitec, reset state.\n472:                    app_delegate.engine.reset()\n473:                        return Unmanaged.passUnretained(event)\n474:                }\n475:                guard let input = UnicodeScalar(UInt32(character)) else {\n476:                    app_delegate.engine.reset()\n477:                    return Unmanaged.passUnretained(event)\n478:                }\n479:\n480:            // Valid input, safe to process with the engine.\n481:            if app_delegate.engine.buffer_full() {\n482:                // The state reach the limit, reset it before continue processing.\n483:                app_delegate.engine.reset()\n484:            }\n485:\n486:            if app_delegate.engine.buffer_effective_full() {\n487:                // The buffer effective is full, process literal input.\n488:                app_delegate.engine.add(input)\n489:                return Unmanaged.passUnretained(event)\n490:            } else {\n491:                // The buffer effective has room, process with synthetic backspace and replacement.\n492:                guard let synthetic_event_source = app_delegate.get_synthetic_event_source() else {\n493:                    // No event source to send synthetic event.\n494:                    app_delegate.engine.reset()\n495:                    return Unmanaged.passUnretained(event)\n496:                }\n497:                \n498:                // Send the input character to engine.\n499:                app_delegate.engine.add(input)\n500:\n501:                // Calculate synthetic backspaces.\n502:                let backspace_count = app_delegate.engine.synthetic_backspaces()\n503:\n504:                // Post synthetic backspaces to event tap.\n505:                if backspace_count > 0 {\n506:                    for _ in 0..<backspace_count {\n507:                        if let synthetic_backspace_down = CGEvent(\n508:                            keyboardEventSource: synthetic_event_source,\n509:                            virtualKey: CGKeyCode(kVK_Delete),\n510:                            keyDown: true\n511:                        ) {\n512:                            synthetic_backspace_down.tapPostEvent(proxy)\n513:                        }\n514:                        \n515:                        if let synthetic_backspace_up = CGEvent(\n516:                            keyboardEventSource: synthetic_event_source,\n517:                            virtualKey: CGKeyCode(kVK_Delete),\n518:                            keyDown: false\n519:                        ) {\n520:                            synthetic_backspace_up.tapPostEvent(proxy)\n521:                        }\n522:                    }\n523:                }\n524:                \n525:                // Compose replacement.\n526:                app_delegate.engine.compose_replacement { replacement in\n527:                    guard let replacement_base_address = replacement.baseAddress else {\n528:                        return\n529:                    }\n530:\n531:                    if let synthetic_characters_down = CGEvent(\n532:                        keyboardEventSource: synthetic_event_source,\n533:                        virtualKey: 0,\n534:                        keyDown: true\n535:                    ) {\n536:                        synthetic_characters_down.keyboardSetUnicodeString(\n537:                            stringLength: replacement.count,\n538:                            unicodeString: replacement_base_address\n539:                        )\n540:                        synthetic_characters_down.tapPostEvent(proxy)\n541:                    }\n542:\n543:                    \n544:                    if let synthetic_characters_up = CGEvent(\n545:                        keyboardEventSource: synthetic_event_source,\n546:                        virtualKey: 0,\n547:                        keyDown: false\n548:                    ) {\n549:                        synthetic_characters_up.keyboardSetUnicodeString(\n550:                            stringLength: replacement.count,\n551:                            unicodeString: replacement_base_address\n552:                        )\n553:                        synthetic_characters_up.tapPostEvent(proxy)\n554:                    }\n555:                }\n556:                return nil\n557:            }\n558:\n559:\n560:        default:\n561:            return Unmanaged.passUnretained(event)\n562:    }\n563:}\n",
+              "exitCode": 0
+            },
+            "status": "done"
+          },
+          "type": "tool_result",
+          "toolUseID": "TU-033RTWvVb6DcdjKolSNJnr"
+        }
+      ],
+      "messageId": 5,
+      "protocolMessageID": "M-033RTWxobPXNJzU4HlGqvJ"
+    },
+    {
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "tool_use"
+      },
+      "usage": {
+        "timestamp": "2026-06-02T15:53:32.390Z",
+        "inputTokens": 0,
+        "outputTokens": 1011,
+        "maxInputTokens": 272000,
+        "totalInputTokens": 16125,
+        "cacheReadInputTokens": 12288,
+        "cacheCreationInputTokens": 3837
+      },
+      "readAt": "2026-06-02T15:53:32.794Z",
+      "content": [
+        {
+          "id": "TU-033RTWzv84CrT5zK86W44G",
+          "name": "shell_command",
+          "type": "tool_use",
+          "input": {
+            "command": "python3 - <<'PY'\nfrom pathlib import Path\np=Path('macos/Lex.swift')\ns=p.read_text()\nrepls={\n'state.deallocate()':'self.state.deallocate()',\n'lex_init(state)':'lex_init(self.state)',\n'lex_add(state,':'lex_add(self.state,',\n'lex_backspace(state)':'lex_backspace(self.state)',\n'lex_buffer_full(state)':'lex_buffer_full(self.state)',\n'lex_buffer_empty(state)':'lex_buffer_empty(self.state)',\n'lex_buffer_effective_full(state)':'lex_buffer_effective_full(self.state)',\n'lex_calculate_synthetic_backspaces(state)':'lex_calculate_synthetic_backspaces(self.state)',\n'            state,\\n            &replacement_buffer,\\n            &replacement_count':'            self.state,\\n            &self.replacement_buffer,\\n            &self.replacement_count',\n'let count = Int(replacement_count)':'let count = Int(self.replacement_count)',\n'replacement_buffer.withUnsafeBufferPointer':'self.replacement_buffer.withUnsafeBufferPointer',\n'signal_sources.removeAll()':'self.signal_sources.removeAll()',\n'signal_sources.append(source)':'self.signal_sources.append(source)',\n'&toggle_input_mode_event_handler_ref':'&self.toggle_input_mode_event_handler_ref',\n'&toggle_input_mode_hot_key_ref':'&self.toggle_input_mode_hot_key_ref',\n'guard let toggle_input_mode_hot_key_ref else':'guard let toggle_input_mode_hot_key_ref = self.toggle_input_mode_hot_key_ref else',\n'guard let toggle_input_mode_event_handler_ref else':'guard let toggle_input_mode_event_handler_ref = self.toggle_input_mode_event_handler_ref else',\n'input_mode = input_mode == .telex ? .literal : .telex':'self.input_mode = self.input_mode == .telex ? .literal : .telex',\n'status_item?.button?.image = input_mode == .telex ? telex_image : literal_image':'self.status_item?.button?.image = self.input_mode == .telex ? self.telex_image : self.literal_image',\n'engine.reset()':'self.engine.reset()',\n'toggle_input_mode_sound?.stop()':'self.toggle_input_mode_sound?.stop()',\n'toggle_input_mode_sound = input_mode == .telex ? telex_sound : literal_sound':'self.toggle_input_mode_sound = self.input_mode == .telex ? self.telex_sound : self.literal_sound',\n'toggle_input_mode_sound?.play()':'self.toggle_input_mode_sound?.play()',\n'precondition(event_tap == nil)':'precondition(self.event_tap == nil)',\n'precondition(event_tap_run_loop_source == nil)':'precondition(self.event_tap_run_loop_source == nil)',\n'event_tap = tap':'self.event_tap = tap',\n'event_tap_run_loop_source = run_loop_source':'self.event_tap_run_loop_source = run_loop_source',\n'guard let tap = event_tap else':'guard let tap = self.event_tap else',\n'if let run_loop_source = event_tap_run_loop_source':'if let run_loop_source = self.event_tap_run_loop_source',\n'event_tap_run_loop_source = nil':'self.event_tap_run_loop_source = nil',\n'event_tap = nil':'self.event_tap = nil',\n'precondition(synthetic_event_source == nil)':'precondition(self.synthetic_event_source == nil)',\n'synthetic_event_source = source':'self.synthetic_event_source = source',\n'synthetic_event_source = nil':'self.synthetic_event_source = nil',\n'precondition(status_item == nil)':'precondition(self.status_item == nil)',\n'status_item.button?.image = input_mode == .telex ? telex_image : literal_image':'status_item.button?.image = self.input_mode == .telex ? self.telex_image : self.literal_image',\n'guard let status_item else':'guard let status_item = self.status_item else',\n'return synthetic_event_source':'return self.synthetic_event_source',\n'guard let event_tap else':'guard let event_tap = self.event_tap else',\n'return input_mode == .literal':'return self.input_mode == .literal',\n}\nfor a,b in repls.items():\n    s=s.replace(a,b)\np.write_text(s)\nPY\nswiftc -typecheck macos/Lex.swift",
+            "workdir": "/<redacted>/lex",
+            "timeout_ms": 120000
+          },
+          "complete": true,
+          "blockState": "complete",
+          "providerToolUseId": "call_l2CFw6T7JAF36jANMS42JMNL"
+        }
+      ],
+      "messageId": 6,
+      "protocolMessageID": "M-033RTWxwmyhgjHaeLGf7oV"
+    },
+    {
+      "role": "user",
+      "readAt": null,
+      "content": [
+        {
+          "run": {
+            "result": {
+              "output": "/bin/bash: line 1: python3: command not found\n/bin/bash: line 51: swiftc: command not found\n",
+              "exitCode": 127
+            },
+            "status": "done"
+          },
+          "type": "tool_result",
+          "toolUseID": "TU-033RTWzv84CrT5zK86W44G"
+        }
+      ],
+      "messageId": 7,
+      "protocolMessageID": "M-033RTXFOWeEC6DIwOAb0XU"
+    },
+    {
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "tool_use"
+      },
+      "usage": {
+        "timestamp": "2026-06-02T15:53:44.758Z",
+        "inputTokens": 0,
+        "outputTokens": 1007,
+        "maxInputTokens": 272000,
+        "totalInputTokens": 17185,
+        "cacheReadInputTokens": 15872,
+        "cacheCreationInputTokens": 1313
+      },
+      "readAt": "2026-06-02T15:53:44.857Z",
+      "content": [
+        {
+          "id": "TU-033RTXKATXNFmuTXh4IJ4X",
+          "name": "shell_command",
+          "type": "tool_use",
+          "input": {
+            "command": "python - <<'PY'\nfrom pathlib import Path\np=Path('macos/Lex.swift')\ns=p.read_text()\nrepls={\n'state.deallocate()':'self.state.deallocate()',\n'lex_init(state)':'lex_init(self.state)',\n'lex_add(state,':'lex_add(self.state,',\n'lex_backspace(state)':'lex_backspace(self.state)',\n'lex_buffer_full(state)':'lex_buffer_full(self.state)',\n'lex_buffer_empty(state)':'lex_buffer_empty(self.state)',\n'lex_buffer_effective_full(state)':'lex_buffer_effective_full(self.state)',\n'lex_calculate_synthetic_backspaces(state)':'lex_calculate_synthetic_backspaces(self.state)',\n'            state,\\n            &replacement_buffer,\\n            &replacement_count':'            self.state,\\n            &self.replacement_buffer,\\n            &self.replacement_count',\n'let count = Int(replacement_count)':'let count = Int(self.replacement_count)',\n'replacement_buffer.withUnsafeBufferPointer':'self.replacement_buffer.withUnsafeBufferPointer',\n'signal_sources.removeAll()':'self.signal_sources.removeAll()',\n'signal_sources.append(source)':'self.signal_sources.append(source)',\n'&toggle_input_mode_event_handler_ref':'&self.toggle_input_mode_event_handler_ref',\n'&toggle_input_mode_hot_key_ref':'&self.toggle_input_mode_hot_key_ref',\n'guard let toggle_input_mode_hot_key_ref else':'guard let toggle_input_mode_hot_key_ref = self.toggle_input_mode_hot_key_ref else',\n'guard let toggle_input_mode_event_handler_ref else':'guard let toggle_input_mode_event_handler_ref = self.toggle_input_mode_event_handler_ref else',\n'input_mode = input_mode == .telex ? .literal : .telex':'self.input_mode = self.input_mode == .telex ? .literal : .telex',\n'status_item?.button?.image = input_mode == .telex ? telex_image : literal_image':'self.status_item?.button?.image = self.input_mode == .telex ? self.telex_image : self.literal_image',\n'engine.reset()':'self.engine.reset()',\n'toggle_input_mode_sound?.stop()':'self.toggle_input_mode_sound?.stop()',\n'toggle_input_mode_sound = input_mode == .telex ? telex_sound : literal_sound':'self.toggle_input_mode_sound = self.input_mode == .telex ? self.telex_sound : self.literal_sound',\n'toggle_input_mode_sound?.play()':'self.toggle_input_mode_sound?.play()',\n'precondition(event_tap == nil)':'precondition(self.event_tap == nil)',\n'precondition(event_tap_run_loop_source == nil)':'precondition(self.event_tap_run_loop_source == nil)',\n'event_tap = tap':'self.event_tap = tap',\n'event_tap_run_loop_source = run_loop_source':'self.event_tap_run_loop_source = run_loop_source',\n'guard let tap = event_tap else':'guard let tap = self.event_tap else',\n'if let run_loop_source = event_tap_run_loop_source':'if let run_loop_source = self.event_tap_run_loop_source',\n'event_tap_run_loop_source = nil':'self.event_tap_run_loop_source = nil',\n'event_tap = nil':'self.event_tap = nil',\n'precondition(synthetic_event_source == nil)':'precondition(self.synthetic_event_source == nil)',\n'synthetic_event_source = source':'self.synthetic_event_source = source',\n'synthetic_event_source = nil':'self.synthetic_event_source = nil',\n'precondition(status_item == nil)':'precondition(self.status_item == nil)',\n'status_item.button?.image = input_mode == .telex ? telex_image : literal_image':'status_item.button?.image = self.input_mode == .telex ? self.telex_image : self.literal_image',\n'guard let status_item else':'guard let status_item = self.status_item else',\n'return synthetic_event_source':'return self.synthetic_event_source',\n'guard let event_tap else':'guard let event_tap = self.event_tap else',\n'return input_mode == .literal':'return self.input_mode == .literal',\n}\nfor a,b in repls.items():\n    s=s.replace(a,b)\np.write_text(s)\nPY\ncommand -v swiftc || true",
+            "workdir": "/<redacted>/lex",
+            "timeout_ms": 10000
+          },
+          "complete": true,
+          "blockState": "complete",
+          "providerToolUseId": "call_CmO6tE6zAktgzButZw6SuK2E"
+        }
+      ],
+      "messageId": 8,
+      "protocolMessageID": "M-033RTXFbIQhHB3W9AIzdRI"
+    },
+    {
+      "role": "user",
+      "readAt": null,
+      "content": [
+        {
+          "run": {
+            "result": {
+              "output": "/bin/bash: line 1: python: command not found\n",
+              "exitCode": 0
+            },
+            "status": "done"
+          },
+          "type": "tool_result",
+          "toolUseID": "TU-033RTXKATXNFmuTXh4IJ4X"
+        }
+      ],
+      "messageId": 9,
+      "protocolMessageID": "M-033RTXYwh123VE0hzdUkeP"
+    },
+    {
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "tool_use"
+      },
+      "usage": {
+        "timestamp": "2026-06-02T15:53:56.174Z",
+        "inputTokens": 0,
+        "outputTokens": 1017,
+        "maxInputTokens": 272000,
+        "totalInputTokens": 18226,
+        "cacheReadInputTokens": 16896,
+        "cacheCreationInputTokens": 1330
+      },
+      "readAt": "2026-06-02T15:53:56.567Z",
+      "content": [
+        {
+          "id": "TU-033RTXb5MTYLMoAzxAW0Lt",
+          "name": "shell_command",
+          "type": "tool_use",
+          "input": {
+            "command": "perl -0pi -e 's/state\\.deallocate\\(\\)/self.state.deallocate()/g; s/lex_init\\(state\\)/lex_init(self.state)/g; s/lex_add\\(state,/lex_add(self.state,/g; s/lex_backspace\\(state\\)/lex_backspace(self.state)/g; s/lex_buffer_full\\(state\\)/lex_buffer_full(self.state)/g; s/lex_buffer_empty\\(state\\)/lex_buffer_empty(self.state)/g; s/lex_buffer_effective_full\\(state\\)/lex_buffer_effective_full(self.state)/g; s/lex_calculate_synthetic_backspaces\\(state\\)/lex_calculate_synthetic_backspaces(self.state)/g; s/            state,\\n            &replacement_buffer,\\n            &replacement_count/            self.state,\\n            &self.replacement_buffer,\\n            &self.replacement_count/g; s/let count = Int\\(replacement_count\\)/let count = Int(self.replacement_count)/g; s/replacement_buffer\\.withUnsafeBufferPointer/self.replacement_buffer.withUnsafeBufferPointer/g; s/signal_sources\\.removeAll\\(\\)/self.signal_sources.removeAll()/g; s/signal_sources\\.append\\(source\\)/self.signal_sources.append(source)/g; s/&toggle_input_mode_event_handler_ref/&self.toggle_input_mode_event_handler_ref/g; s/&toggle_input_mode_hot_key_ref/&self.toggle_input_mode_hot_key_ref/g; s/guard let toggle_input_mode_hot_key_ref else/guard let toggle_input_mode_hot_key_ref = self.toggle_input_mode_hot_key_ref else/g; s/guard let toggle_input_mode_event_handler_ref else/guard let toggle_input_mode_event_handler_ref = self.toggle_input_mode_event_handler_ref else/g; s/input_mode = input_mode == \\.telex \\? \\.literal : \\.telex/self.input_mode = self.input_mode == .telex ? .literal : .telex/g; s/status_item\\?\\.button\\?\\.image = input_mode == \\.telex \\? telex_image : literal_image/self.status_item?.button?.image = self.input_mode == .telex ? self.telex_image : self.literal_image/g; s/engine\\.reset\\(\\)/self.engine.reset()/g; s/toggle_input_mode_sound\\?\\.stop\\(\\)/self.toggle_input_mode_sound?.stop()/g; s/toggle_input_mode_sound = input_mode == \\.telex \\? telex_sound : literal_sound/self.toggle_input_mode_sound = self.input_mode == .telex ? self.telex_sound : self.literal_sound/g; s/toggle_input_mode_sound\\?\\.play\\(\\)/self.toggle_input_mode_sound?.play()/g; s/precondition\\(event_tap == nil\\)/precondition(self.event_tap == nil)/g; s/precondition\\(event_tap_run_loop_source == nil\\)/precondition(self.event_tap_run_loop_source == nil)/g; s/event_tap = tap/self.event_tap = tap/g; s/event_tap_run_loop_source = run_loop_source/self.event_tap_run_loop_source = run_loop_source/g; s/guard let tap = event_tap else/guard let tap = self.event_tap else/g; s/if let run_loop_source = event_tap_run_loop_source/if let run_loop_source = self.event_tap_run_loop_source/g; s/event_tap_run_loop_source = nil/self.event_tap_run_loop_source = nil/g; s/event_tap = nil/self.event_tap = nil/g; s/precondition\\(synthetic_event_source == nil\\)/precondition(self.synthetic_event_source == nil)/g; s/synthetic_event_source = source/self.synthetic_event_source = source/g; s/synthetic_event_source = nil/self.synthetic_event_source = nil/g; s/precondition\\(status_item == nil\\)/precondition(self.status_item == nil)/g; s/status_item\\.button\\?\\.image = input_mode == \\.telex \\? telex_image : literal_image/status_item.button?.image = self.input_mode == .telex ? self.telex_image : self.literal_image/g; s/guard let status_item else/guard let status_item = self.status_item else/g; s/return synthetic_event_source/return self.synthetic_event_source/g; s/guard let event_tap else/guard let event_tap = self.event_tap else/g; s/return input_mode == \\.literal/return self.input_mode == .literal/g' macos/Lex.swift\nsed -n '56,380p' macos/Lex.swift",
+            "workdir": "/<redacted>/lex",
+            "timeout_ms": 10000
+          },
+          "complete": true,
+          "blockState": "complete",
+          "providerToolUseId": "call_LNXUCdj6CVdtWAn1SjAEKMyH"
+        }
+      ],
+      "messageId": 10,
+      "protocolMessageID": "M-033RTXZ46JlM54QX307C2v"
+    },
+    {
+      "role": "user",
+      "readAt": null,
+      "content": [
+        {
+          "run": {
+            "result": {
+              "output": "/bin/bash: line 1: perl: command not found\n    deinit {\n        // Release the state memory.\n        state.deallocate()\n    }\n\n    func reset() {\n        // Reset the engine state to initial value.\n        lex_init(state)\n    }\n\n    func add(_ unicode_scalar: Unicode.Scalar) {\n        // TODO: should return error when not ASCII.\n        guard unicode_scalar.isASCII else {\n            return\n        }\n        lex_add(state, UInt8(unicode_scalar.value))\n    }\n\n    func backspace() {\n        if !buffer_empty() {\n            lex_backspace(state)\n        }\n    }\n\n    func buffer_full() -> Bool {\n        return lex_buffer_full(state)\n    }\n\n    func buffer_empty() -> Bool {\n        return lex_buffer_empty(state)\n    }\n\n    func buffer_effective_full() -> Bool {\n        return lex_buffer_effective_full(state)\n    }\n\n    func synthetic_backspaces() -> Int {\n        return Int(lex_calculate_synthetic_backspaces(state))\n    }\n\n    func compose_replacement(_ body: (UnsafeBufferPointer<UInt16>) -> Void) {\n        lex_compose_utf16_string_replacement(\n            state,\n            &replacement_buffer,\n            &replacement_count\n        )\n        let count = Int(replacement_count)\n        guard count > 0 else {\n            return\n        }\n        replacement_buffer.withUnsafeBufferPointer { buffer in\n            body(UnsafeBufferPointer(start: buffer.baseAddress!, count: count))\n        }\n    }\n}\n\nprivate final class AppDelegate: NSObject, NSApplicationDelegate {\n    fileprivate let engine = LexEngine()\n    private var status_item: NSStatusItem?\n    private let telex_image: NSImage? = {\n        // TODO: should remove optional.\n        let image = NSImage(\n            systemSymbolName: \"pencil\",\n            accessibilityDescription: \"Lex\"\n        )\n        image?.isTemplate = true\n        return image\n    }()\n    private let literal_image: NSImage? = {\n        // TODO: should remove optional.\n        let image = NSImage(\n            systemSymbolName: \"pencil.slash\",\n            accessibilityDescription: \"Lex\"\n        )\n        image?.isTemplate = true\n        return image\n    }()\n    private let telex_sound: NSSound? = NSSound(named: \"Pop\")\n    private let literal_sound: NSSound? = NSSound(named: \"Tink\")\n\n    private var signal_sources: [DispatchSourceSignal] = []\n    private var input_mode: InputMode = .telex\n    private var toggle_input_mode_event_handler_ref: EventHandlerRef?\n    private var toggle_input_mode_hot_key_ref: EventHotKeyRef?\n    private var toggle_input_mode_sound: NSSound?\n\n    private var event_tap: CFMachPort?\n    private var event_tap_run_loop_source: CFRunLoopSource?\n    private var synthetic_event_source: CGEventSource?\n\n    func applicationDidFinishLaunching(_ notification: Notification) {\n        print(\"Activated.\")\n        initialize_status_item()\n        install_signal_handler(SIGINT)\n        install_signal_handler(SIGTERM)\n        initialize_synthetic_event_source()\n        start_event_tap()\n        register_toggle_input_mode_hot_key()\n    }\n    \n    func applicationWillTerminate(_ notification: Notification) {\n        print(\"Shutting down...\")\n        unregister_toggle_input_mode_hot_key()\n        stop_event_tap()\n        destroy_synthetic_event_source()\n        destroy_status_item()\n        signal_sources.removeAll()\n    }\n\n    private func install_signal_handler(_ signal_number: Int32) {\n        signal(signal_number, SIG_IGN)\n        let source = DispatchSource.makeSignalSource(signal: signal_number, queue: .main)\n        source.setEventHandler {\n            NSApp.terminate(nil)\n        }\n        source.resume()\n        signal_sources.append(source)\n    }\n\n    private func register_toggle_input_mode_hot_key() {\n        let self_pointer = Unmanaged.passUnretained(self).toOpaque()\n        var event_type = EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyPressed))\n        InstallEventHandler(\n            GetApplicationEventTarget(),\n            { _, event, userData -> OSStatus in\n                guard let userData else {\n                    return OSStatus(eventNotHandledErr)\n                }\n                var hot_key_id = EventHotKeyID()\n                GetEventParameter(\n                    event!,\n                    EventParamName(kEventParamDirectObject),\n                    EventParamType(typeEventHotKeyID),\n                    nil,\n                    MemoryLayout<EventHotKeyID>.size,\n                    nil,\n                    &hot_key_id\n                )\n                if hot_key_id.signature == toggle_input_mode_hot_key_id.signature &&\n                        hot_key_id.id == toggle_input_mode_hot_key_id.id {\n                    let app_delegate = Unmanaged<AppDelegate>\n                        .fromOpaque(userData)\n                        .takeUnretainedValue()\n                    DispatchQueue.main.async {\n                        app_delegate.toggle_input_mode()\n                    }\n                }\n                return noErr\n            },\n            1,\n            &event_type,\n            self_pointer,\n            &toggle_input_mode_event_handler_ref\n        )\n        let id = toggle_input_mode_hot_key_id\n        RegisterEventHotKey(\n            UInt32(kVK_Space),\n            UInt32(controlKey | optionKey),\n            id,\n            GetApplicationEventTarget(),\n            0,\n            &toggle_input_mode_hot_key_ref\n        )\n    }\n\n    private func unregister_toggle_input_mode_hot_key() {\n        guard let toggle_input_mode_hot_key_ref else {\n            return\n        }\n        UnregisterEventHotKey(toggle_input_mode_hot_key_ref)\n        self.toggle_input_mode_hot_key_ref = nil\n\n        guard let toggle_input_mode_event_handler_ref else {\n            return\n        }\n        RemoveEventHandler(toggle_input_mode_event_handler_ref)\n        self.toggle_input_mode_event_handler_ref = nil\n    }\n\n    private func toggle_input_mode() {\n        // Change mode.\n        input_mode = input_mode == .telex ? .literal : .telex\n        status_item?.button?.image = input_mode == .telex ? telex_image : literal_image\n        // Reset state.\n        engine.reset()\n        // Play sound when toggling mode.\n        toggle_input_mode_sound?.stop()\n        toggle_input_mode_sound = input_mode == .telex ? telex_sound : literal_sound\n        toggle_input_mode_sound?.play()\n    }\n\n    private func start_event_tap() {\n        precondition(event_tap == nil)\n        precondition(event_tap_run_loop_source == nil)\n\n        let options = [ kAXTrustedCheckOptionPrompt.takeUnretainedValue(): true ] as CFDictionary\n        guard AXIsProcessTrustedWithOptions(options) else {\n            print(\"Accessibility permission required. Grant access in System Settings > Privacy & Security > Accessibility, then relaunch.\")\n            return\n        }\n\n        // TODO: we must understand the mask.\n        // let event_mask = (1 << CGEventType.keyDown.rawValue\n        //         | 1 << CGEventType.tapDisabledByTimeout.rawValue\n        //         | 1 << CGEventType.tapDisabledByUserInput.rawValue)\n        let event_mask =\n            (CGEventMask(1) << CGEventType.keyDown.rawValue)\n            | (CGEventMask(1) << CGEventType.flagsChanged.rawValue)\n            | (CGEventMask(1) << CGEventType.leftMouseDown.rawValue)\n            | (CGEventMask(1) << CGEventType.rightMouseDown.rawValue)\n            | (CGEventMask(1) << CGEventType.tapDisabledByTimeout.rawValue)\n            | (CGEventMask(1) << CGEventType.tapDisabledByUserInput.rawValue)\n        let self_pointer = Unmanaged.passUnretained(self).toOpaque()\n        guard let tap = CGEvent.tapCreate(\n            tap: .cgSessionEventTap,\n            place: .headInsertEventTap,\n            options: .defaultTap,\n            eventsOfInterest: CGEventMask(event_mask),\n            callback: event_tap_callback,\n            userInfo: self_pointer\n        ) else {\n            print(\"Failed to create event tap.\")\n            return\n        }\n        let run_loop_source = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, tap, 0)\n        event_tap = tap\n        event_tap_run_loop_source = run_loop_source\n        CFRunLoopAddSource(CFRunLoopGetCurrent(), run_loop_source, .commonModes)\n        CGEvent.tapEnable(tap: tap, enable: true)\n        print(\"Event tap started.\")\n    }\n\n    private func stop_event_tap() {\n        guard let tap = event_tap else {\n            return\n        }\n        CGEvent.tapEnable(tap: tap, enable: false)\n        if let run_loop_source = event_tap_run_loop_source {\n            CFRunLoopRemoveSource(CFRunLoopGetCurrent(), run_loop_source, .commonModes)\n        }\n        CFMachPortInvalidate(tap)\n        event_tap_run_loop_source = nil\n        event_tap = nil\n        print(\"Event tap stopped.\")\n    }\n\n    private func initialize_synthetic_event_source() {\n        precondition(synthetic_event_source == nil)\n        let source = CGEventSource(stateID: .privateState)\n        source?.userData = synthetic_event_source_user_data\n        synthetic_event_source = source\n    }\n\n    private func destroy_synthetic_event_source() {\n        synthetic_event_source = nil\n    }\n\n    private func initialize_status_item() {\n        precondition(status_item == nil)\n\n        let status_item = NSStatusBar.system.statusItem(\n            withLength: NSStatusItem.squareLength\n        )\n        self.status_item = status_item\n\n        let menu = NSMenu()\n\n        let lock_item = NSMenuItem(\n            title: \"Lock keyboard\",\n            action: #selector(lock_keyboard(_:)),\n            keyEquivalent: \"\"\n        )\n        lock_item.target = self\n        menu.addItem(lock_item)\n\n        menu.addItem(.separator())\n\n        let quit_item = NSMenuItem(\n            title: \"Quit\",\n            action: #selector(quit(_:)),\n            keyEquivalent: \"q\"\n        )\n        quit_item.target = self\n        menu.addItem(quit_item)\n\n        status_item.menu = menu\n        status_item.button?.image = input_mode == .telex ? telex_image : literal_image\n    }\n\n    private func destroy_status_item() {\n        guard let status_item else {\n            return\n        }\n\n        NSStatusBar.system.removeStatusItem(status_item)\n        self.status_item = nil\n    }\n\n    @objc\n    private func lock_keyboard(_ sender: Any?) {\n        // Preserve current behavior: current SwiftUI \"Lock inputs\" button is a no-op.\n        // If desired later, this can call toggle_input_mode().\n    }\n\n    @objc\n    private func quit(_ sender: Any?) {\n       NSApp.terminate(nil) \n    }\n\n    func get_synthetic_event_source() -> CGEventSource? {\n        return synthetic_event_source\n    }\n\n    func enable_event_tap() {\n        // TODO: why do we need to re-enable the tap?\n        guard let event_tap else {\n            return\n        }\n        CGEvent.tapEnable(tap: event_tap, enable: true)\n    }\n\n    func is_literal() -> Bool {\n        return input_mode == .literal\n    }\n}\n",
+              "exitCode": 0
+            },
+            "status": "done"
+          },
+          "type": "tool_result",
+          "toolUseID": "TU-033RTXb5MTYLMoAzxAW0Lt"
+        }
+      ],
+      "messageId": 11,
+      "protocolMessageID": "M-033RTXqnTsSrpvwm2IeWbr"
+    },
+    {
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "tool_use"
+      },
+      "usage": {
+        "timestamp": "2026-06-02T15:54:09.542Z",
+        "inputTokens": 0,
+        "outputTokens": 1188,
+        "maxInputTokens": 272000,
+        "totalInputTokens": 21916,
+        "cacheReadInputTokens": 17920,
+        "cacheCreationInputTokens": 3996
+      },
+      "readAt": "2026-06-02T15:54:09.952Z",
+      "content": [
+        {
+          "id": "TU-033RTXtRpb9Z7Z89HgBswO",
+          "name": "shell_command",
+          "type": "tool_use",
+          "input": {
+            "command": "cat > /tmp/patch.awk <<'AWK'\n{\n gsub(/state\\.deallocate\\(\\)/,\"self.state.deallocate()\")\n gsub(/lex_init\\(state\\)/,\"lex_init(self.state)\")\n gsub(/lex_add\\(state,/,\"lex_add(self.state,\")\n gsub(/lex_backspace\\(state\\)/,\"lex_backspace(self.state)\")\n gsub(/lex_buffer_full\\(state\\)/,\"lex_buffer_full(self.state)\")\n gsub(/lex_buffer_empty\\(state\\)/,\"lex_buffer_empty(self.state)\")\n gsub(/lex_buffer_effective_full\\(state\\)/,\"lex_buffer_effective_full(self.state)\")\n gsub(/lex_calculate_synthetic_backspaces\\(state\\)/,\"lex_calculate_synthetic_backspaces(self.state)\")\n gsub(/&replacement_buffer/,\"\\\\&self.replacement_buffer\")\n gsub(/&replacement_count/,\"\\\\&self.replacement_count\")\n gsub(/Int\\(replacement_count\\)/,\"Int(self.replacement_count)\")\n gsub(/replacement_buffer\\.withUnsafeBufferPointer/,\"self.replacement_buffer.withUnsafeBufferPointer\")\n gsub(/signal_sources\\.removeAll\\(\\)/,\"self.signal_sources.removeAll()\")\n gsub(/signal_sources\\.append\\(source\\)/,\"self.signal_sources.append(source)\")\n gsub(/&toggle_input_mode_event_handler_ref/,\"\\\\&self.toggle_input_mode_event_handler_ref\")\n gsub(/&toggle_input_mode_hot_key_ref/,\"\\\\&self.toggle_input_mode_hot_key_ref\")\n gsub(/guard let toggle_input_mode_hot_key_ref else/,\"guard let toggle_input_mode_hot_key_ref = self.toggle_input_mode_hot_key_ref else\")\n gsub(/guard let toggle_input_mode_event_handler_ref else/,\"guard let toggle_input_mode_event_handler_ref = self.toggle_input_mode_event_handler_ref else\")\n gsub(/input_mode = input_mode == \\.telex \\? \\.literal : \\.telex/,\"self.input_mode = self.input_mode == .telex ? .literal : .telex\")\n gsub(/status_item\\?\\.button\\?\\.image = input_mode == \\.telex \\? telex_image : literal_image/,\"self.status_item?.button?.image = self.input_mode == .telex ? self.telex_image : self.literal_image\")\n gsub(/engine\\.reset\\(\\)/,\"self.engine.reset()\")\n gsub(/toggle_input_mode_sound\\?\\.stop\\(\\)/,\"self.toggle_input_mode_sound?.stop()\")\n gsub(/toggle_input_mode_sound = input_mode == \\.telex \\? telex_sound : literal_sound/,\"self.toggle_input_mode_sound = self.input_mode == .telex ? self.telex_sound : self.literal_sound\")\n gsub(/toggle_input_mode_sound\\?\\.play\\(\\)/,\"self.toggle_input_mode_sound?.play()\")\n gsub(/precondition\\(event_tap == nil\\)/,\"precondition(self.event_tap == nil)\")\n gsub(/precondition\\(event_tap_run_loop_source == nil\\)/,\"precondition(self.event_tap_run_loop_source == nil)\")\n gsub(/event_tap = tap/,\"self.event_tap = tap\")\n gsub(/event_tap_run_loop_source = run_loop_source/,\"self.event_tap_run_loop_source = run_loop_source\")\n gsub(/guard let tap = event_tap else/,\"guard let tap = self.event_tap else\")\n gsub(/if let run_loop_source = event_tap_run_loop_source/,\"if let run_loop_source = self.event_tap_run_loop_source\")\n gsub(/event_tap_run_loop_source = nil/,\"self.event_tap_run_loop_source = nil\")\n gsub(/event_tap = nil/,\"self.event_tap = nil\")\n gsub(/precondition\\(synthetic_event_source == nil\\)/,\"precondition(self.synthetic_event_source == nil)\")\n gsub(/synthetic_event_source = source/,\"self.synthetic_event_source = source\")\n gsub(/synthetic_event_source = nil/,\"self.synthetic_event_source = nil\")\n gsub(/precondition\\(status_item == nil\\)/,\"precondition(self.status_item == nil)\")\n gsub(/status_item\\.button\\?\\.image = input_mode == \\.telex \\? telex_image : literal_image/,\"status_item.button?.image = self.input_mode == .telex ? self.telex_image : self.literal_image\")\n gsub(/guard let status_item else/,\"guard let status_item = self.status_item else\")\n gsub(/return synthetic_event_source/,\"return self.synthetic_event_source\")\n gsub(/guard let event_tap else/,\"guard let event_tap = self.event_tap else\")\n gsub(/return input_mode == \\.literal/,\"return self.input_mode == .literal\")\n print\n}\nAWK\nawk -f /tmp/patch.awk macos/Lex.swift > /tmp/Lex.swift && mv /tmp/Lex.swift macos/Lex.swift\ncommand -v swiftc || true",
+            "workdir": "/<redacted>/lex",
+            "timeout_ms": 10000
+          },
+          "complete": true,
+          "blockState": "complete",
+          "providerToolUseId": "call_HH6Y0DAr3tnBiM4VF8L4vBXv"
+        }
+      ],
+      "messageId": 12,
+      "protocolMessageID": "M-033RTXr4XVJrbCfxGLKbDm"
+    },
+    {
+      "role": "user",
+      "readAt": null,
+      "content": [
+        {
+          "run": {
+            "result": {
+              "output": "",
+              "exitCode": 0
+            },
+            "status": "done"
+          },
+          "type": "tool_result",
+          "toolUseID": "TU-033RTXtRpb9Z7Z89HgBswO"
+        }
+      ],
+      "messageId": 13,
+      "protocolMessageID": "M-033RTYCCNgAVgkUWQ1JLhP"
+    },
+    {
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "tool_use"
+      },
+      "usage": {
+        "timestamp": "2026-06-02T15:54:14.473Z",
+        "inputTokens": 0,
+        "outputTokens": 155,
+        "maxInputTokens": 272000,
+        "totalInputTokens": 23123,
+        "cacheReadInputTokens": 21504,
+        "cacheCreationInputTokens": 1619
+      },
+      "readAt": null,
+      "content": [
+        {
+          "id": "TU-033RTYF9Xt794WkJJ6NMri",
+          "name": "shell_command",
+          "type": "tool_use",
+          "input": {
+            "command": "grep -n \"\\b\\(state\\|replacement_buffer\\|replacement_count\\|signal_sources\\|input_mode\\|status_item\\|engine\\|toggle_input_mode_event_handler_ref\\|toggle_input_mode_hot_key_ref\\|toggle_input_mode_sound\\|event_tap\\|event_tap_run_loop_source\\|synthetic_event_source\\|telex_image\\|literal_image\\|telex_sound\\|literal_sound\\)\\b\" macos/Lex.swift | sed -n '1,220p'",
+            "workdir": "/<redacted>/lex",
+            "timeout_ms": 10000
+          },
+          "complete": true,
+          "blockState": "complete",
+          "providerToolUseId": "call_ypahpvYdLmCbzuxV1dAfPv4v"
+        }
+      ],
+      "messageId": 14,
+      "protocolMessageID": "M-033RTYCSStJ6GPrAnuHrqn"
+    },
+    {
+      "role": "user",
+      "readAt": null,
+      "content": [
+        {
+          "run": {
+            "result": {
+              "output": "33:    // The internal state of the engine. DO NOT READ.\n34:    private let state: UnsafeMutableRawPointer\n35:    // The memory to receive the replacement characters from engine.\n36:    private var replacement_buffer: [UInt16] = [UInt16](\n40:    // The memory to receive the number of replacement characters from engine.\n41:    private var replacement_count: UInt8 = 0\n44:        // Allocate memory for engine state.\n47:        let state = UnsafeMutableRawPointer.allocate(\n51:        // Initialize the state.\n52:        lex_init(self.state)\n53:        self.state = state\n57:        // Release the state memory.\n58:        self.state.deallocate()\n62:        // Reset the engine state to initial value.\n63:        lex_init(self.state)\n71:        lex_add(self.state, UInt8(unicode_scalar.value))\n76:            lex_backspace(self.state)\n81:        return lex_buffer_full(self.state)\n85:        return lex_buffer_empty(self.state)\n89:        return lex_buffer_effective_full(self.state)\n93:        return Int(lex_calculate_synthetic_backspaces(self.state))\n98:            state,\n99:            &self.replacement_buffer,\n100:            &self.replacement_count\n102:        let count = Int(self.replacement_count)\n106:        self.replacement_buffer.withUnsafeBufferPointer { buffer in\n113:    fileprivate let engine = LexEngine()\n114:    private var status_item: NSStatusItem?\n115:    private let telex_image: NSImage? = {\n124:    private let literal_image: NSImage? = {\n133:    private let telex_sound: NSSound? = NSSound(named: \"Pop\")\n134:    private let literal_sound: NSSound? = NSSound(named: \"Tink\")\n136:    private var signal_sources: [DispatchSourceSignal] = []\n137:    private var input_mode: InputMode = .telex\n138:    private var toggle_input_mode_event_handler_ref: EventHandlerRef?\n139:    private var toggle_input_mode_hot_key_ref: EventHotKeyRef?\n140:    private var toggle_input_mode_sound: NSSound?\n142:    private var event_tap: CFMachPort?\n143:    private var event_tap_run_loop_source: CFRunLoopSource?\n144:    private var synthetic_event_source: CGEventSource?\n162:        self.signal_sources.removeAll()\n172:        self.signal_sources.append(source)\n208:            &self.toggle_input_mode_event_handler_ref\n217:            &self.toggle_input_mode_hot_key_ref\n222:        guard let toggle_input_mode_hot_key_ref = self.toggle_input_mode_hot_key_ref else {\n225:        UnregisterEventHotKey(toggle_input_mode_hot_key_ref)\n226:        self.toggle_input_mode_hot_key_ref = nil\n228:        guard let toggle_input_mode_event_handler_ref = self.toggle_input_mode_event_handler_ref else {\n231:        RemoveEventHandler(toggle_input_mode_event_handler_ref)\n232:        self.toggle_input_mode_event_handler_ref = nil\n237:        self.input_mode = self.input_mode == .telex ? .literal : .telex\n238:        self.status_item?.button?.image = self.input_mode == .telex ? self.telex_image : self.literal_image\n239:        // Reset state.\n240:        self.engine.reset()\n242:        self.toggle_input_mode_sound?.stop()\n243:        self.toggle_input_mode_sound = self.input_mode == .telex ? self.telex_sound : self.literal_sound\n244:        self.toggle_input_mode_sound?.play()\n248:        precondition(self.event_tap == nil)\n249:        precondition(self.event_tap_run_loop_source == nil)\n281:        self.event_tap = tap\n282:        self.event_tap_run_loop_source = run_loop_source\n289:        guard let tap = self.event_tap else {\n293:        if let run_loop_source = self.event_tap_run_loop_source {\n297:        self.event_tap_run_loop_source = nil\n298:        self.event_tap = nil\n303:        precondition(self.synthetic_event_source == nil)\n306:        self.synthetic_event_source = source\n310:        self.synthetic_event_source = nil\n314:        precondition(self.status_item == nil)\n316:        let status_item = NSStatusBar.system.statusItem(\n319:        self.status_item = status_item\n341:        status_item.menu = menu\n342:        status_item.button?.image = self.input_mode == .telex ? self.telex_image : self.literal_image\n346:        guard let status_item = self.status_item else {\n350:        NSStatusBar.system.removeStatusItem(status_item)\n351:        self.status_item = nil\n366:        return self.synthetic_event_source\n371:        guard let event_tap = self.event_tap else {\n374:        CGEvent.tapEnable(tap: event_tap, enable: true)\n378:        return self.input_mode == .literal\n399:            // Reset engine.\n400:            app_delegate.self.engine.reset()\n407:            // Reset engine.\n408:            app_delegate.self.engine.reset()\n436:                    app_delegate.engine.backspace()\n441:                        // Reset state for unhandled keycode.\n442:                        // app_delegate.self.engine.reset()\n456:                    app_delegate.self.engine.reset()\n471:                    // No alphabitec, reset state.\n472:                    app_delegate.self.engine.reset()\n476:                    app_delegate.self.engine.reset()\n480:            // Valid input, safe to process with the engine.\n481:            if app_delegate.engine.buffer_full() {\n482:                // The state reach the limit, reset it before continue processing.\n483:                app_delegate.self.engine.reset()\n486:            if app_delegate.engine.buffer_effective_full() {\n488:                app_delegate.engine.add(input)\n492:                guard let synthetic_event_source = app_delegate.get_synthetic_event_source() else {\n494:                    app_delegate.self.engine.reset()\n498:                // Send the input character to engine.\n499:                app_delegate.engine.add(input)\n502:                let backspace_count = app_delegate.engine.synthetic_backspaces()\n508:                            keyboardEventSource: synthetic_event_source,\n516:                            keyboardEventSource: synthetic_event_source,\n526:                app_delegate.engine.compose_replacement { replacement in\n532:                        keyboardEventSource: synthetic_event_source,\n545:                        keyboardEventSource: synthetic_event_source,\n",
+              "exitCode": 0
+            },
+            "status": "done"
+          },
+          "type": "tool_result",
+          "toolUseID": "TU-033RTYF9Xt794WkJJ6NMri"
+        }
+      ],
+      "messageId": 15,
+      "protocolMessageID": "M-033RTYJxvsmMkP5K1gjKNI"
+    },
+    {
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "tool_use"
+      },
+      "usage": {
+        "timestamp": "2026-06-02T15:54:18.633Z",
+        "inputTokens": 0,
+        "outputTokens": 105,
+        "maxInputTokens": 272000,
+        "totalInputTokens": 24727,
+        "cacheReadInputTokens": 23040,
+        "cacheCreationInputTokens": 1687
+      },
+      "readAt": "2026-06-02T15:54:18.626Z",
+      "content": [
+        {
+          "id": "TU-033RTYMlprNUdPYU94519K",
+          "name": "shell_command",
+          "type": "tool_use",
+          "input": {
+            "command": "sed -i 's/            state,/            self.state,/; s/app_delegate\\.self\\.engine/app_delegate.engine/g' macos/Lex.swift\nsed -n '47,105p' macos/Lex.swift\nsed -n '392,500p' macos/Lex.swift",
+            "workdir": "/<redacted>/lex",
+            "timeout_ms": 10000
+          },
+          "complete": true,
+          "blockState": "complete",
+          "providerToolUseId": "call_WZcmzhxjMem7DYi1KkE74BzC"
+        }
+      ],
+      "messageId": 16,
+      "protocolMessageID": "M-033RTYKKY57Y2hUQqGIPHG"
+    },
+    {
+      "role": "user",
+      "readAt": null,
+      "content": [
+        {
+          "run": {
+            "result": {
+              "output": "        let state = UnsafeMutableRawPointer.allocate(\n            byteCount: byte_count,\n            alignment: alignment\n        )\n        // Initialize the state.\n        lex_init(self.state)\n        self.state = state\n    }\n\n    deinit {\n        // Release the state memory.\n        self.state.deallocate()\n    }\n\n    func reset() {\n        // Reset the engine state to initial value.\n        lex_init(self.state)\n    }\n\n    func add(_ unicode_scalar: Unicode.Scalar) {\n        // TODO: should return error when not ASCII.\n        guard unicode_scalar.isASCII else {\n            return\n        }\n        lex_add(self.state, UInt8(unicode_scalar.value))\n    }\n\n    func backspace() {\n        if !buffer_empty() {\n            lex_backspace(self.state)\n        }\n    }\n\n    func buffer_full() -> Bool {\n        return lex_buffer_full(self.state)\n    }\n\n    func buffer_empty() -> Bool {\n        return lex_buffer_empty(self.state)\n    }\n\n    func buffer_effective_full() -> Bool {\n        return lex_buffer_effective_full(self.state)\n    }\n\n    func synthetic_backspaces() -> Int {\n        return Int(lex_calculate_synthetic_backspaces(self.state))\n    }\n\n    func compose_replacement(_ body: (UnsafeBufferPointer<UInt16>) -> Void) {\n        lex_compose_utf16_string_replacement(\n            self.state,\n            &self.replacement_buffer,\n            &self.replacement_count\n        )\n        let count = Int(self.replacement_count)\n        guard count > 0 else {\n            return\n        }\n\n    let app_delegate = Unmanaged<AppDelegate>\n            .fromOpaque(userInfo)\n            .takeUnretainedValue()\n\n    switch event_type {\n        case .tapDisabledByTimeout, .tapDisabledByUserInput:\n            // Reset engine.\n            app_delegate.engine.reset()\n            // Re-enable tap.\n            app_delegate.enable_event_tap()\n            // Pass through event.\n            return Unmanaged.passUnretained(event)\n\n        case .leftMouseDown, .rightMouseDown:\n            // Reset engine.\n            app_delegate.engine.reset()\n            // Pass through event.\n            return Unmanaged.passUnretained(event)\n\n        case .flagsChanged:\n            // Pass through event.\n            // Don't reset for plain Shift / Caps Lock.\n            return Unmanaged.passUnretained(event)\n\n        case .keyDown:\n            // Handle key down.\n            \n            // Ignore Lex's synthetic events.\n            if event.getIntegerValueField(.eventSourceUserData) == synthetic_event_source_user_data {\n                return Unmanaged.passUnretained(event)\n            }\n\n            // passthrough event when in literal mode.\n            if app_delegate.is_literal() {\n                return Unmanaged.passUnretained(event)\n            }\n\n            // Get keycode to detect special key pressed.\n            let key_code = event.getIntegerValueField(.keyboardEventKeycode)\n            switch key_code {\n                case Int64(kVK_Delete):\n                    // User input backspace.\n                    // Call backspace action to keep buffer in sync with real input.\n                    app_delegate.engine.backspace()\n                    // Passthrough backspace.\n                    return Unmanaged.passUnretained(event)\n\n                default:\n                        // Reset state for unhandled keycode.\n                        // app_delegate.engine.reset()\n                        // return Unmanaged.passUnretained(event)\n                        break\n            }\n\n            // Detect and handle alphabetic input.\n            var character_count = 0\n                event.keyboardGetUnicodeString(\n                        maxStringLength: 0,\n                        actualStringLength: &character_count,\n                        unicodeString: nil\n                        )\n                guard character_count == 1 else {\n                    // No character, could be a special key, could not handle this case.\n                    app_delegate.engine.reset()\n                        return Unmanaged.passUnretained(event)\n                }\n\n            // Get Unicode character.\n            var character: UniChar = 0\n                event.keyboardGetUnicodeString(\n                        maxStringLength: 1,\n                        actualStringLength: &character_count,\n                        unicodeString: &character\n                        )\n                // Check if it's alphabetic.\n                let is_alphabetic = (character >= 65 && character <= 90)\n                || (character >= 97 && character <= 122)\n                guard is_alphabetic else {\n                    // No alphabitec, reset state.\n                    app_delegate.engine.reset()\n                        return Unmanaged.passUnretained(event)\n                }\n                guard let input = UnicodeScalar(UInt32(character)) else {\n                    app_delegate.engine.reset()\n                    return Unmanaged.passUnretained(event)\n                }\n\n            // Valid input, safe to process with the engine.\n            if app_delegate.engine.buffer_full() {\n                // The state reach the limit, reset it before continue processing.\n                app_delegate.engine.reset()\n            }\n\n            if app_delegate.engine.buffer_effective_full() {\n                // The buffer effective is full, process literal input.\n                app_delegate.engine.add(input)\n                return Unmanaged.passUnretained(event)\n            } else {\n                // The buffer effective has room, process with synthetic backspace and replacement.\n                guard let synthetic_event_source = app_delegate.get_synthetic_event_source() else {\n                    // No event source to send synthetic event.\n                    app_delegate.engine.reset()\n                    return Unmanaged.passUnretained(event)\n                }\n                \n                // Send the input character to engine.\n                app_delegate.engine.add(input)\n\n",
+              "exitCode": 0
+            },
+            "status": "done"
+          },
+          "type": "tool_result",
+          "toolUseID": "TU-033RTYMlprNUdPYU94519K"
+        }
+      ],
+      "messageId": 17,
+      "protocolMessageID": "M-033RTYQmhhNkd9O65T9Ek3"
+    },
+    {
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "tool_use"
+      },
+      "usage": {
+        "timestamp": "2026-06-02T15:54:23.513Z",
+        "inputTokens": 0,
+        "outputTokens": 185,
+        "maxInputTokens": 272000,
+        "totalInputTokens": 26115,
+        "cacheReadInputTokens": 24576,
+        "cacheCreationInputTokens": 1539
+      },
+      "readAt": "2026-06-02T15:54:23.675Z",
+      "content": [
+        {
+          "id": "TU-033RTYTCEm8l3X7Ppz6qaO",
+          "name": "shell_command",
+          "type": "tool_use",
+          "input": {
+            "command": "sed -n '43,55p' macos/Lex.swift; sed -n '96,110p' macos/Lex.swift; grep -n \"\\b\\(state\\|replacement_buffer\\|replacement_count\\|signal_sources\\|input_mode\\|status_item\\|engine\\|toggle_input_mode_event_handler_ref\\|toggle_input_mode_hot_key_ref\\|toggle_input_mode_sound\\|event_tap\\|event_tap_run_loop_source\\|synthetic_event_source\\|telex_image\\|literal_image\\|telex_sound\\|literal_sound\\)\\b\" macos/Lex.swift | sed -n '1,180p'",
+            "workdir": "/<redacted>/lex",
+            "timeout_ms": 10000
+          },
+          "complete": true,
+          "blockState": "complete",
+          "providerToolUseId": "call_37BPuvVS31NLjH8ogcy0Pfpe"
+        }
+      ],
+      "messageId": 18,
+      "protocolMessageID": "M-033RTYQxWXLfiG2PF82Rf8"
+    },
+    {
+      "role": "user",
+      "readAt": null,
+      "content": [
+        {
+          "run": {
+            "result": {
+              "output": "    init() {\n        // Allocate memory for engine state.\n        let byte_count = Int(lex_state_size)\n        let alignment = Int(lex_state_alignment)\n        let state = UnsafeMutableRawPointer.allocate(\n            byteCount: byte_count,\n            alignment: alignment\n        )\n        // Initialize the state.\n        lex_init(self.state)\n        self.state = state\n    }\n\n    func compose_replacement(_ body: (UnsafeBufferPointer<UInt16>) -> Void) {\n        lex_compose_utf16_string_replacement(\n            self.state,\n            &self.replacement_buffer,\n            &self.replacement_count\n        )\n        let count = Int(self.replacement_count)\n        guard count > 0 else {\n            return\n        }\n        self.replacement_buffer.withUnsafeBufferPointer { buffer in\n            body(UnsafeBufferPointer(start: buffer.baseAddress!, count: count))\n        }\n    }\n}\n33:    // The internal state of the engine. DO NOT READ.\n34:    private let state: UnsafeMutableRawPointer\n35:    // The memory to receive the replacement characters from engine.\n36:    private var replacement_buffer: [UInt16] = [UInt16](\n40:    // The memory to receive the number of replacement characters from engine.\n41:    private var replacement_count: UInt8 = 0\n44:        // Allocate memory for engine state.\n47:        let state = UnsafeMutableRawPointer.allocate(\n51:        // Initialize the state.\n52:        lex_init(self.state)\n53:        self.state = state\n57:        // Release the state memory.\n58:        self.state.deallocate()\n62:        // Reset the engine state to initial value.\n63:        lex_init(self.state)\n71:        lex_add(self.state, UInt8(unicode_scalar.value))\n76:            lex_backspace(self.state)\n81:        return lex_buffer_full(self.state)\n85:        return lex_buffer_empty(self.state)\n89:        return lex_buffer_effective_full(self.state)\n93:        return Int(lex_calculate_synthetic_backspaces(self.state))\n98:            self.state,\n99:            &self.replacement_buffer,\n100:            &self.replacement_count\n102:        let count = Int(self.replacement_count)\n106:        self.replacement_buffer.withUnsafeBufferPointer { buffer in\n113:    fileprivate let engine = LexEngine()\n114:    private var status_item: NSStatusItem?\n115:    private let telex_image: NSImage? = {\n124:    private let literal_image: NSImage? = {\n133:    private let telex_sound: NSSound? = NSSound(named: \"Pop\")\n134:    private let literal_sound: NSSound? = NSSound(named: \"Tink\")\n136:    private var signal_sources: [DispatchSourceSignal] = []\n137:    private var input_mode: InputMode = .telex\n138:    private var toggle_input_mode_event_handler_ref: EventHandlerRef?\n139:    private var toggle_input_mode_hot_key_ref: EventHotKeyRef?\n140:    private var toggle_input_mode_sound: NSSound?\n142:    private var event_tap: CFMachPort?\n143:    private var event_tap_run_loop_source: CFRunLoopSource?\n144:    private var synthetic_event_source: CGEventSource?\n162:        self.signal_sources.removeAll()\n172:        self.signal_sources.append(source)\n208:            &self.toggle_input_mode_event_handler_ref\n217:            &self.toggle_input_mode_hot_key_ref\n222:        guard let toggle_input_mode_hot_key_ref = self.toggle_input_mode_hot_key_ref else {\n225:        UnregisterEventHotKey(toggle_input_mode_hot_key_ref)\n226:        self.toggle_input_mode_hot_key_ref = nil\n228:        guard let toggle_input_mode_event_handler_ref = self.toggle_input_mode_event_handler_ref else {\n231:        RemoveEventHandler(toggle_input_mode_event_handler_ref)\n232:        self.toggle_input_mode_event_handler_ref = nil\n237:        self.input_mode = self.input_mode == .telex ? .literal : .telex\n238:        self.status_item?.button?.image = self.input_mode == .telex ? self.telex_image : self.literal_image\n239:        // Reset state.\n240:        self.engine.reset()\n242:        self.toggle_input_mode_sound?.stop()\n243:        self.toggle_input_mode_sound = self.input_mode == .telex ? self.telex_sound : self.literal_sound\n244:        self.toggle_input_mode_sound?.play()\n248:        precondition(self.event_tap == nil)\n249:        precondition(self.event_tap_run_loop_source == nil)\n281:        self.event_tap = tap\n282:        self.event_tap_run_loop_source = run_loop_source\n289:        guard let tap = self.event_tap else {\n293:        if let run_loop_source = self.event_tap_run_loop_source {\n297:        self.event_tap_run_loop_source = nil\n298:        self.event_tap = nil\n303:        precondition(self.synthetic_event_source == nil)\n306:        self.synthetic_event_source = source\n310:        self.synthetic_event_source = nil\n314:        precondition(self.status_item == nil)\n316:        let status_item = NSStatusBar.system.statusItem(\n319:        self.status_item = status_item\n341:        status_item.menu = menu\n342:        status_item.button?.image = self.input_mode == .telex ? self.telex_image : self.literal_image\n346:        guard let status_item = self.status_item else {\n350:        NSStatusBar.system.removeStatusItem(status_item)\n351:        self.status_item = nil\n366:        return self.synthetic_event_source\n371:        guard let event_tap = self.event_tap else {\n374:        CGEvent.tapEnable(tap: event_tap, enable: true)\n378:        return self.input_mode == .literal\n399:            // Reset engine.\n400:            app_delegate.engine.reset()\n407:            // Reset engine.\n408:            app_delegate.engine.reset()\n436:                    app_delegate.engine.backspace()\n441:                        // Reset state for unhandled keycode.\n442:                        // app_delegate.engine.reset()\n456:                    app_delegate.engine.reset()\n471:                    // No alphabitec, reset state.\n472:                    app_delegate.engine.reset()\n476:                    app_delegate.engine.reset()\n480:            // Valid input, safe to process with the engine.\n481:            if app_delegate.engine.buffer_full() {\n482:                // The state reach the limit, reset it before continue processing.\n483:                app_delegate.engine.reset()\n486:            if app_delegate.engine.buffer_effective_full() {\n488:                app_delegate.engine.add(input)\n492:                guard let synthetic_event_source = app_delegate.get_synthetic_event_source() else {\n494:                    app_delegate.engine.reset()\n498:                // Send the input character to engine.\n499:                app_delegate.engine.add(input)\n502:                let backspace_count = app_delegate.engine.synthetic_backspaces()\n508:                            keyboardEventSource: synthetic_event_source,\n516:                            keyboardEventSource: synthetic_event_source,\n526:                app_delegate.engine.compose_replacement { replacement in\n532:                        keyboardEventSource: synthetic_event_source,\n545:                        keyboardEventSource: synthetic_event_source,\n",
+              "exitCode": 0
+            },
+            "status": "done"
+          },
+          "type": "tool_result",
+          "toolUseID": "TU-033RTYTCEm8l3X7Ppz6qaO"
+        }
+      ],
+      "messageId": 19,
+      "protocolMessageID": "M-033RTYYPTvW2JcnUXrL3Ko"
+    },
+    {
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "tool_use"
+      },
+      "usage": {
+        "timestamp": "2026-06-02T15:54:27.526Z",
+        "inputTokens": 0,
+        "outputTokens": 102,
+        "maxInputTokens": 272000,
+        "totalInputTokens": 27952,
+        "cacheReadInputTokens": 25600,
+        "cacheCreationInputTokens": 2352
+      },
+      "readAt": null,
+      "content": [
+        {
+          "id": "TU-033RTYbEMRUK90odsusryv",
+          "name": "shell_command",
+          "type": "tool_use",
+          "input": {
+            "command": "sed -i 's/lex_init(self.state)/lex_init(state)/' macos/Lex.swift\ncommand -v swiftc || true\ncommand -v xcodebuild || true\ngit diff -- macos/Lex.swift | sed -n '1,220p'",
+            "workdir": "/<redacted>/lex",
+            "timeout_ms": 10000
+          },
+          "complete": true,
+          "blockState": "complete",
+          "providerToolUseId": "call_eWE6oIJKfCppD8Dr2hLRbi68"
+        }
+      ],
+      "messageId": 20,
+      "protocolMessageID": "M-033RTYZ5UjCsN4qPIyVn1H"
+    },
+    {
+      "role": "user",
+      "readAt": null,
+      "content": [
+        {
+          "run": {
+            "result": {
+              "output": "diff --git a/lex/macos/Lex.swift b/lex/macos/Lex.swift\nindex a640356..094fc25 100644\n--- a/lex/macos/Lex.swift\n+++ b/lex/macos/Lex.swift\n@@ -55,7 +55,7 @@ private final class LexEngine {\n \n     deinit {\n         // Release the state memory.\n-        state.deallocate()\n+        self.state.deallocate()\n     }\n \n     func reset() {\n@@ -68,42 +68,42 @@ private final class LexEngine {\n         guard unicode_scalar.isASCII else {\n             return\n         }\n-        lex_add(state, UInt8(unicode_scalar.value))\n+        lex_add(self.state, UInt8(unicode_scalar.value))\n     }\n \n     func backspace() {\n         if !buffer_empty() {\n-            lex_backspace(state)\n+            lex_backspace(self.state)\n         }\n     }\n \n     func buffer_full() -> Bool {\n-        return lex_buffer_full(state)\n+        return lex_buffer_full(self.state)\n     }\n \n     func buffer_empty() -> Bool {\n-        return lex_buffer_empty(state)\n+        return lex_buffer_empty(self.state)\n     }\n \n     func buffer_effective_full() -> Bool {\n-        return lex_buffer_effective_full(state)\n+        return lex_buffer_effective_full(self.state)\n     }\n \n     func synthetic_backspaces() -> Int {\n-        return Int(lex_calculate_synthetic_backspaces(state))\n+        return Int(lex_calculate_synthetic_backspaces(self.state))\n     }\n \n     func compose_replacement(_ body: (UnsafeBufferPointer<UInt16>) -> Void) {\n         lex_compose_utf16_string_replacement(\n-            state,\n-            &replacement_buffer,\n-            &replacement_count\n+            self.state,\n+            &self.replacement_buffer,\n+            &self.replacement_count\n         )\n-        let count = Int(replacement_count)\n+        let count = Int(self.replacement_count)\n         guard count > 0 else {\n             return\n         }\n-        replacement_buffer.withUnsafeBufferPointer { buffer in\n+        self.replacement_buffer.withUnsafeBufferPointer { buffer in\n             body(UnsafeBufferPointer(start: buffer.baseAddress!, count: count))\n         }\n     }\n@@ -159,7 +159,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {\n         stop_event_tap()\n         destroy_synthetic_event_source()\n         destroy_status_item()\n-        signal_sources.removeAll()\n+        self.signal_sources.removeAll()\n     }\n \n     private func install_signal_handler(_ signal_number: Int32) {\n@@ -169,7 +169,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {\n             NSApp.terminate(nil)\n         }\n         source.resume()\n-        signal_sources.append(source)\n+        self.signal_sources.append(source)\n     }\n \n     private func register_toggle_input_mode_hot_key() {\n@@ -205,7 +205,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {\n             1,\n             &event_type,\n             self_pointer,\n-            &toggle_input_mode_event_handler_ref\n+            &self.toggle_input_mode_event_handler_ref\n         )\n         let id = toggle_input_mode_hot_key_id\n         RegisterEventHotKey(\n@@ -214,18 +214,18 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {\n             id,\n             GetApplicationEventTarget(),\n             0,\n-            &toggle_input_mode_hot_key_ref\n+            &self.toggle_input_mode_hot_key_ref\n         )\n     }\n \n     private func unregister_toggle_input_mode_hot_key() {\n-        guard let toggle_input_mode_hot_key_ref else {\n+        guard let toggle_input_mode_hot_key_ref = self.toggle_input_mode_hot_key_ref else {\n             return\n         }\n         UnregisterEventHotKey(toggle_input_mode_hot_key_ref)\n         self.toggle_input_mode_hot_key_ref = nil\n \n-        guard let toggle_input_mode_event_handler_ref else {\n+        guard let toggle_input_mode_event_handler_ref = self.toggle_input_mode_event_handler_ref else {\n             return\n         }\n         RemoveEventHandler(toggle_input_mode_event_handler_ref)\n@@ -234,19 +234,19 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {\n \n     private func toggle_input_mode() {\n         // Change mode.\n-        input_mode = input_mode == .telex ? .literal : .telex\n-        status_item?.button?.image = input_mode == .telex ? telex_image : literal_image\n+        self.input_mode = self.input_mode == .telex ? .literal : .telex\n+        self.status_item?.button?.image = self.input_mode == .telex ? self.telex_image : self.literal_image\n         // Reset state.\n-        engine.reset()\n+        self.engine.reset()\n         // Play sound when toggling mode.\n-        toggle_input_mode_sound?.stop()\n-        toggle_input_mode_sound = input_mode == .telex ? telex_sound : literal_sound\n-        toggle_input_mode_sound?.play()\n+        self.toggle_input_mode_sound?.stop()\n+        self.toggle_input_mode_sound = self.input_mode == .telex ? self.telex_sound : self.literal_sound\n+        self.toggle_input_mode_sound?.play()\n     }\n \n     private func start_event_tap() {\n-        precondition(event_tap == nil)\n-        precondition(event_tap_run_loop_source == nil)\n+        precondition(self.event_tap == nil)\n+        precondition(self.event_tap_run_loop_source == nil)\n \n         let options = [ kAXTrustedCheckOptionPrompt.takeUnretainedValue(): true ] as CFDictionary\n         guard AXIsProcessTrustedWithOptions(options) else {\n@@ -278,40 +278,40 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {\n             return\n         }\n         let run_loop_source = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, tap, 0)\n-        event_tap = tap\n-        event_tap_run_loop_source = run_loop_source\n+        self.event_tap = tap\n+        self.event_tap_run_loop_source = run_loop_source\n         CFRunLoopAddSource(CFRunLoopGetCurrent(), run_loop_source, .commonModes)\n         CGEvent.tapEnable(tap: tap, enable: true)\n         print(\"Event tap started.\")\n     }\n \n     private func stop_event_tap() {\n-        guard let tap = event_tap else {\n+        guard let tap = self.event_tap else {\n             return\n         }\n         CGEvent.tapEnable(tap: tap, enable: false)\n-        if let run_loop_source = event_tap_run_loop_source {\n+        if let run_loop_source = self.event_tap_run_loop_source {\n             CFRunLoopRemoveSource(CFRunLoopGetCurrent(), run_loop_source, .commonModes)\n         }\n         CFMachPortInvalidate(tap)\n-        event_tap_run_loop_source = nil\n-        event_tap = nil\n+        self.event_tap_run_loop_source = nil\n+        self.event_tap = nil\n         print(\"Event tap stopped.\")\n     }\n \n     private func initialize_synthetic_event_source() {\n-        precondition(synthetic_event_source == nil)\n+        precondition(self.synthetic_event_source == nil)\n         let source = CGEventSource(stateID: .privateState)\n         source?.userData = synthetic_event_source_user_data\n-        synthetic_event_source = source\n+        self.synthetic_event_source = source\n     }\n \n     private func destroy_synthetic_event_source() {\n-        synthetic_event_source = nil\n+        self.synthetic_event_source = nil\n     }\n \n     private func initialize_status_item() {\n-        precondition(status_item == nil)\n+        precondition(self.status_item == nil)\n \n         let status_item = NSStatusBar.system.statusItem(\n             withLength: NSStatusItem.squareLength\n@@ -339,11 +339,11 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {\n         menu.addItem(quit_item)\n \n         status_item.menu = menu\n-        status_item.button?.image = input_mode == .telex ? telex_image : literal_image\n+        status_item.button?.image = self.input_mode == .telex ? self.telex_image : self.literal_image\n     }\n \n     private func destroy_status_item() {\n-        guard let status_item else {\n+        guard let status_item = self.status_item else {\n             return\n         }\n \n@@ -363,19 +363,19 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {\n     }\n \n     func get_synthetic_event_source() -> CGEventSource? {\n-        return synthetic_event_source\n+        return self.synthetic_event_source\n     }\n \n     func enable_event_tap() {\n         // TODO: why do we need to re-enable the tap?\n-        guard let event_tap else {\n",
+              "exitCode": 0
+            },
+            "status": "done"
+          },
+          "type": "tool_result",
+          "toolUseID": "TU-033RTYbEMRUK90odsusryv"
+        }
+      ],
+      "messageId": 21,
+      "protocolMessageID": "M-033RTYe41JtNZ7NeHhwpwC"
+    },
+    {
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "tool_use"
+      },
+      "usage": {
+        "timestamp": "2026-06-02T15:54:30.234Z",
+        "inputTokens": 0,
+        "outputTokens": 62,
+        "maxInputTokens": 272000,
+        "totalInputTokens": 30129,
+        "cacheReadInputTokens": 27648,
+        "cacheCreationInputTokens": 2481
+      },
+      "readAt": null,
+      "content": [
+        {
+          "id": "TU-033RTYfzQuNRUjmDFslvCS",
+          "name": "shell_command",
+          "type": "tool_use",
+          "input": {
+            "command": "git diff -- macos/Lex.swift | sed -n '220,320p'",
+            "workdir": "/<redacted>/lex",
+            "timeout_ms": 10000
+          },
+          "complete": true,
+          "blockState": "complete",
+          "providerToolUseId": "call_ZLNPSNInfK7jyh0yiPaxDBke"
+        }
+      ],
+      "messageId": 22,
+      "protocolMessageID": "M-033RTYeD5PVzBJBRW0M0iD"
+    },
+    {
+      "role": "user",
+      "readAt": null,
+      "content": [
+        {
+          "run": {
+            "result": {
+              "output": "-        guard let event_tap else {\n+        guard let event_tap = self.event_tap else {\n             return\n         }\n         CGEvent.tapEnable(tap: event_tap, enable: true)\n     }\n \n     func is_literal() -> Bool {\n-        return input_mode == .literal\n+        return self.input_mode == .literal\n     }\n }\n \n",
+              "exitCode": 0
+            },
+            "status": "done"
+          },
+          "type": "tool_result",
+          "toolUseID": "TU-033RTYfzQuNRUjmDFslvCS"
+        }
+      ],
+      "messageId": 23,
+      "protocolMessageID": "M-033RTYii4kUvyJzPUq12TP"
+    },
+    {
+      "meta": {
+        "openAIResponsePhase": "final_answer"
+      },
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "end_turn"
+      },
+      "usage": {
+        "timestamp": "2026-06-02T15:54:33.666Z",
+        "inputTokens": 0,
+        "outputTokens": 73,
+        "maxInputTokens": 272000,
+        "totalInputTokens": 30299,
+        "cacheReadInputTokens": 29696,
+        "cacheCreationInputTokens": 603
+      },
+      "readAt": "2026-06-02T15:54:34.058Z",
+      "content": [
+        {
+          "text": "Applied the Swift `self.` instance-property convention in [macos/Lex.swift](file:///<redacted>/lex/macos/Lex.swift). Verification blocked: this environment has no `swiftc` or `xcodebuild` installed, so I could not typecheck/build locally.",
+          "type": "text",
+          "finalTime": 1780415673600,
+          "startTime": 1780415672585,
+          "blockState": "complete"
+        }
+      ],
+      "messageId": 24,
+      "turnElapsedMs": 78612,
+      "protocolMessageID": "M-033RTYiszd9MYQQQX3ACxy"
+    },
+    {
+      "meta": {
+        "sentAt": 1780445482111
+      },
+      "role": "user",
+      "readAt": "2026-06-03T00:11:22.240Z",
+      "content": [
+        {
+          "text": "Apply the same convention for instance functions.",
+          "type": "text"
+        }
+      ],
+      "messageId": 25,
+      "protocolMessageID": "M-033RfkgyYdIJFiQMtnNWWS"
+    },
+    {
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "tool_use"
+      },
+      "usage": {
+        "timestamp": "2026-06-03T00:11:25.469Z",
+        "inputTokens": 0,
+        "outputTokens": 83,
+        "maxInputTokens": 272000,
+        "totalInputTokens": 30422,
+        "cacheReadInputTokens": 7680,
+        "cacheCreationInputTokens": 22742
+      },
+      "readAt": "2026-06-03T00:11:25.849Z",
+      "content": [
+        {
+          "id": "TU-033Rfkkn2rFUWm9nTZZC8T",
+          "name": "shell_command",
+          "type": "tool_use",
+          "input": {
+            "command": "grep -n \"^[[:space:]]*[A-Za-z_][A-Za-z0-9_]*(\" macos/Lex.swift | sed -n '1,220p'",
+            "workdir": "/<redacted>/lex",
+            "timeout_ms": 10000
+          },
+          "complete": true,
+          "blockState": "complete",
+          "providerToolUseId": "call_2Ulze57WwiYDlVMTyXZWr7IU"
+        }
+      ],
+      "messageId": 26,
+      "protocolMessageID": "M-033RfkiML6OHvqp1Mf8ZgG"
+    },
+    {
+      "role": "user",
+      "readAt": null,
+      "content": [
+        {
+          "run": {
+            "result": {
+              "output": "43:    init() {\n52:        lex_init(state)\n63:        lex_init(self.state)\n71:        lex_add(self.state, UInt8(unicode_scalar.value))\n76:            lex_backspace(self.state)\n97:        lex_compose_utf16_string_replacement(\n107:            body(UnsafeBufferPointer(start: buffer.baseAddress!, count: count))\n147:        print(\"Activated.\")\n148:        initialize_status_item()\n149:        install_signal_handler(SIGINT)\n150:        install_signal_handler(SIGTERM)\n151:        initialize_synthetic_event_source()\n152:        start_event_tap()\n153:        register_toggle_input_mode_hot_key()\n157:        print(\"Shutting down...\")\n158:        unregister_toggle_input_mode_hot_key()\n159:        stop_event_tap()\n160:        destroy_synthetic_event_source()\n161:        destroy_status_item()\n166:        signal(signal_number, SIG_IGN)\n178:        InstallEventHandler(\n179:            GetApplicationEventTarget(),\n185:                GetEventParameter(\n187:                    EventParamName(kEventParamDirectObject),\n188:                    EventParamType(typeEventHotKeyID),\n211:        RegisterEventHotKey(\n212:            UInt32(kVK_Space),\n213:            UInt32(controlKey | optionKey),\n215:            GetApplicationEventTarget(),\n225:        UnregisterEventHotKey(toggle_input_mode_hot_key_ref)\n231:        RemoveEventHandler(toggle_input_mode_event_handler_ref)\n248:        precondition(self.event_tap == nil)\n249:        precondition(self.event_tap_run_loop_source == nil)\n253:            print(\"Accessibility permission required. Grant access in System Settings > Privacy & Security > Accessibility, then relaunch.\")\n277:            print(\"Failed to create event tap.\")\n283:        CFRunLoopAddSource(CFRunLoopGetCurrent(), run_loop_source, .commonModes)\n285:        print(\"Event tap started.\")\n294:            CFRunLoopRemoveSource(CFRunLoopGetCurrent(), run_loop_source, .commonModes)\n296:        CFMachPortInvalidate(tap)\n299:        print(\"Event tap stopped.\")\n303:        precondition(self.synthetic_event_source == nil)\n314:        precondition(self.status_item == nil)\n",
+              "exitCode": 0
+            },
+            "status": "done"
+          },
+          "type": "tool_result",
+          "toolUseID": "TU-033Rfkkn2rFUWm9nTZZC8T"
+        }
+      ],
+      "messageId": 27,
+      "protocolMessageID": "M-033RfknV0IrzkkO3utUDGQ"
+    },
+    {
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "tool_use"
+      },
+      "usage": {
+        "timestamp": "2026-06-03T00:11:30.226Z",
+        "inputTokens": 0,
+        "outputTokens": 276,
+        "maxInputTokens": 272000,
+        "totalInputTokens": 31047,
+        "cacheReadInputTokens": 30208,
+        "cacheCreationInputTokens": 839
+      },
+      "readAt": null,
+      "content": [
+        {
+          "id": "TU-033RfkpI8DdqnlQlfG1uPD",
+          "name": "shell_command",
+          "type": "tool_use",
+          "input": {
+            "command": "sed -i 's/        initialize_status_item()/        self.initialize_status_item()/; s/        install_signal_handler(SIGINT)/        self.install_signal_handler(SIGINT)/; s/        install_signal_handler(SIGTERM)/        self.install_signal_handler(SIGTERM)/; s/        initialize_synthetic_event_source()/        self.initialize_synthetic_event_source()/; s/        start_event_tap()/        self.start_event_tap()/; s/        register_toggle_input_mode_hot_key()/        self.register_toggle_input_mode_hot_key()/; s/        unregister_toggle_input_mode_hot_key()/        self.unregister_toggle_input_mode_hot_key()/; s/        stop_event_tap()/        self.stop_event_tap()/; s/        destroy_synthetic_event_source()/        self.destroy_synthetic_event_source()/; s/        destroy_status_item()/        self.destroy_status_item()/; s/if !buffer_empty()/if !self.buffer_empty()/' macos/Lex.swift\ncommand -v swiftc || true\ncommand -v xcodebuild || true\ngit diff -- macos/Lex.swift | sed -n '1,260p'",
+            "workdir": "/<redacted>/lex",
+            "timeout_ms": 10000
+          },
+          "complete": true,
+          "blockState": "complete",
+          "providerToolUseId": "call_RJmAG1zhi3uzc975IsScMYTu"
+        }
+      ],
+      "messageId": 28,
+      "protocolMessageID": "M-033RfknfvAPIiPBzhYg5R2"
+    },
+    {
+      "role": "user",
+      "readAt": null,
+      "content": [
+        {
+          "run": {
+            "result": {
+              "output": "diff --git a/lex/macos/Lex.swift b/lex/macos/Lex.swift\nindex a640356..9c52a51 100644\n--- a/lex/macos/Lex.swift\n+++ b/lex/macos/Lex.swift\n@@ -55,12 +55,12 @@ private final class LexEngine {\n \n     deinit {\n         // Release the state memory.\n-        state.deallocate()\n+        self.state.deallocate()\n     }\n \n     func reset() {\n         // Reset the engine state to initial value.\n-        lex_init(state)\n+        lex_init(self.state)\n     }\n \n     func add(_ unicode_scalar: Unicode.Scalar) {\n@@ -68,42 +68,42 @@ private final class LexEngine {\n         guard unicode_scalar.isASCII else {\n             return\n         }\n-        lex_add(state, UInt8(unicode_scalar.value))\n+        lex_add(self.state, UInt8(unicode_scalar.value))\n     }\n \n     func backspace() {\n-        if !buffer_empty() {\n-            lex_backspace(state)\n+        if !self.buffer_empty() {\n+            lex_backspace(self.state)\n         }\n     }\n \n     func buffer_full() -> Bool {\n-        return lex_buffer_full(state)\n+        return lex_buffer_full(self.state)\n     }\n \n     func buffer_empty() -> Bool {\n-        return lex_buffer_empty(state)\n+        return lex_buffer_empty(self.state)\n     }\n \n     func buffer_effective_full() -> Bool {\n-        return lex_buffer_effective_full(state)\n+        return lex_buffer_effective_full(self.state)\n     }\n \n     func synthetic_backspaces() -> Int {\n-        return Int(lex_calculate_synthetic_backspaces(state))\n+        return Int(lex_calculate_synthetic_backspaces(self.state))\n     }\n \n     func compose_replacement(_ body: (UnsafeBufferPointer<UInt16>) -> Void) {\n         lex_compose_utf16_string_replacement(\n-            state,\n-            &replacement_buffer,\n-            &replacement_count\n+            self.state,\n+            &self.replacement_buffer,\n+            &self.replacement_count\n         )\n-        let count = Int(replacement_count)\n+        let count = Int(self.replacement_count)\n         guard count > 0 else {\n             return\n         }\n-        replacement_buffer.withUnsafeBufferPointer { buffer in\n+        self.replacement_buffer.withUnsafeBufferPointer { buffer in\n             body(UnsafeBufferPointer(start: buffer.baseAddress!, count: count))\n         }\n     }\n@@ -145,21 +145,21 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {\n \n     func applicationDidFinishLaunching(_ notification: Notification) {\n         print(\"Activated.\")\n-        initialize_status_item()\n-        install_signal_handler(SIGINT)\n-        install_signal_handler(SIGTERM)\n-        initialize_synthetic_event_source()\n-        start_event_tap()\n-        register_toggle_input_mode_hot_key()\n+        self.initialize_status_item()\n+        self.install_signal_handler(SIGINT)\n+        self.install_signal_handler(SIGTERM)\n+        self.initialize_synthetic_event_source()\n+        self.start_event_tap()\n+        self.register_toggle_input_mode_hot_key()\n     }\n     \n     func applicationWillTerminate(_ notification: Notification) {\n         print(\"Shutting down...\")\n-        unregister_toggle_input_mode_hot_key()\n-        stop_event_tap()\n-        destroy_synthetic_event_source()\n-        destroy_status_item()\n-        signal_sources.removeAll()\n+        self.unregister_toggle_input_mode_hot_key()\n+        self.stop_event_tap()\n+        self.destroy_synthetic_event_source()\n+        self.destroy_status_item()\n+        self.signal_sources.removeAll()\n     }\n \n     private func install_signal_handler(_ signal_number: Int32) {\n@@ -169,7 +169,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {\n             NSApp.terminate(nil)\n         }\n         source.resume()\n-        signal_sources.append(source)\n+        self.signal_sources.append(source)\n     }\n \n     private func register_toggle_input_mode_hot_key() {\n@@ -205,7 +205,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {\n             1,\n             &event_type,\n             self_pointer,\n-            &toggle_input_mode_event_handler_ref\n+            &self.toggle_input_mode_event_handler_ref\n         )\n         let id = toggle_input_mode_hot_key_id\n         RegisterEventHotKey(\n@@ -214,18 +214,18 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {\n             id,\n             GetApplicationEventTarget(),\n             0,\n-            &toggle_input_mode_hot_key_ref\n+            &self.toggle_input_mode_hot_key_ref\n         )\n     }\n \n     private func unregister_toggle_input_mode_hot_key() {\n-        guard let toggle_input_mode_hot_key_ref else {\n+        guard let toggle_input_mode_hot_key_ref = self.toggle_input_mode_hot_key_ref else {\n             return\n         }\n         UnregisterEventHotKey(toggle_input_mode_hot_key_ref)\n         self.toggle_input_mode_hot_key_ref = nil\n \n-        guard let toggle_input_mode_event_handler_ref else {\n+        guard let toggle_input_mode_event_handler_ref = self.toggle_input_mode_event_handler_ref else {\n             return\n         }\n         RemoveEventHandler(toggle_input_mode_event_handler_ref)\n@@ -234,19 +234,19 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {\n \n     private func toggle_input_mode() {\n         // Change mode.\n-        input_mode = input_mode == .telex ? .literal : .telex\n-        status_item?.button?.image = input_mode == .telex ? telex_image : literal_image\n+        self.input_mode = self.input_mode == .telex ? .literal : .telex\n+        self.status_item?.button?.image = self.input_mode == .telex ? self.telex_image : self.literal_image\n         // Reset state.\n-        engine.reset()\n+        self.engine.reset()\n         // Play sound when toggling mode.\n-        toggle_input_mode_sound?.stop()\n-        toggle_input_mode_sound = input_mode == .telex ? telex_sound : literal_sound\n-        toggle_input_mode_sound?.play()\n+        self.toggle_input_mode_sound?.stop()\n+        self.toggle_input_mode_sound = self.input_mode == .telex ? self.telex_sound : self.literal_sound\n+        self.toggle_input_mode_sound?.play()\n     }\n \n     private func start_event_tap() {\n-        precondition(event_tap == nil)\n-        precondition(event_tap_run_loop_source == nil)\n+        precondition(self.event_tap == nil)\n+        precondition(self.event_tap_run_loop_source == nil)\n \n         let options = [ kAXTrustedCheckOptionPrompt.takeUnretainedValue(): true ] as CFDictionary\n         guard AXIsProcessTrustedWithOptions(options) else {\n@@ -278,40 +278,40 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {\n             return\n         }\n         let run_loop_source = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, tap, 0)\n-        event_tap = tap\n-        event_tap_run_loop_source = run_loop_source\n+        self.event_tap = tap\n+        self.event_tap_run_loop_source = run_loop_source\n         CFRunLoopAddSource(CFRunLoopGetCurrent(), run_loop_source, .commonModes)\n         CGEvent.tapEnable(tap: tap, enable: true)\n         print(\"Event tap started.\")\n     }\n \n     private func stop_event_tap() {\n-        guard let tap = event_tap else {\n+        guard let tap = self.event_tap else {\n             return\n         }\n         CGEvent.tapEnable(tap: tap, enable: false)\n-        if let run_loop_source = event_tap_run_loop_source {\n+        if let run_loop_source = self.event_tap_run_loop_source {\n             CFRunLoopRemoveSource(CFRunLoopGetCurrent(), run_loop_source, .commonModes)\n         }\n         CFMachPortInvalidate(tap)\n-        event_tap_run_loop_source = nil\n-        event_tap = nil\n+        self.event_tap_run_loop_source = nil\n+        self.event_tap = nil\n         print(\"Event tap stopped.\")\n     }\n \n     private func initialize_synthetic_event_source() {\n-        precondition(synthetic_event_source == nil)\n+        precondition(self.synthetic_event_source == nil)\n         let source = CGEventSource(stateID: .privateState)\n         source?.userData = synthetic_event_source_user_data\n-        synthetic_event_source = source\n+        self.synthetic_event_source = source\n     }\n \n     private func destroy_synthetic_event_source() {\n-        synthetic_event_source = nil\n+        self.synthetic_event_source = nil\n     }\n \n     private func initialize_status_item() {\n-        precondition(status_item == nil)\n+        precondition(self.status_item == nil)\n \n         let status_item = NSStatusBar.system.statusItem(\n             withLength: NSStatusItem.squareLength\n@@ -339,11 +339,11 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {\n         menu.addItem(quit_item)\n \n         status_item.menu = menu\n-        status_item.button?.image = input_mode == .telex ? telex_image : literal_image\n+        status_item.button?.image = self.input_mode == .telex ? self.telex_image : self.literal_image\n     }\n \n     private func destroy_status_item() {\n-        guard let status_item else {\n+        guard let status_item = self.status_item else {\n             return\n         }\n \n@@ -363,19 +363,19 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {\n     }\n \n     func get_synthetic_event_source() -> CGEventSource? {\n-        return synthetic_event_source\n+        return self.synthetic_event_source\n     }\n \n     func enable_event_tap() {\n         // TODO: why do we need to re-enable the tap?\n-        guard let event_tap else {\n+        guard let event_tap = self.event_tap else {\n             return\n         }\n         CGEvent.tapEnable(tap: event_tap, enable: true)\n     }\n \n     func is_literal() -> Bool {\n-        return input_mode == .literal\n+        return self.input_mode == .literal\n",
+              "exitCode": 0
+            },
+            "status": "done"
+          },
+          "type": "tool_result",
+          "toolUseID": "TU-033RfkpI8DdqnlQlfG1uPD"
+        }
+      ],
+      "messageId": 29,
+      "protocolMessageID": "M-033RfkukgAC4kPeboFbWZq"
+    },
+    {
+      "meta": {
+        "openAIResponsePhase": "final_answer"
+      },
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "end_turn"
+      },
+      "usage": {
+        "timestamp": "2026-06-03T00:11:33.483Z",
+        "inputTokens": 0,
+        "outputTokens": 89,
+        "maxInputTokens": 272000,
+        "totalInputTokens": 33738,
+        "cacheReadInputTokens": 30720,
+        "cacheCreationInputTokens": 3018
+      },
+      "readAt": "2026-06-03T00:11:33.873Z",
+      "content": [
+        {
+          "text": "Applied the same `self.` convention for instance function calls in [macos/Lex.swift](file:///<redacted>/lex/macos/Lex.swift), including lifecycle setup/teardown calls and `LexEngine.backspace()`’s `buffer_empty()` call.\n\nVerification blocked: `swiftc` and `xcodebuild` are not installed in this environment.",
+          "type": "text",
+          "finalTime": 1780445493414,
+          "startTime": 1780445492275,
+          "blockState": "complete"
+        }
+      ],
+      "messageId": 30,
+      "turnElapsedMs": 11343,
+      "protocolMessageID": "M-033RfkurhIb3mlzI7ZKnLp"
+    }
+  ],
+  "agentMode": "rush",
+  "nextMessageId": 31,
+  "creatorUserID": "<redacted>",
+  "updatedAt": "2026-06-03T00:11:22.111Z"
+}

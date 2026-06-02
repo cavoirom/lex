@@ -18,13 +18,19 @@ Instruction for coding agents.
 ## General coding conventions
 
 - Naming:
-  - The naming conventions are applied for both Swift and Zig code. If a more specific rule exists, it
-    will be described in their own coding conventions.
+  - The naming conventions are applied for both Swift and Zig code. If a more specific rule exists,
+    it will be described in their own coding conventions.
   - Function: use `snake_case`, e.g. `fn snake_case() {}`, `func snake_case() {}`.
   - Variable: use `snake_case`, e.g. `var snake_case: u8;`, `var snake_case`.
   - Constant: use `snake_case`, e.g. `const snake_case: u8 = 100;`, `let snake_case`.
-  - Enum value: use `snake_case`, e.g. `const SomeEnum = enum { snake_case };`, `enum SomeEnum { case snake_case }`.
+  - Enum value: use `snake_case`, e.g. `const SomeEnum = enum { snake_case };`,
+    `enum SomeEnum { case snake_case }`.
   - Type: use `PascalCase`, e.g. `const PascalCase = struct {};`, `class PascalCase: NSObject {}`.
+
+## Swift coding conventions
+
+- Use `self.*` to refer to instance property, functions. This will differentiate instance
+  properties, functions from the variables and functions of other scopes.
 
 ## Zig coding conventions
 

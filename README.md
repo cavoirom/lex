@@ -22,24 +22,29 @@ trách nhiệm cho toàn bộ chương trình.
 - [x] Nhập Tiếng Việt kiểu Telex với một số tùy chỉnh:
   - [x] Bỏ dấu kiểu cũ: _òa_, _úy_. Ví dụ: _hòa_, _thúy_.
   - [x] Không bỏ dấu nếu từ bắt đầu bằng phụ âm không phải Tiếng Việt: _f_, _j_, _w_, _z_.
-- [ ] Phím tắt bật / tắt nhập Tiếng Việt: `Ctrl + Opt + Space`.
+  - [x] Dấu của nguyên âm, phụ âm `đ` phải bỏ liền sau ký tự đó.
+  - [x] Dấu của từ có thể bỏ ở cuối từ.
+- [x] Phím tắt bật / tắt nhập Tiếng Việt: `Ctrl + Opt + Space`.
 - [ ] Phím tắt để xóa trạng thái gõ Tiếng Việt: `Ctrl (left)`.
-- [ ] Chỉ hiện biểu tượng trên thanh Menu của macOS.
-- [ ] Khởi động khi đăng nhập.
+- [ ] Khóa bàn phím.
+- [x] Chỉ hiện biểu tượng trên thanh Menu của macOS.
+- [x] Khởi động khi đăng nhập.
 
 ## Lộ trình
 
 - [ ] 0.1.x
-  - [ ] Chỉ hiện biểu tượng trên thanh Menu của macOS.
+  - [x] Chỉ hiện biểu tượng trên thanh Menu của macOS.
   - [x] Nhập Tiếng Việt kiểu Telex với một số tùy chỉnh:
     - [x] Bỏ dấu kiểu cũ: _òa_, _úy_. Ví dụ: _hòa_, _thúy_.
     - [x] Không bỏ dấu nếu từ bắt đầu bằng phụ âm không phải Tiếng Việt: _f_, _j_, _w_, _z_.
-  - [ ] Phím tắt bật / tắt nhập Tiếng Việt: `Ctrl + Opt + Space`.
+    - [x] Dấu của nguyên âm, phụ âm `đ` phải bỏ liền sau ký tự đó.
+    - [x] Dấu của từ có thể bỏ ở cuối từ.
+  - [x] Phím tắt bật / tắt nhập Tiếng Việt: `Ctrl + Opt + Space`.
+  - [x] Khởi động khi đăng nhập.
 - [ ] 0.2.x
   - [ ] Phím tắt để xóa trạng thái gõ Tiếng Việt: `Ctrl (left)`.
+  - [ ] Khóa bàn phím.
 - [ ] 0.3.x
-  - [ ] Khởi động khi đăng nhập.
-- [ ] 0.4.x
   - [ ] Hoàn thiện cơ chế kiểm thử.
 - [ ] 1.0.x - tất cả chức năng đã hoàn thành.
 

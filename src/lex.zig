@@ -549,7 +549,7 @@ test "expect Span.init_diacritic_tone can construct all vowels with all tones" {
     }
 }
 
-test "expect Span.to_utf16 produce correct UTF-16 code point" {
+test "expect Span.to_utf16 produces correct UTF-16 code point" {
     // Arrange
     const Case = struct { base: u8, diacritic: Diacritic, tone: Tone, expected: u16 };
     const cases = [_]Case{
@@ -582,7 +582,7 @@ test "expect Span.to_utf16 produce correct UTF-16 code point" {
     }
 }
 
-// Information about a range of character for tone positioning.
+// Information about a range of characters for tone positioning.
 const Pseudoword = struct {
     // The start position of the word on State.buffer_effective.
     start: u8,
@@ -603,8 +603,8 @@ const Pseudoword = struct {
 const buffer_effective_length: u8 = 16;
 
 const State = struct {
-    // The effective buffer to process Vietnamese input. we will skip processing if the buffer
-    // longer than 15. The last input is always literal.
+    // The effective buffer to process Vietnamese input. We will skip processing if the buffer
+    // is longer than 15. The last input is always literal.
     buffer_effective: [buffer_effective_length]Span,
     // The maximum buffer length that the engine still keeps the effective buffer, after the maximum
     // value (255), we will reset the effective buffer and this value.
@@ -632,7 +632,7 @@ const State = struct {
         assert(isAlphabetic(c));
 
         if (self.literal_index) |literal_index| {
-            // The literal_index value must be in range null or 0 -> 15 (within buffer_effective)
+            // The literal_index value must be in the range null or 0 -> 15 (within buffer_effective)
             // because we won't process Vietnamese input outside the buffer_effective and need the
             // literal character for replacement composition.
             assert(literal_index < self.buffer_effective.len);
@@ -642,7 +642,7 @@ const State = struct {
 
         // buffer_length conditions
         // 1. must be within buffer_effective length while the whole buffer is Telex-processable.
-        // 2. could be equal or more than buffer_effective after literal_index starts the literal
+        // 2. could be equal to or greater than buffer_effective after literal_index starts the literal
         //    tail.
         assert(self.buffer_length < self.buffer_effective.len or self.literal_index != null);
 
@@ -817,7 +817,7 @@ const State = struct {
                     break :input_f;
                 }
 
-                // From here, the word has vowels, but doesn't mean appliceable for all cases.
+                // From here, the word has vowels, but that doesn't mean it is applicable for all cases.
                 if (word.has_vowels() and word.length == 2 and self.buffer_effective[word.start].equals_ignore_case_diacritic_tone('Q') and self.buffer_effective[word.end].equals_ignore_case('U', .empty, .level)) {
                     // 5. Exact 'QU', 'U' is a part of the consonant, append literally.
                     self.append_literal(c);
@@ -922,7 +922,7 @@ const State = struct {
                     break :input_j;
                 }
 
-                // From here, the word has vowels, but doesn't mean appliceable for all cases.
+                // From here, the word has vowels, but that doesn't mean it is applicable for all cases.
                 if (word.has_vowels() and word.length == 2 and self.buffer_effective[word.start].equals_ignore_case_diacritic_tone('Q') and self.buffer_effective[word.end].equals_ignore_case_diacritic_tone('U')) {
                     // 5. Exact 'QU', 'U' is a part of the consonant, append literally.
                     self.append_literal(c);
@@ -1115,7 +1115,7 @@ const State = struct {
                     break :input_r;
                 }
 
-                // From here, the word has vowels, but doesn't mean appliceable for all cases.
+                // From here, the word has vowels, but that doesn't mean it is applicable for all cases.
                 if (word.length == 2 and self.buffer_effective[word.start].equals_ignore_case_diacritic_tone('Q') and self.buffer_effective[word.end].equals_ignore_case('U', .empty, .level)) {
                     // 5. Exact 'QU', 'U' is a part of the consonant, append literally.
                     self.append_literal(c);
@@ -1179,7 +1179,7 @@ const State = struct {
                     break :input_s;
                 }
 
-                // From here, the word has vowels, but doesn't mean appliceable for all cases.
+                // From here, the word has vowels, but that doesn't mean it is applicable for all cases.
                 if (word.length == 2 and self.buffer_effective[word.start].equals_ignore_case_diacritic_tone('Q') and self.buffer_effective[word.end].equals_ignore_case('U', .empty, .level)) {
                     // 5. Exact 'QU', 'U' is a part of the consonant, append literally.
                     self.append_literal(c);
@@ -1281,7 +1281,7 @@ const State = struct {
             }, // fill missing diacritic, e.g. hươu.
             'W', 'w' => { // breve, horn
                 if (self.literal_index != null or self.buffer_length == 0) {
-                    // 1. Literal index is set, stop process Vietnamese input.
+                    // 1. Literal index is set, stop processing Vietnamese input.
                     // 2. No previous character, append literally.
                     self.append_literal(c);
                     // Set modification index to null because we didn't modify any existing span.
@@ -1385,7 +1385,7 @@ const State = struct {
                     break :input_x;
                 }
 
-                // From here, the word has vowels, but doesn't mean appliceable for all cases.
+                // From here, the word has vowels, but that doesn't mean it is applicable for all cases.
                 if (word.length == 2 and self.buffer_effective[word.start].equals_ignore_case_diacritic_tone('Q') and self.buffer_effective[word.end].equals_ignore_case('U', .empty, .level)) {
                     // 5. Exact 'QU', 'U' is a part of the consonant, append literally.
                     self.append_literal(c);
@@ -1439,7 +1439,7 @@ const State = struct {
                     self.literal_index = self.buffer_length - 1;
                     break :input_z;
                 } else if (self.literal_index != null) {
-                    // 2. Literal index is set, stop process Vietnamese input.
+                    // 2. Literal index is set, stop processing Vietnamese input.
                     self.append_literal(c);
                     // Set modification index to null because we didn't modify any existing span.
                     self.buffer_modification_index = null;
@@ -1491,10 +1491,10 @@ const State = struct {
 
         // The buffer_modification_index must point to a pre-existing span before add action.
         assert(self.buffer_modification_index == null or self.buffer_modification_index.? < self.buffer_length_previous);
-        // The buffer_modification index must be inbound of the buffer_effective.
+        // The buffer_modification index must be within the bounds of buffer_effective.
         assert(self.buffer_modification_index == null or (self.buffer_modification_index.? < self.buffer_effective.len and self.buffer_modification_index.? < self.buffer_length));
 
-        // The buffer_length_previous must not larger than buffer_length.
+        // The buffer_length_previous must not be larger than buffer_length.
         assert(self.buffer_length_previous <= self.buffer_length);
     }
 
@@ -1521,14 +1521,14 @@ const State = struct {
 
     // Return the last item in buffer_effective, not valid if the buffer_length is out of range.
     fn buffer_effective_last(self: *State) Span {
-        // 1. Should not work if buffer_length exceed buffer_effective.
+        // 1. Should not work if buffer_length exceeds buffer_effective.
         // 2. Buffer must have at least 1 character.
         assert(self.buffer_length > 0 and self.buffer_length <= self.buffer_effective.len);
 
         return self.buffer_effective[self.buffer_length - 1];
     }
 
-    // Return the pseudoword when scan backward the buffer_effective.
+    // Return the pseudoword when scanning buffer_effective backward.
     fn pseudoword(self: *State) Pseudoword {
         // Only scan when buffer has characters and doesn't exceed buffer_effective length.
         assert(self.buffer_length > 0 and self.buffer_length <= self.buffer_effective.len);
@@ -1574,7 +1574,7 @@ const State = struct {
         }
         const word_end: u8 = self.buffer_length - 1;
 
-        // word_start must always have valid values.
+        // word_start must always have a valid value.
         assert(word_start != null);
         assert(word_start.? <= word_end);
 
@@ -1611,7 +1611,7 @@ const State = struct {
             assert(!(self.buffer_effective[word.start].equals_ignore_case_diacritic_tone('Q') and self.buffer_effective[word.end].equals_ignore_case_diacritic_tone('U')));
         }
 
-        // Existing vowels have level tone.
+        // Existing vowels must have a level tone.
         // Note: the end is exclusive.
         for (word.vowels_start.?..(word.vowels_end.? + 1)) |i| {
             assert(self.buffer_effective[i].tone == .level);
@@ -1721,7 +1721,7 @@ const State = struct {
         assert(self.buffer_modification_index != null);
     }
 
-    // Reset all tone in vowels to level. If word has no tone, this function is no-op.
+    // Reset all tones in vowels to level. If word has no tone, this function is no-op.
     fn reset_tone(self: *State, word: Pseudoword, tone_index: u8) void {
         // The word must have vowels.
         assert(word.has_vowels());
@@ -1781,7 +1781,7 @@ const State = struct {
         assert(self.buffer_length <= self.buffer_effective.len);
 
         if (self.buffer_modification_index) |buffer_modification_index| {
-            // The previous action has been modified the buffer_effective.
+            // The previous action has modified buffer_effective.
             // Iterate from the buffer_modification_index to compose the replacement.
             for (buffer_modification_index..self.buffer_length) |i| {
                 replacement_buffer[i - buffer_modification_index] = self.buffer_effective[i].to_utf16();
@@ -1789,7 +1789,7 @@ const State = struct {
             // Calculate replacement_count.
             replacement_count.* = self.buffer_length - buffer_modification_index;
         } else {
-            // The previous action only add one character literally, no retrospect editing.
+            // The previous action only added one character literally, no retrospect editing.
             assert((self.buffer_length - self.buffer_length_previous) == 1);
 
             replacement_buffer[0] = self.buffer_effective[self.buffer_length - 1].to_utf16();
@@ -1808,7 +1808,7 @@ const State = struct {
     }
 };
 
-test "expect State.add handles non-Telex characters less than 1 character of the buffer_effective length" {
+test "expect State.add handles non-Telex characters one character less than buffer_effective length" {
     // Arrange
     var state: State = undefined;
     state.init();
@@ -1828,7 +1828,7 @@ test "expect State.add handles non-Telex characters less than 1 character of the
     try expectEqual(null, state.buffer_modification_index);
     // Because we didn't exceed the buffer_effective, don't set literal_index.
     try expectEqual(null, state.literal_index);
-    // Verify every the spans, must exactly the same with the input.
+    // Verify every span is exactly the same as the input.
     for (input_sequence, 0..) |c, i| {
         const sp = state.buffer_effective[i];
         try expectEqual(c, sp.base);
@@ -1857,7 +1857,7 @@ test "expect State.add handles non-Telex characters fill the last slot" {
     try expectEqual(null, state.buffer_modification_index);
     // Because we fill the last slot, start literal input from the last slot.
     try expectEqual(15, state.literal_index);
-    // Verify every the spans, must exactly the same with the input.
+    // Verify every span is exactly the same as the input.
     for (input_sequence, 0..) |c, i| {
         const sp = state.buffer_effective[i];
         try expectEqual(c, sp.base);
@@ -1866,7 +1866,7 @@ test "expect State.add handles non-Telex characters fill the last slot" {
     }
 }
 
-test "expect State.add handles non-Telex characters just exceed the buffer_effective length" {
+test "expect State.add handles non-Telex characters just exceeds the buffer_effective length" {
     // Arrange
     var state: State = undefined;
     state.init();
@@ -1884,9 +1884,9 @@ test "expect State.add handles non-Telex characters just exceed the buffer_effec
     try expectEqual(17, state.buffer_length);
     // Because we don't modify any existing character since the last input, expect null.
     try expectEqual(null, state.buffer_modification_index);
-    // Because the input exceed the buffer_effective, keep literal_index at the last slot.
+    // Because the input exceeds the buffer_effective, keep literal_index at the last slot.
     try expectEqual(15, state.literal_index);
-    // Verify every the spans, must exactly the same with the input.
+    // Verify every span is exactly the same as the input.
     for (input_sequence[0..16], 0..) |c, i| {
         const sp = state.buffer_effective[i];
         try expectEqual(c, sp.base);
@@ -1895,7 +1895,7 @@ test "expect State.add handles non-Telex characters just exceed the buffer_effec
     }
 }
 
-test "expect State.add adds a literally because it's the start of the buffer" {
+test "expect State.add adds a character literally because it's the start of the buffer" {
     // Arrange
     var state: State = undefined;
     state.init();
@@ -1914,7 +1914,7 @@ test "expect State.add adds a literally because it's the start of the buffer" {
     try expectEqual(.level, sp.tone);
 }
 
-test "expect State.add start literal input when the new input fills the last slot" {
+test "expect State.add starts literal input when the new input fills the last slot" {
     // Arrange
     var state: State = undefined;
     state.init();
@@ -1971,7 +1971,7 @@ test "expect State.add does not process Telex after filling the last slot" {
     try expectEqual(.level, sp.tone);
 }
 
-test "expect State.add apply circumflex for valid cases" {
+test "expect State.add applies circumflex for valid cases" {
     // Arrange
     const Case = struct { vowel: u8, new_input: u8 };
     const cases = [_]Case{
@@ -2014,7 +2014,7 @@ test "expect State.add apply circumflex for valid cases" {
     }
 }
 
-test "expect State.add apply breve for valid cases" {
+test "expect State.add applies breve for valid cases" {
     // Arrange
     const Case = struct { vowel: u8, new_input: u8 };
     const cases = [_]Case{
@@ -2049,7 +2049,7 @@ test "expect State.add apply breve for valid cases" {
     }
 }
 
-test "expect State.add apply horn for valid cases" {
+test "expect State.add applies horn for valid cases" {
     // Arrange
     const Case = struct { vowel: u8, new_input: u8 };
     const cases = [_]Case{
@@ -2088,7 +2088,7 @@ test "expect State.add apply horn for valid cases" {
     }
 }
 
-test "expect State.add apply stroke for valid cases" {
+test "expect State.add applies stroke for valid cases" {
     // Arrange
     const Case = struct { consonant: u8, new_input: u8 };
     const cases = [_]Case{
@@ -2119,7 +2119,7 @@ test "expect State.add apply stroke for valid cases" {
     }
 }
 
-test "expect State.add override existing diacritic with the new diacritic for valid cases" {
+test "expect State.add overrides existing diacritic with the new diacritic for valid cases" {
     // Arrange
     const Case = struct { vowel: u8, start_diacritic: Diacritic, new_input: u8, expected_diacritic: Diacritic };
     const cases = [_]Case{
@@ -2170,7 +2170,7 @@ test "expect State.add override existing diacritic with the new diacritic for va
     }
 }
 
-test "expect State.add cancel existing diacritic for valid cases" {
+test "expect State.add cancels existing diacritic for valid cases" {
     // Arrange
     const VowelCase = struct { vowel: u8, start_diacritic: Diacritic, new_input: u8 };
     const vowel_cases = [_]VowelCase{
@@ -2270,7 +2270,7 @@ test "expect State.add cancel existing diacritic for valid cases" {
     }
 }
 
-test "expect State.add cancel existing diacritic will switch to literal for the next charaters" {
+test "expect State.add cancelling an existing diacritic switches to literal for the next characters" {
     // Arrange
     var state: State = undefined;
     state.init();
@@ -2403,7 +2403,7 @@ test "expect State.add cancel existing diacritic will switch to literal for the 
     try expectEqual(.level, state.buffer_effective[5].tone);
 }
 
-test "expect State.add cancel existing diacritic at the last slot boundary" {
+test "expect State.add cancels existing diacritic at the last slot boundary" {
     // Arrange
     var state: State = undefined;
     state.init();
@@ -2440,7 +2440,7 @@ test "expect State.add cancel existing diacritic at the last slot boundary" {
     try expectEqual(.level, sp_new.tone);
 }
 
-test "expect State.add auto-fill missing horn in valid cases" {
+test "expect State.add auto-fills missing horn in valid cases" {
     // Arrange: starting pair shapes covering both auto-fill targets and all
     // case combinations. `receiving_offset` marks which vowel in the pair
     // gains horn (0 = first, 1 = second).
@@ -2596,7 +2596,7 @@ test "expect State.add does not auto-fill horn in invalid cases" {
     }
 }
 
-test "expect State.add auto-fill missing horn at the last slot boundary" {
+test "expect State.add auto-fills missing horn at the last slot boundary" {
     // Arrange: place the incomplete pair at indices 13..14 so a trigger fills
     // the last slot. The implementation must both mutate the existing vowel
     // and start literal input from the last slot.
@@ -2663,7 +2663,7 @@ test "expect State.add auto-fill missing horn at the last slot boundary" {
     }
 }
 
-test "expect State.add switch to literal input when append F, J, W, Z (ignore cases) on empty buffer" {
+test "expect State.add switches to literal input when appending F or J, W, Z (ignore cases) on empty buffer" {
     // Arrange
     const inputs = [_]u8{ 'F', 'f', 'J', 'j', 'W', 'w', 'Z', 'z' };
 
@@ -2686,7 +2686,7 @@ test "expect State.add switch to literal input when append F, J, W, Z (ignore ca
     }
 }
 
-test "expect State.add switch to literal input when append W (ignore cases) on character outside diacritic scope" {
+test "expect State.add switches to literal input when appending W (ignore cases) on character outside diacritic scope" {
     // Arrange
     const Case = struct { base: u8, diacritic: Diacritic };
     const cases = [_]Case{
@@ -2734,7 +2734,7 @@ test "expect State.add switch to literal input when append W (ignore cases) on c
     }
 }
 
-test "expect State.add switch to literal input when append F, J (ignore cases) on word without placeable tone" {
+test "expect State.add switches to literal input when appending F or J (ignore cases) on word without placeable tone" {
     const inputs = [_]u8{ 'F', 'f', 'J', 'j' };
 
     // Sub-block A: single-consonant pseudo-word (no vowel).
@@ -3333,7 +3333,7 @@ test "expect State.add cancels an existing matching non-level tone at the last s
     try expectEqual(.level, sp_new.tone);
 }
 
-test "expect State.pseudoword will scan and provide pseudoword correctly" {
+test "expect State.pseudoword scans and provides a pseudoword correctly" {
     // Arrange. Each case seeds buffer_effective directly, then asks the
     // pseudo-word scanner for structural indexes only. Cases with a leading
     // consonant include multiple consonant characters to verify that the scan
@@ -3432,7 +3432,7 @@ test "expect State.pseudoword will scan and provide pseudoword correctly" {
     }
 }
 
-test "expect State.backspace will reduce buffer_length by 1 and won't touch literal_index" {
+test "expect State.backspace reduces buffer_length by 1 and won't touch literal_index" {
     // Arrange
     var state: State = undefined;
     state.init();
@@ -3451,7 +3451,7 @@ test "expect State.backspace will reduce buffer_length by 1 and won't touch lite
     try expectEqual(15, state.literal_index);
 }
 
-test "expect State.backspace will reduce buffer_length by 1 and unset literal_index" {
+test "expect State.backspace reduces buffer_length by 1 and unset literal_index" {
     // Arrange
     var state: State = undefined;
     state.init();
@@ -3470,7 +3470,7 @@ test "expect State.backspace will reduce buffer_length by 1 and unset literal_in
     try expectEqual(null, state.literal_index);
 }
 
-test "expect State.backspace will reduce buffer_length by 1 when literal_index is not set" {
+test "expect State.backspace reduces buffer_length by 1 when literal_index is not set" {
     // Arrange
     var state: State = undefined;
     state.init();
@@ -3605,7 +3605,7 @@ test "expect State.calculate_synthetic_backspaces produces correct calculations 
     }
 }
 
-test "expect State.calculate_synthetic_backspaces produces correct calculations when modify and append in one action" {
+test "expect State.calculate_synthetic_backspaces produces correct calculations when modifying and appending in one action" {
     const Case = struct {
         input: []const u8,
         expected_buffer_length_previous: u8,
@@ -3815,7 +3815,7 @@ test "expect State.compose_utf16_string_replacement composes replacement in retr
     }
 }
 
-test "expect State.compose_utf16_string_replacement composes replacement when append literally" {
+test "expect State.compose_utf16_string_replacement composes replacement when appending literally" {
     // Arrange
     const Case = struct {
         input: []const u8,
@@ -3872,7 +3872,7 @@ test "expect State.compose_utf16_string_replacement composes replacement when ap
     }
 }
 
-// Simple ABI wrapper for initialize allocated memory.
+// Simple ABI wrapper for initializing allocated memory.
 export fn lex_init(state: *anyopaque) void {
     // Pointer must not be null.
     assert(@intFromPtr(state) != 0);
@@ -3892,7 +3892,7 @@ export const lex_state_alignment: usize = @alignOf(State);
 test "expect State can be initialized by raw allocation" {
     // Arrange
 
-    // Allocate memory, only specify on this test to simulate runtime allocation.
+    // Allocate memory, specified only in this test to simulate runtime allocation.
     const raw_pointer = std.testing.allocator.rawAlloc(lex_state_size, .fromByteUnits(lex_state_alignment), @returnAddress()) orelse return error.OutOfMemory;
     defer std.testing.allocator.rawFree(raw_pointer[0..lex_state_size], .fromByteUnits(lex_state_alignment), @returnAddress());
 
@@ -3914,7 +3914,7 @@ test "expect State can be initialized by raw allocation" {
     try expectEqual(null, state.buffer_modification_index);
     // Because we didn't exceed the buffer_effective, don't set literal_index.
     try expectEqual(null, state.literal_index);
-    // Verify every the spans, must exactly the same with the input.
+    // Verify every span is exactly the same as the input.
     for (input_sequence, 0..) |c, i| {
         const sp = state.buffer_effective[i];
         try expectEqual(c, sp.base);
@@ -3967,7 +3967,7 @@ export fn lex_buffer_effective_full(state: *anyopaque) bool {
 
 export const lex_replacement_buffer_length: usize = buffer_effective_length;
 
-// replacement_buffer capacity must exactly the lex_replacement_buffer_length.
+// replacement_buffer capacity must be exactly lex_replacement_buffer_length.
 export fn lex_compose_utf16_string_replacement(state: *anyopaque, replacement_buffer: [*]u16, replacement_count: *u8) void {
     // State pointer must not be null.
     assert(@intFromPtr(state) != 0);
@@ -3987,10 +3987,10 @@ export fn lex_compose_utf16_string_replacement(state: *anyopaque, replacement_bu
     s.compose_utf16_string_replacement(r_buffer, replacement_count);
 }
 
-test "expect lex_compose_utf16_string_replacement accept the provided allocations and write the result to those allocations" {
+test "expect lex_compose_utf16_string_replacement accepts the provided allocations and writes the result to those allocations" {
     // Arrange
 
-    // Allocate memory, only specify on this test to simulate runtime allocation.
+    // Allocate memory, specified only in this test to simulate runtime allocation.
     const raw_pointer = std.testing.allocator.rawAlloc(lex_state_size, .fromByteUnits(lex_state_alignment), @returnAddress()) orelse return error.OutOfMemory;
     defer std.testing.allocator.rawFree(raw_pointer[0..lex_state_size], .fromByteUnits(lex_state_alignment), @returnAddress());
 
@@ -4020,4 +4020,26 @@ test "expect lex_compose_utf16_string_replacement accept the provided allocation
     for (replacement_buffer[replacement_count..]) |replacement_character| {
         try expectEqual(0xFFFF, replacement_character);
     }
+}
+
+// Indicate the buffer_length is at the maximum limit.
+export fn lex_buffer_full(state: *anyopaque) bool {
+    // State pointer must not be null.
+    assert(@intFromPtr(state) != 0);
+    // Ensure the allocated memory is aligned.
+    assert(@intFromPtr(state) % @alignOf(State) == 0);
+
+    const s: *State = @ptrCast(@alignCast(state));
+    return s.buffer_length == maxInt(@TypeOf(s.buffer_length));
+}
+
+// Indicate the buffer_length is zero.
+export fn lex_buffer_empty(state: *anyopaque) bool {
+    // State pointer must not be null.
+    assert(@intFromPtr(state) != 0);
+    // Ensure the allocated memory is aligned.
+    assert(@intFromPtr(state) % @alignOf(State) == 0);
+
+    const s: *State = @ptrCast(@alignCast(state));
+    return s.buffer_length == 0;
 }
