@@ -48,4 +48,4 @@ Instruction for coding agents.
   - Every `State.add` action must decide the value for `State.buffer_modification_index` because the
     caller will need it to calculate synthetic backspaces.
   - Rewrite C header `lex.h` as a part of the edit for `lex.zig` when we changed the C ABI.
-- On production build, always use `ReleaseFast`.
+- On production build, always use `ReleaseSafe`.
