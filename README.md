@@ -90,7 +90,7 @@ codesign -f -s - macos/Lex.app
 
 ## Tình hình phát triển
 
-Đã hoàn thành bản _0.1.0_, do tác giả chưa là thành viên của Apple Developer Program nên người dùng
-cần tự biên dịch chương trình từ mã nguồn hoặc
+Đã phát hành bản chính thức, do tác giả chưa là thành viên của Apple Developer Program nên người
+dùng cần tự biên dịch chương trình từ mã nguồn hoặc
 [tải bản unsigned](https://github.com/cavoirom/lex/releases) về rồi tự sign bằng lệnh:
 `codesign -f -s - Lex.app`.

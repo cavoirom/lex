@@ -692,17 +692,23 @@ const State = struct {
                     unreachable;
                 }
             },
-            'C', 'c' => { // fill missing diacritic, e.g. cước.
+            'C', 'c' => input_c: { // fill missing diacritic, e.g. cước.
                 if (self.literal_index != null or self.buffer_length < 2) {
                     // 1. Append literally when literal_index is set.
-                    // 2. Append literal because no previous span existed. Continue Vietnamese
+                    // 2. Append literal because less than 2 spans existed. Continue Vietnamese
                     // processing on next input.
                     // 3. Buffer is less than 2 characters to start with.
                     self.append_literal(c);
                     // Set modification index to null because we didn't modify any existing span.
                     self.buffer_modification_index = null;
                 } else if (self.buffer_effective[self.buffer_length - 2].equals_ignore_case_tone('U', .empty) and self.buffer_effective[self.buffer_length - 1].equals_ignore_case_tone('O', .horn)) {
-                    // 4. Pattern: 'UƠ', fill missing horn on 'U'.
+                    if (self.buffer_length > 2 and self.buffer_effective[self.buffer_length - 3].equals_ignore_case_diacritic_tone('Q')) {
+                        // 4a. The 'U' in this case belongs to 'QU', a consonant, append literally.
+                        self.append_literal(c);
+                        self.buffer_modification_index = null;
+                        break :input_c;
+                    }
+                    // 4b. Pattern: 'UƠ', fill missing horn on 'U'.
                     const span_previous2 = self.buffer_effective[self.buffer_length - 2];
                     self.buffer_effective[self.buffer_length - 2] = Span.init_diacritic_tone(span_previous2.base, .horn, span_previous2.tone);
                     self.buffer_modification_index = self.buffer_length - 2;
@@ -863,17 +869,23 @@ const State = struct {
                     unreachable;
                 }
             },
-            'I', 'i' => {
+            'I', 'i' => input_i: { // fill missing diacritic, e.g. người.
                 if (self.literal_index != null or self.buffer_length < 2) {
                     // 1. Append literally when literal_index is set.
-                    // 2. Append literal because no previous span existed. Continue Vietnamese
+                    // 2. Append literal because less than 2 spans existed. Continue Vietnamese
                     // processing on next input.
                     // 3. Buffer is less than 2 characters to start with.
                     self.append_literal(c);
                     // Set modification index to null because we didn't modify any existing span.
                     self.buffer_modification_index = null;
                 } else if (self.buffer_effective[self.buffer_length - 2].equals_ignore_case_tone('U', .empty) and self.buffer_effective[self.buffer_length - 1].equals_ignore_case_tone('O', .horn)) {
-                    // 4. Pattern: 'UƠ', fill missing horn on 'U'.
+                    if (self.buffer_length > 2 and self.buffer_effective[self.buffer_length - 3].equals_ignore_case_diacritic_tone('Q')) {
+                        // 4a. The 'U' in this case belongs to 'QU', a consonant, append literally.
+                        self.append_literal(c);
+                        self.buffer_modification_index = null;
+                        break :input_i;
+                    }
+                    // 4b. Pattern: 'UƠ', fill missing horn on 'U'.
                     const span_previous2 = self.buffer_effective[self.buffer_length - 2];
                     self.buffer_effective[self.buffer_length - 2] = Span.init_diacritic_tone(span_previous2.base, .horn, span_previous2.tone);
                     self.buffer_modification_index = self.buffer_length - 2;
@@ -891,7 +903,7 @@ const State = struct {
                     self.append_literal(c);
                     self.buffer_modification_index = null;
                 }
-            }, // fill missing diacritic, e.g. người.
+            },
             'J', 'j' => input_j: {
                 if (self.literal_index != null or self.buffer_length == 0) {
                     // 1. Append literally when literal_index is set.
@@ -968,17 +980,23 @@ const State = struct {
                     unreachable;
                 }
             }, // falling_glottalized.
-            'M', 'm' => {
+            'M', 'm' => input_m: { // fill missing diacritic, e.g. cườm.
                 if (self.literal_index != null or self.buffer_length < 2) {
                     // 1. Append literally when literal_index is set.
-                    // 2. Append literal because no previous span existed. Continue Vietnamese
+                    // 2. Append literal because less than 2 spans existed. Continue Vietnamese
                     // processing on next input.
                     // 3. Buffer is less than 2 characters to start with.
                     self.append_literal(c);
                     // Set modification index to null because we didn't modify any existing span.
                     self.buffer_modification_index = null;
                 } else if (self.buffer_effective[self.buffer_length - 2].equals_ignore_case_tone('U', .empty) and self.buffer_effective[self.buffer_length - 1].equals_ignore_case_tone('O', .horn)) {
-                    // 4. Pattern: 'UƠ', fill missing horn on 'U'.
+                    if (self.buffer_length > 2 and self.buffer_effective[self.buffer_length - 3].equals_ignore_case_diacritic_tone('Q')) {
+                        // 4a. The 'U' in this case belongs to 'QU', a consonant, append literally.
+                        self.append_literal(c);
+                        self.buffer_modification_index = null;
+                        break :input_m;
+                    }
+                    // 4b. Pattern: 'UƠ', fill missing horn on 'U'.
                     const span_previous2 = self.buffer_effective[self.buffer_length - 2];
                     self.buffer_effective[self.buffer_length - 2] = Span.init_diacritic_tone(span_previous2.base, .horn, span_previous2.tone);
                     self.buffer_modification_index = self.buffer_length - 2;
@@ -996,18 +1014,24 @@ const State = struct {
                     self.append_literal(c);
                     self.buffer_modification_index = null;
                 }
-            }, // fill missing diacritic, e.g. cườm.
-            'N', 'n' => {
+            },
+            'N', 'n' => input_n: { // fill missing diacritic, e.g. cường.
                 if (self.literal_index != null or self.buffer_length < 2) {
                     // 1. Append literally when literal_index is set.
-                    // 2. Append literal because no previous span existed. Continue Vietnamese
+                    // 2. Append literal because less than 2 spans existed. Continue Vietnamese
                     // processing on next input.
                     // 3. Buffer is less than 2 characters to start with.
                     self.append_literal(c);
                     // Set modification index to null because we didn't modify any existing span.
                     self.buffer_modification_index = null;
                 } else if (self.buffer_effective[self.buffer_length - 2].equals_ignore_case_tone('U', .empty) and self.buffer_effective[self.buffer_length - 1].equals_ignore_case_tone('O', .horn)) {
-                    // 4. Pattern: 'UƠ', fill missing horn on 'U'.
+                    if (self.buffer_length > 2 and self.buffer_effective[self.buffer_length - 3].equals_ignore_case_diacritic_tone('Q')) {
+                        // 4a. The 'U' in this case belongs to 'QU', a consonant, append literally.
+                        self.append_literal(c);
+                        self.buffer_modification_index = null;
+                        break :input_n;
+                    }
+                    // 4b. Pattern: 'UƠ', fill missing horn on 'U'.
                     const span_previous2 = self.buffer_effective[self.buffer_length - 2];
                     self.buffer_effective[self.buffer_length - 2] = Span.init_diacritic_tone(span_previous2.base, .horn, span_previous2.tone);
                     self.buffer_modification_index = self.buffer_length - 2;
@@ -1025,7 +1049,7 @@ const State = struct {
                     self.append_literal(c);
                     self.buffer_modification_index = null;
                 }
-            }, // fill missing diacritic, e.g. cường.
+            },
             'O', 'o' => {
                 if (self.literal_index != null or self.buffer_length == 0) {
                     // 1. Append literally when literal_index is set.
@@ -1065,17 +1089,23 @@ const State = struct {
                     unreachable;
                 }
             },
-            'P', 'p' => {
+            'P', 'p' => input_p: { // fill missing diacritic, e.g. cướp.
                 if (self.literal_index != null or self.buffer_length < 2) {
                     // 1. Append literally when literal_index is set.
-                    // 2. Append literal because no previous span existed. Continue Vietnamese
+                    // 2. Append literal because less than 2 spans existed. Continue Vietnamese
                     // processing on next input.
                     // 3. Buffer is less than 2 characters to start with.
                     self.append_literal(c);
                     // Set modification index to null because we didn't modify any existing span.
                     self.buffer_modification_index = null;
                 } else if (self.buffer_effective[self.buffer_length - 2].equals_ignore_case_tone('U', .empty) and self.buffer_effective[self.buffer_length - 1].equals_ignore_case_tone('O', .horn)) {
-                    // 4. Pattern: 'UƠ', fill missing horn on 'U'.
+                    if (self.buffer_length > 2 and self.buffer_effective[self.buffer_length - 3].equals_ignore_case_diacritic_tone('Q')) {
+                        // 4a. The 'U' in this case belongs to 'QU', a consonant, append literally.
+                        self.append_literal(c);
+                        self.buffer_modification_index = null;
+                        break :input_p;
+                    }
+                    // 4b. Pattern: 'UƠ', fill missing horn on 'U'.
                     const span_previous2 = self.buffer_effective[self.buffer_length - 2];
                     self.buffer_effective[self.buffer_length - 2] = Span.init_diacritic_tone(span_previous2.base, .horn, span_previous2.tone);
                     self.buffer_modification_index = self.buffer_length - 2;
@@ -1093,7 +1123,7 @@ const State = struct {
                     self.append_literal(c);
                     self.buffer_modification_index = null;
                 }
-            }, // fill missing diacritic, e.g. cướp.
+            },
             'R', 'r' => input_r: { // dipping_rising.
                 if (self.literal_index != null or self.buffer_length == 0) {
                     // 1. Append literally when literal_index is set.
@@ -1221,17 +1251,23 @@ const State = struct {
                     unreachable;
                 }
             },
-            'T', 't' => {
+            'T', 't' => input_t: { // fill missing diacritic, e.g. trượt.
                 if (self.literal_index != null or self.buffer_length < 2) {
                     // 1. Append literally when literal_index is set.
-                    // 2. Append literal because no previous span existed. Continue Vietnamese
+                    // 2. Append literal because less than 2 spans existed. Continue Vietnamese
                     // processing on next input.
                     // 3. Buffer is less than 2 characters to start with.
                     self.append_literal(c);
                     // Set modification index to null because we didn't modify any existing span.
                     self.buffer_modification_index = null;
                 } else if (self.buffer_effective[self.buffer_length - 2].equals_ignore_case_tone('U', .empty) and self.buffer_effective[self.buffer_length - 1].equals_ignore_case_tone('O', .horn)) {
-                    // 4. Pattern: 'UƠ', fill missing horn on 'U'.
+                    if (self.buffer_length > 2 and self.buffer_effective[self.buffer_length - 3].equals_ignore_case_diacritic_tone('Q')) {
+                        // 4a. The 'U' in this case belongs to 'QU', a consonant, append literally.
+                        self.append_literal(c);
+                        self.buffer_modification_index = null;
+                        break :input_t;
+                    }
+                    // 4b. Pattern: 'UƠ', fill missing horn on 'U'.
                     const span_previous2 = self.buffer_effective[self.buffer_length - 2];
                     self.buffer_effective[self.buffer_length - 2] = Span.init_diacritic_tone(span_previous2.base, .horn, span_previous2.tone);
                     self.buffer_modification_index = self.buffer_length - 2;
@@ -1249,18 +1285,24 @@ const State = struct {
                     self.append_literal(c);
                     self.buffer_modification_index = null;
                 }
-            }, // fill missing diacritic, e.g. trượt.
-            'U', 'u' => {
+            },
+            'U', 'u' => input_u: { // fill missing diacritic, e.g. hươu.
                 if (self.literal_index != null or self.buffer_length < 2) {
                     // 1. Append literally when literal_index is set.
-                    // 2. Append literal because no previous span existed. Continue Vietnamese
+                    // 2. Append literal because less than 2 spans existed. Continue Vietnamese
                     // processing on next input.
                     // 3. Buffer is less than 2 characters to start with.
                     self.append_literal(c);
                     // Set modification index to null because we didn't modify any existing span.
                     self.buffer_modification_index = null;
                 } else if (self.buffer_effective[self.buffer_length - 2].equals_ignore_case_tone('U', .empty) and self.buffer_effective[self.buffer_length - 1].equals_ignore_case_tone('O', .horn)) {
-                    // 4. Pattern: 'UƠ', fill missing horn on 'U'.
+                    if (self.buffer_length > 2 and self.buffer_effective[self.buffer_length - 3].equals_ignore_case_diacritic_tone('Q')) {
+                        // 4a. The 'U' in this case belongs to 'QU', a consonant, append literally.
+                        self.append_literal(c);
+                        self.buffer_modification_index = null;
+                        break :input_u;
+                    }
+                    // 4b. Pattern: 'UƠ', fill missing horn on 'U'.
                     const span_previous2 = self.buffer_effective[self.buffer_length - 2];
                     self.buffer_effective[self.buffer_length - 2] = Span.init_diacritic_tone(span_previous2.base, .horn, span_previous2.tone);
                     self.buffer_modification_index = self.buffer_length - 2;
@@ -1278,8 +1320,8 @@ const State = struct {
                     self.append_literal(c);
                     self.buffer_modification_index = null;
                 }
-            }, // fill missing diacritic, e.g. hươu.
-            'W', 'w' => { // breve, horn
+            },
+            'W', 'w' => input_w: { // breve, horn
                 if (self.literal_index != null or self.buffer_length == 0) {
                     // 1. Literal index is set, stop processing Vietnamese input.
                     // 2. No previous character, append literally.
@@ -1335,7 +1377,16 @@ const State = struct {
                     // Append literal 'W', 'w'.
                     self.append_literal(c);
                 } else if (self.buffer_effective_last().equals_ignore_case_tone('U', .empty)) {
-                    // 10. Previous span is 'U', 'u', apply horn.
+                    if (self.buffer_length > 1 and self.buffer_effective[self.buffer_length - 2].equals_ignore_case_diacritic_tone('Q')) {
+                        // 10a. Previous spans are QU, a consonant, append literally.
+                        // Start literal input from this position.
+                        self.literal_index = self.buffer_length;
+                        // Append literal 'W', 'w'.
+                        self.append_literal(c);
+                        self.buffer_modification_index = null;
+                        break :input_w;
+                    }
+                    // 10b. Previous span is 'U', 'u', apply horn.
                     const span_previous = self.buffer_effective[self.buffer_length - 1];
                     self.buffer_effective[self.buffer_length - 1] = Span.init_diacritic_tone(span_previous.base, .horn, span_previous.tone);
                     // Set modification index for calculating synthetic backspace.
@@ -2088,6 +2139,57 @@ test "expect State.add applies horn for valid cases" {
     }
 }
 
+test "expect State.add does not apply horn for 'U' in 'QU' because 'QU' is a consonant" {
+    // Arrange
+    const Case = struct { seeds: []const Span, new_input: u8 };
+    const cases = [_]Case{
+        .{ .seeds = &.{ Span.init('q'), Span.init('u') }, .new_input = 'w' },
+        .{ .seeds = &.{ Span.init('q'), Span.init('u') }, .new_input = 'W' },
+        .{ .seeds = &.{ Span.init('q'), Span.init('U') }, .new_input = 'w' },
+        .{ .seeds = &.{ Span.init('q'), Span.init('U') }, .new_input = 'W' },
+        .{ .seeds = &.{ Span.init('Q'), Span.init('u') }, .new_input = 'w' },
+        .{ .seeds = &.{ Span.init('Q'), Span.init('u') }, .new_input = 'W' },
+        .{ .seeds = &.{ Span.init('Q'), Span.init('U') }, .new_input = 'w' },
+        .{ .seeds = &.{ Span.init('Q'), Span.init('U') }, .new_input = 'W' },
+        .{ .seeds = &.{ Span.init('a'), Span.init('b'), Span.init('c'), Span.init('q'), Span.init('u') }, .new_input = 'w' },
+    };
+
+    for (cases) |c| {
+        var state: State = undefined;
+        state.init();
+        for (c.seeds, 0..) |s, i| {
+            state.buffer_effective[i] = s;
+        }
+        state.buffer_length = @intCast(c.seeds.len);
+
+        // Act
+        state.add(c.new_input);
+
+        // Assert
+        const expected_buffer_length: u8 = @intCast(c.seeds.len + 1);
+        const expected_literal_index: u8 = @intCast(c.seeds.len);
+        try expectEqual(expected_buffer_length, state.buffer_length);
+        try expectEqual(null, state.buffer_modification_index);
+        try expectEqual(@as(?u8, expected_literal_index), state.literal_index);
+
+        for (c.seeds, 0..) |s, i| {
+            const sp = state.buffer_effective[i];
+            try expectEqual(s.base, sp.base);
+            try expectEqual(s.diacritic, sp.diacritic);
+            try expectEqual(s.tone, sp.tone);
+        }
+
+        const sp_previous = state.buffer_effective[c.seeds.len - 1];
+        try expectEqual(.empty, sp_previous.diacritic);
+        try expectEqual(.level, sp_previous.tone);
+
+        const sp_new = state.buffer_effective[c.seeds.len];
+        try expectEqual(c.new_input, sp_new.base);
+        try expectEqual(.empty, sp_new.diacritic);
+        try expectEqual(.level, sp_new.tone);
+    }
+}
+
 test "expect State.add applies stroke for valid cases" {
     // Arrange
     const Case = struct { consonant: u8, new_input: u8 };
@@ -2593,6 +2695,57 @@ test "expect State.add does not auto-fill horn in invalid cases" {
         try expectEqual(c.new_input, sp_new.base);
         try expectEqual(.empty, sp_new.diacritic);
         try expectEqual(.level, sp_new.tone);
+    }
+}
+
+test "expect State.add does not auto-fill missing horn in 'QUƠ' because 'QU' is a consonant" {
+    // Arrange
+    const q_cases = [_]u8{ 'q', 'Q' };
+    const u_cases = [_]u8{ 'u', 'U' };
+    const o_cases = [_]u8{ 'o', 'O' };
+    const triggers = [_]u8{ 'C', 'c', 'I', 'i', 'M', 'm', 'N', 'n', 'P', 'p', 'T', 't', 'U', 'u' };
+
+    for (q_cases) |q| {
+        for (u_cases) |u| {
+            for (o_cases) |o| {
+                for (triggers) |trigger| {
+                    var state: State = undefined;
+                    state.init();
+                    state.buffer_effective[0] = Span.init(q);
+                    state.buffer_effective[1] = Span.init(u);
+                    state.buffer_effective[2] = Span.init_diacritic(o, .horn);
+                    state.buffer_length = 3;
+
+                    // Act
+                    state.add(trigger);
+
+                    // Assert
+                    try expectEqual(4, state.buffer_length);
+                    try expectEqual(null, state.buffer_modification_index);
+                    try expectEqual(null, state.literal_index);
+
+                    const sp_q = state.buffer_effective[0];
+                    try expectEqual(q, sp_q.base);
+                    try expectEqual(.empty, sp_q.diacritic);
+                    try expectEqual(.level, sp_q.tone);
+
+                    const sp_u = state.buffer_effective[1];
+                    try expectEqual(u, sp_u.base);
+                    try expectEqual(.empty, sp_u.diacritic);
+                    try expectEqual(.level, sp_u.tone);
+
+                    const sp_o = state.buffer_effective[2];
+                    try expectEqual(o, sp_o.base);
+                    try expectEqual(.horn, sp_o.diacritic);
+                    try expectEqual(.level, sp_o.tone);
+
+                    const sp_new = state.buffer_effective[3];
+                    try expectEqual(trigger, sp_new.base);
+                    try expectEqual(.empty, sp_new.diacritic);
+                    try expectEqual(.level, sp_new.tone);
+                }
+            }
+        }
     }
 }
 
