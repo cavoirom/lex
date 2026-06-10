@@ -65,7 +65,7 @@ Khởi động Lex sau khi đã cấp quyền.
 Yêu cầu:
 
 - macOS 26 hoặc mới hơn.
-- Zig 0.15.2.
+- Zig 0.16.0.
 - Xcode 26 hoặc mới hơn.
 
 Biên dịch liblex.a:
@@ -87,6 +87,8 @@ Ký chữ ký điện tử để macOS đồng ý cấp quyền _Accessibility_:
 ```
 codesign -f -s - macos/Lex.app
 ```
+
+Ngoài ra, người dùng có thể chạy `zig build` để tự động chạy các bước trên.
 
 ## Tình hình phát triển
 
