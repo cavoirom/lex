@@ -1,0 +1,67 @@
+{
+  "v": 12,
+  "id": "T-019ece32-0628-759d-9767-4df53f71176a",
+  "env": {
+    "initial": {
+      "trees": [
+        {
+          "uri": ".",
+          "displayName": "lex"
+        }
+      ],
+      "platform": {
+        "os": "linux",
+        "client": "CLI",
+        "osVersion": "6.18.33-gnu",
+        "clientType": "cli",
+        "webBrowser": false,
+        "clientVersion": "0.0.<redacted:team-id>-gd59ca1",
+        "installationID": "<redacted:installation-id>",
+        "cpuArchitecture": "arm64",
+        "deviceFingerprint": "<redacted:device-fingerprint>"
+      }
+    }
+  },
+  "meta": {
+    "executorType": "local-client",
+    "lastKnownAgentState": {
+      "state": "idle",
+      "updatedAt": "2026-06-16T02:11:02.377Z"
+    },
+    "deleted": false,
+    "createdOnServer": false,
+    "lastUserMessageAt": "2026-06-16T02:10:46.808Z",
+    "workspaceID": null,
+    "projectID": null,
+    "visibility": "private",
+    "sharedGroupIDs": [],
+    "agentMode": "smart",
+    "usesDtw": true,
+    "usesThreadActors": true
+  },
+  "title": "iOS keyboard initialization performance",
+  "created": 1781575845416,
+  "messages": [
+    {
+      "meta": {
+        "sentAt": 1781575846808
+      },
+      "role": "user",
+      "readAt": null,
+      "content": [
+        {
+          "text": "We are working no @playground/ios-app deeply analyze the code to initialize the keyboard UI to optimize the performance why strictly keeping the behaviors.\n\n- I see many glitches when switching between built-in keyboard and Lex keyboard.\n- I see many glitches when switch to the app with Lex keyboard is in use (my guess iOS init the keyboard again).\n- We are on iOS 26.\n\nCome up with the approach, then consult the Oracle for another perspective, but prevent the Oracle from producing any example code. You should not write any code.",
+          "type": "text"
+        }
+      ],
+      "messageId": 1,
+      "protocolMessageID": "M-033Yu9xXua08FEkZbMh2xn"
+    }
+  ],
+  "agentMode": "smart",
+  "nextMessageId": 2,
+  "reasoningEffort": "high",
+  "creatorUserID": "<redacted:creator-user-id>",
+  "pinned": false,
+  "updatedAt": "2026-06-16T02:11:02.851Z"
+}

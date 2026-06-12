@@ -1,0 +1,100 @@
+name: Lex
+
+options:
+  bundleIdPrefix: com.cavoirom.lex
+  deploymentTarget:
+    iOS: "26.0"
+  createIntermediateGroups: true
+  generateEmptyDirectories: true
+
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    # iPhone only (the experiment targets iPhone 11 Pro).
+    TARGETED_DEVICE_FAMILY: "1"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    # Default to automatic signing; for device builds set DEVELOPMENT_TEAM on
+    # the xcodebuild command line (see README). Simulator builds pass
+    # CODE_SIGNING_ALLOWED=NO and need none of this.
+    CODE_SIGN_STYLE: Automatic
+
+targets:
+  # ---------------------------------------------------------------------------
+  # Container app. iOS requires an app to deliver the keyboard extension. This
+  # one only shows enable-instructions; it does not link liblex.
+  # ---------------------------------------------------------------------------
+  Lex:
+    type: application
+    platform: iOS
+    sources:
+      - path: Lex.swift
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.cavoirom.lex.ios
+        GENERATE_INFOPLIST_FILE: NO
+    info:
+      path: Generated/Lex-Info.plist
+      properties:
+        CFBundleDevelopmentRegion: $(DEVELOPMENT_LANGUAGE)
+        CFBundleDisplayName: Lex
+        CFBundleExecutable: $(EXECUTABLE_NAME)
+        CFBundleIdentifier: $(PRODUCT_BUNDLE_IDENTIFIER)
+        CFBundleInfoDictionaryVersion: "6.0"
+        CFBundleName: $(PRODUCT_NAME)
+        CFBundlePackageType: $(PRODUCT_BUNDLE_PACKAGE_TYPE)
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        UILaunchScreen: {}
+        UIApplicationSupportsIndirectInputEvents: true
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+    dependencies:
+      # Embed the keyboard extension's .appex inside the app bundle.
+      - target: Keyboard
+        embed: true
+
+  # ---------------------------------------------------------------------------
+  # Keyboard extension. Hosts the UIInputViewController, the US-QWERTY UI and
+  # the liblex engine wrapper. This is the only target that links liblex.
+  # ---------------------------------------------------------------------------
+  Keyboard:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: Keyboard.swift
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.cavoirom.lex.ios.keyboard
+        GENERATE_INFOPLIST_FILE: NO
+        # Keyboard extensions may only use extension-safe API.
+        APPLICATION_EXTENSION_API_ONLY: YES
+        # liblex's C ABI is surfaced to Swift through the engine's C header,
+        # used directly as the bridging header (mirrors the macOS app's
+        # `-import-objc-header src/lex.h`).
+        SWIFT_OBJC_BRIDGING_HEADER: $(PROJECT_DIR)/../src/lex.h
+    info:
+      path: Generated/Keyboard-Info.plist
+      properties:
+        CFBundleDevelopmentRegion: $(DEVELOPMENT_LANGUAGE)
+        CFBundleDisplayName: Lex
+        CFBundleExecutable: $(EXECUTABLE_NAME)
+        CFBundleIdentifier: $(PRODUCT_BUNDLE_IDENTIFIER)
+        CFBundleInfoDictionaryVersion: "6.0"
+        CFBundleName: $(PRODUCT_NAME)
+        CFBundlePackageType: $(PRODUCT_BUNDLE_PACKAGE_TYPE)
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.keyboard-service
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).KeyboardViewController
+          NSExtensionAttributes:
+            IsASCIICapable: true
+            PrefersRightToLeft: false
+            PrimaryLanguage: vi
+            RequestsOpenAccess: false
+    dependencies:
+      # Static-library XCFramework (device + simulator slices) produced by
+      # `zig build xcframework`. Link only; nothing to embed for a static lib.
+      - framework: ../zig-out/liblex.xcframework
+        embed: false

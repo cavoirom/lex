@@ -1,0 +1,1324 @@
+{
+  "v": 154,
+  "id": "T-019ed3f2-db23-73b8-a668-5be15cf151fe",
+  "env": {
+    "initial": {
+      "trees": [
+        {
+          "uri": ".",
+          "displayName": "lex"
+        }
+      ],
+      "platform": {
+        "os": "linux",
+        "client": "CLI",
+        "osVersion": "6.18.33-gnu",
+        "clientType": "cli",
+        "webBrowser": false,
+        "clientVersion": "0.0.<redacted:team-id>-g912937",
+        "installationID": "<redacted:installation-id>",
+        "cpuArchitecture": "arm64",
+        "deviceFingerprint": "<redacted:device-fingerprint>"
+      }
+    }
+  },
+  "meta": {
+    "executorType": "local-client",
+    "lastKnownAgentState": {
+      "state": "idle",
+      "messageID": "M-033ZleoefXD12G2MNC5UCg",
+      "updatedAt": "2026-06-17T05:03:15.471Z"
+    },
+    "deleted": false,
+    "createdOnServer": false,
+    "lastUserMessageAt": "2026-06-17T04:59:30.641Z",
+    "workspaceID": null,
+    "projectID": null,
+    "visibility": "private",
+    "sharedGroupIDs": [],
+    "agentMode": "smart",
+    "usesDtw": true,
+    "usesThreadActors": true
+  },
+  "title": "Keyboard layout flickering workaround removal",
+  "created": 1781672368931,
+  "messages": [
+    {
+      "meta": {
+        "sentAt": 1781672370641
+      },
+      "role": "user",
+      "readAt": null,
+      "content": [
+        {
+          "text": "Remove all fix / workaround to prevent flickering of the keyboard layout height because it's not effective, I seems this is the bug on Apple side, as described in the following article:\n\n- https://developer.apple.com/forums/thread/813579\n- https://www.reddit.com/r/swift/comments/1rowkla/custom_keyboard_flashflicker_on_initial/\n\n- Rewrite the code in a normal way, idiomatic to iOS keyboard extension and iOS UI.\n- Eliminate the redraw, re-render during initialization! This is IMPORTANT to reduce flickering.",
+          "type": "text"
+        }
+      ],
+      "messageId": 1,
+      "protocolMessageID": "M-033ZUqLKt7LAiEYBFIzjMs"
+    },
+    {
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "tool_use"
+      },
+      "usage": {
+        "model": "claude-opus-4-8",
+        "timestamp": "2026-06-17T04:59:37.245Z",
+        "inputTokens": 2,
+        "outputTokens": 157,
+        "maxInputTokens": 300000,
+        "totalInputTokens": 18235,
+        "cacheReadInputTokens": 16242,
+        "cacheCreationInputTokens": 1991
+      },
+      "readAt": "2026-06-17T04:59:50.070Z",
+      "content": [
+        {
+          "type": "thinking",
+          "provider": "anthropic",
+          "thinking": " I'm diving into the codebase to understand what's causing the keyboard layout height to flicker and what workarounds have been implemented.",
+          "finalTime": 1781672376487,
+          "signature": "<redacted:signature>",
+          "startTime": 1781672374294,
+          "blockState": "complete"
+        },
+        {
+          "id": "TU-033ZlZXwashgc2530TVv24",
+          "name": "Bash",
+          "type": "tool_use",
+          "input": {
+            "cmd": "cat fix_keyboard_ui_glitch.patch"
+          },
+          "complete": true,
+          "blockState": "complete",
+          "providerToolUseId": "toolu_vrtx_01LvqA6Ymi5cdqiohSNKRJ6d"
+        },
+        {
+          "id": "TU-033ZlZY3PuzupSSMKtoTSU",
+          "name": "Bash",
+          "type": "tool_use",
+          "input": {
+            "cmd": "find macos -type f | head -100"
+          },
+          "complete": true,
+          "blockState": "complete",
+          "providerToolUseId": "toolu_vrtx_01RgdVzC4o1zUvng9nPDE1xY"
+        }
+      ],
+      "messageId": 2,
+      "protocolMessageID": "M-033ZlZROsr3QXep90eATt1"
+    },
+    {
+      "role": "user",
+      "readAt": null,
+      "content": [
+        {
+          "run": {
+            "result": {
+              "output": "diff --git a/lex/playground/ios-app/ios/Keyboard.swift b/lex/playground/ios-app/ios/Keyboard.swift\nindex c2eaf0d..f10af9b 100644\n--- a/lex/playground/ios-app/ios/Keyboard.swift\n+++ b/lex/playground/ios-app/ios/Keyboard.swift\n@@ -104,6 +104,30 @@ private final class LexEngine {\n private final class KeyboardInputView: UIInputView {\n     weak var keyboard_view: KeyboardView?\n \n+    // Fixed portrait keyboard height, surfaced through Auto Layout's intrinsic\n+    // content size. Per the docs the system owns the keyboard width and derives\n+    // the keyboard region (its required UIView-Encapsulated-Layout-Height) from\n+    // this view's fitting size. With only an optional height constraint and no\n+    // intrinsic height, the first fitting yields the full available region\n+    // (~2/3 of the portrait screen), which is then resized down to our height —\n+    // the initialization flash. Advertising an intrinsic height makes the very\n+    // first size negotiation already resolve to the final height. This feeds\n+    // systemLayoutSizeFitting regardless of allowsSelfSizing, so we keep\n+    // self-sizing off (it can leave stale full-screen geometry across app\n+    // hide/show transitions) and still win the first frame.\n+    var intrinsic_height: CGFloat = 0 {\n+        didSet {\n+            guard self.intrinsic_height != oldValue else {\n+                return\n+            }\n+            self.invalidateIntrinsicContentSize()\n+        }\n+    }\n+\n+    override var intrinsicContentSize: CGSize {\n+        return CGSize(width: UIView.noIntrinsicMetric, height: self.intrinsic_height)\n+    }\n+\n     override func point(inside point: CGPoint, with event: UIEvent?) -> Bool {\n         return self.bounds.contains(point)\n     }\n@@ -145,10 +169,12 @@ final class KeyboardViewController: UIInputViewController {\n     private var applied_shows_globe: Bool?\n     private var applied_document_identifier: UUID?\n \n-    // Provide a fixed-height input view as the controller's root. Apple expects\n-    // custom keyboards to size the UIInputViewController view with constraints;\n-    // using self-sizing here can leave the host with stale full-screen keyboard\n-    // geometry after app hide/show transitions.\n+    // Provide the controller's root input view. The docs say the system sets\n+    // the keyboard width and the height comes from Auto Layout on this view, so\n+    // we drive height two ways that agree on the same value: an intrinsic\n+    // content height (wins the first size negotiation) and the explicit height\n+    // constraint below (the documented, maintained contract). Self-sizing stays\n+    // off because it can leave stale full-screen geometry across app hide/show.\n     override func loadView() {\n         let input_view = KeyboardInputView(\n             frame: CGRect(x: 0, y: 0, width: 0, height: Self.keyboard_height),\n@@ -156,19 +182,18 @@ final class KeyboardViewController: UIInputViewController {\n         )\n         input_view.isMultipleTouchEnabled = true\n         input_view.allowsSelfSizing = false\n+        input_view.intrinsic_height = Self.keyboard_height\n \n         self.view = input_view\n     }\n \n-    // Install the fixed-height constraint as early as possible. The out-of-\n-    // process keyboard host must pick a keyboard height on first presentation;\n-    // if the root view has no active height assertion yet, the host falls back\n-    // to a default available input region (~2/3 of the portrait screen) and\n-    // then snaps to our height a layout pass later — the initialization flash.\n-    // Creating the constraint here, before the first layout, gives the host the\n-    // correct height up front. Priority < required (1000) still avoids\n-    // conflicting with the host's own required encapsulated-layout-height during\n-    // transitions.\n+    // The documented way to set a custom keyboard's height: an Auto Layout\n+    // height constraint on the controller's view. It is the maintained contract\n+    // (reasserted in updateViewConstraints, e.g. on appearance) that holds the\n+    // height steady after the first frame, while the input view's intrinsic\n+    // content height wins the host's initial size negotiation. Priority <\n+    // required (1000) avoids conflicting with the host's own required\n+    // encapsulated-layout-height during transitions.\n     private func install_keyboard_height_constraint() {\n         guard self.keyboard_height_constraint == nil else {\n             return\n@@ -205,12 +230,10 @@ final class KeyboardViewController: UIInputViewController {\n             self.keyboard_view.bottomAnchor.constraint(equalTo: self.view.bottomAnchor),\n         ])\n \n-        // Assert the keyboard height before the first layout/measurement so the\n-        // host never shows its default region first. The constraint is the\n-        // authoritative sizing contract; preferredContentSize is an advisory\n-        // hint the keyboard-service host may also consult on some paths.\n+        // Install the explicit height constraint before the first layout so it\n+        // exists for the first measurement; the intrinsic content height set in\n+        // loadView is what actually wins the host's first size negotiation.\n         self.install_keyboard_height_constraint()\n-        self.preferredContentSize = CGSize(width: 0, height: Self.keyboard_height)\n \n         self.refresh_traits(force: true)\n     }\n",
+              "exitCode": 0
+            },
+            "status": "done"
+          },
+          "type": "tool_result",
+          "toolUseID": "TU-033ZlZXwashgc2530TVv24"
+        },
+        {
+          "run": {
+            "result": {
+              "output": "macos/Lex.swift\nmacos/Lex.app/Contents/Info.plist\n",
+              "exitCode": 0
+            },
+            "status": "done"
+          },
+          "type": "tool_result",
+          "toolUseID": "TU-033ZlZY3PuzupSSMKtoTSU"
+        }
+      ],
+      "messageId": 3,
+      "protocolMessageID": "M-033ZlZdQtkWjYkVCzIDkpZ"
+    },
+    {
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "tool_use"
+      },
+      "usage": {
+        "model": "claude-opus-4-8",
+        "timestamp": "2026-06-17T04:59:43.211Z",
+        "inputTokens": 2,
+        "outputTokens": 89,
+        "maxInputTokens": 300000,
+        "totalInputTokens": 20426,
+        "cacheReadInputTokens": 18233,
+        "cacheCreationInputTokens": 2191
+      },
+      "readAt": null,
+      "content": [
+        {
+          "type": "thinking",
+          "provider": "anthropic",
+          "thinking": " Looking for the actual Keyboard.swift file...",
+          "finalTime": 1781672382979,
+          "signature": "<redacted:signature>",
+          "startTime": 1781672382096,
+          "blockState": "complete"
+        },
+        {
+          "id": "TU-033ZlZi8kjlC9Zr8oPUDXw",
+          "name": "Bash",
+          "type": "tool_use",
+          "input": {
+            "cmd": "find playground -type f -name \"*.swift\" | head -50"
+          },
+          "complete": true,
+          "blockState": "complete",
+          "providerToolUseId": "toolu_vrtx_01Gtq8kcxvE4q6naMych3kra"
+        }
+      ],
+      "messageId": 4,
+      "protocolMessageID": "M-033ZlZdiRcoayEZYwBrHqH"
+    },
+    {
+      "role": "user",
+      "readAt": null,
+      "content": [
+        {
+          "run": {
+            "result": {
+              "output": "playground/minimal-app/app/main.swift\nplayground/prototype-app/macos/Lex.swift\nplayground/ios-app/ios/Keyboard.swift\nplayground/ios-app/ios/Lex.swift\nplayground/structure-app/macos/Lex.swift\n",
+              "exitCode": 0
+            },
+            "status": "done"
+          },
+          "type": "tool_result",
+          "toolUseID": "TU-033ZlZi8kjlC9Zr8oPUDXw"
+        }
+      ],
+      "messageId": 5,
+      "protocolMessageID": "M-033ZlZkmcLujlT5kFDdpTd"
+    },
+    {
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "tool_use"
+      },
+      "usage": {
+        "model": "claude-opus-4-8",
+        "timestamp": "2026-06-17T04:59:49.684Z",
+        "inputTokens": 2,
+        "outputTokens": 71,
+        "maxInputTokens": 300000,
+        "totalInputTokens": 20631,
+        "cacheReadInputTokens": 16242,
+        "cacheCreationInputTokens": 4387
+      },
+      "readAt": null,
+      "content": [
+        {
+          "id": "TU-033ZlZrgkTpGsyBo7KGglz",
+          "name": "Bash",
+          "type": "tool_use",
+          "input": {
+            "cmd": "cat -n playground/ios-app/ios/Keyboard.swift"
+          },
+          "complete": true,
+          "blockState": "complete",
+          "providerToolUseId": "toolu_vrtx_011789T4vx7tpCx3VJy1uRcy"
+        }
+      ],
+      "messageId": 6,
+      "protocolMessageID": "M-033ZlZkyVd2mWjwbGI8hNV"
+    },
+    {
+      "role": "user",
+      "readAt": null,
+      "content": [
+        {
+          "run": {
+            "result": {
+              "output": "    95\t                return\n    96\t            }\n    97\t            body(UnsafeBufferPointer(start: base, count: count))\n    98\t        }\n    99\t    }\n   100\t}\n   101\t\n   102\t// MARK: - Keyboard view controller (principal class)\n   103\t\n   104\tprivate final class KeyboardInputView: UIInputView {\n   105\t    weak var keyboard_view: KeyboardView?\n   106\t\n   107\t    // Fixed portrait keyboard height, surfaced through Auto Layout's intrinsic\n   108\t    // content size. Per the docs the system owns the keyboard width and derives\n   109\t    // the keyboard region (its required UIView-Encapsulated-Layout-Height) from\n   110\t    // this view's fitting size. With only an optional height constraint and no\n   111\t    // intrinsic height, the first fitting yields the full available region\n   112\t    // (~2/3 of the portrait screen), which is then resized down to our height —\n   113\t    // the initialization flash. Advertising an intrinsic height makes the very\n   114\t    // first size negotiation already resolve to the final height. This feeds\n   115\t    // systemLayoutSizeFitting regardless of allowsSelfSizing, so we keep\n   116\t    // self-sizing off (it can leave stale full-screen geometry across app\n   117\t    // hide/show transitions) and still win the first frame.\n   118\t    var intrinsic_height: CGFloat = 0 {\n   119\t        didSet {\n   120\t            guard self.intrinsic_height != oldValue else {\n   121\t                return\n   122\t            }\n   123\t            self.invalidateIntrinsicContentSize()\n   124\t        }\n   125\t    }\n   126\t\n   127\t    override var intrinsicContentSize: CGSize {\n   128\t        return CGSize(width: UIView.noIntrinsicMetric, height: self.intrinsic_height)\n   129\t    }\n   130\t\n   131\t    override func point(inside point: CGPoint, with event: UIEvent?) -> Bool {\n   132\t        return self.bounds.contains(point)\n   133\t    }\n   134\t\n   135\t    override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {\n   136\t        guard self.point(inside: point, with: event) else {\n   137\t            return nil\n   138\t        }\n   139\t\n   140\t        if let keyboard_view = self.keyboard_view {\n   141\t            let point_in_keyboard = keyboard_view.convert(point, from: self)\n   142\t            if keyboard_view.point(inside: point_in_keyboard, with: event) {\n   143\t                return keyboard_view\n   144\t            }\n   145\t        }\n   146\t\n   147\t        return super.hitTest(point, with: event)\n   148\t    }\n   149\t}\n   150\t\n   151\tfinal class KeyboardViewController: UIInputViewController {\n   152\t    // Fixed portrait-iPhone keyboard height (v1 scope: portrait only).\n   153\t    private static let keyboard_height: CGFloat = 216\n   154\t\n   155\t    private let engine = LexEngine()\n   156\t    private var keyboard_height_constraint: NSLayoutConstraint?\n   157\t\n   158\t    // The text we believe sits immediately before the cursor (the engine's\n   159\t    // currently composed word). Used as a guardrail to detect external changes\n   160\t    // (cursor moves, host edits): if the document no longer ends with this, the\n   161\t    // world changed under us and we start a fresh composition.\n   162\t    private var owned_suffix: String = \"\"\n   163\t\n   164\t    private let keyboard_view = KeyboardView()\n   165\t\n   166\t    // Cached traits, to avoid rebuilding the keyboard on every keystroke.\n   167\t    private var applied_dark: Bool?\n   168\t    private var applied_return_title: String?\n   169\t    private var applied_shows_globe: Bool?\n   170\t    private var applied_document_identifier: UUID?\n   171\t\n   172\t    // Provide the controller's root input view. The docs say the system sets\n   173\t    // the keyboard width and the height comes from Auto Layout on this view, so\n   174\t    // we drive height two ways that agree on the same value: an intrinsic\n   175\t    // content height (wins the first size negotiation) and the explicit height\n   176\t    // constraint below (the documented, maintained contract). Self-sizing stays\n   177\t    // off because it can leave stale full-screen geometry across app hide/show.\n   178\t    override func loadView() {\n   179\t        let input_view = KeyboardInputView(\n   180\t            frame: CGRect(x: 0, y: 0, width: 0, height: Self.keyboard_height),\n   181\t            inputViewStyle: .keyboard\n   182\t        )\n   183\t        input_view.isMultipleTouchEnabled = true\n   184\t        input_view.allowsSelfSizing = false\n   185\t        input_view.intrinsic_height = Self.keyboard_height\n   186\t\n   187\t        self.view = input_view\n   188\t    }\n   189\t\n   190\t    // The documented way to set a custom keyboard's height: an Auto Layout\n   191\t    // height constraint on the controller's view. It is the maintained contract\n   192\t    // (reasserted in updateViewConstraints, e.g. on appearance) that holds the\n   193\t    // height steady after the first frame, while the input view's intrinsic\n   194\t    // content height wins the host's initial size negotiation. Priority <\n   195\t    // required (1000) avoids conflicting with the host's own required\n   196\t    // encapsulated-layout-height during transitions.\n   197\t    private func install_keyboard_height_constraint() {\n   198\t        guard self.keyboard_height_constraint == nil else {\n   199\t            return\n   200\t        }\n   201\t        let height_constraint = self.view.heightAnchor.constraint(\n   202\t            equalToConstant: Self.keyboard_height\n   203\t        )\n   204\t        height_constraint.priority = UILayoutPriority(999)\n   205\t        height_constraint.isActive = true\n   206\t        self.keyboard_height_constraint = height_constraint\n   207\t    }\n   208\t\n   209\t    override func updateViewConstraints() {\n   210\t        self.install_keyboard_height_constraint()\n   211\t        self.keyboard_height_constraint?.constant = Self.keyboard_height\n   212\t\n   213\t        super.updateViewConstraints()\n   214\t    }\n   215\t\n   216\t    override func viewDidLoad() {\n   217\t        super.viewDidLoad()\n   218\t\n   219\t        self.keyboard_view.translatesAutoresizingMaskIntoConstraints = false\n   220\t        self.keyboard_view.delegate = self\n   221\t        if let input_view = self.view as? KeyboardInputView {\n   222\t            input_view.keyboard_view = self.keyboard_view\n   223\t        }\n   224\t        self.view.addSubview(self.keyboard_view)\n   225\t\n   226\t        NSLayoutConstraint.activate([\n   227\t            self.keyboard_view.leadingAnchor.constraint(equalTo: self.view.leadingAnchor),\n   228\t            self.keyboard_view.trailingAnchor.constraint(equalTo: self.view.trailingAnchor),\n   229\t            self.keyboard_view.topAnchor.constraint(equalTo: self.view.topAnchor),\n   230\t            self.keyboard_view.bottomAnchor.constraint(equalTo: self.view.bottomAnchor),\n   231\t        ])\n   232\t\n   233\t        // Install the explicit height constraint before the first layout so it\n   234\t        // exists for the first measurement; the intrinsic content height set in\n   235\t        // loadView is what actually wins the host's first size negotiation.\n   236\t        self.install_keyboard_height_constraint()\n   237\t\n   238\t        self.refresh_traits(force: true)\n   239\t    }\n   240\t\n   241\t    override func viewWillAppear(_ animated: Bool) {\n   242\t        super.viewWillAppear(animated)\n   243\t        self.keyboard_view.cancel_tracking()\n   244\t        self.view.setNeedsUpdateConstraints()\n   245\t        // Fresh document / re-presentation: start a clean composition.\n   246\t        self.engine.reset()\n   247\t        self.owned_suffix = \"\"\n   248\t        self.applied_document_identifier = self.textDocumentProxy.documentIdentifier\n   249\t        // Re-presentation (app foreground, keyboard switch) must not tear down\n   250\t        // the UI when nothing changed. The trait cache still applies any real\n   251\t        // change (appearance, return title, globe) as a cheap in-place update.\n   252\t        self.refresh_traits(force: false)\n   253\t    }\n   254\t\n   255\t    override func viewWillDisappear(_ animated: Bool) {\n   256\t        super.viewWillDisappear(animated)\n   257\t        self.keyboard_view.cancel_tracking()\n   258\t    }\n   259\t\n   260\t    // The host text/selection changed. We do NOT reset here: this fires for our\n   261\t    // own edits too, and resetting would break multi-key Telex composition.\n   262\t    // Reset only when the active document identity changes; destructive edit\n   263\t    // guards still validate the owned suffix before deleting host text.\n   264\t    override func textDidChange(_ textInput: UITextInput?) {\n   265\t        let document_identifier = self.textDocumentProxy.documentIdentifier\n   266\t        if document_identifier != self.applied_document_identifier {\n   267\t            self.applied_document_identifier = document_identifier\n   268\t            self.engine.reset()\n   269\t            self.owned_suffix = \"\"\n   270\t        }\n   271\t        self.refresh_traits(force: false)\n   272\t    }\n   273\t\n   274\t    // MARK: Reconciliation\n   275\t\n   276\t    private func handle_character(_ text: String) {\n   277\t        let proxy = self.textDocumentProxy\n   278\t\n   279\t        // Only ASCII letters flow through the engine. Everything else (digits,\n   280\t        // symbols) is inserted verbatim and ends the current composition.\n   281\t        let scalars = text.unicodeScalars\n   282\t        let is_single_ascii_alpha: Bool = {\n   283\t            guard text.count == 1, scalars.count == 1, let v = scalars.first?.value else {\n   284\t                return false\n   285\t            }\n   286\t            return (v >= 65 && v <= 90) || (v >= 97 && v <= 122)\n   287\t        }()\n   288\t\n   289\t        guard is_single_ascii_alpha, let scalar = scalars.first else {\n   290\t            self.engine.reset()\n   291\t            self.owned_suffix = \"\"\n   292\t            proxy.insertText(text)\n   293\t            return\n   294\t        }\n   295\t\n   296\t        if self.engine.buffer_full() {\n   297\t            self.engine.reset()\n   298\t            self.owned_suffix = \"\"\n   299\t        }\n   300\t\n   301\t        if self.engine.buffer_effective_full() {\n   302\t            // No room left to compose; append literally but keep the engine in\n   303\t            // sync so backspace tracking stays correct.\n   304\t            self.engine.add(scalar)\n   305\t            proxy.insertText(text)\n   306\t            self.owned_suffix += text\n   307\t            return\n   308\t        }\n   309\t\n   310\t        // Normal path: feed the engine, then mirror its delete/insert against\n   311\t        // both the host document and the owned-suffix model. liblex returns the\n   312\t        // tail segment from its modification index (e.g. \"nuowc\" -> \"ươc\") plus\n   313\t        // the count of previously committed characters to drop, so the visible\n   314\t        // text becomes owned_suffix.dropLast(backspaces) + composed.\n   315\t        self.engine.add(scalar)\n   316\t        let backspaces = self.engine.synthetic_backspaces()\n   317\t\n   318\t        // Host context reads cross the keyboard/host boundary, so keep them out\n   319\t        // of the append-only hot path. Validate only before destructive edits,\n   320\t        // where a stale suffix would otherwise delete text we do not own.\n   321\t        if backspaces > 0, !self.owned_suffix.isEmpty {\n   322\t            let before = proxy.documentContextBeforeInput ?? \"\"\n   323\t            if !before.hasSuffix(self.owned_suffix) {\n   324\t                self.engine.reset()\n   325\t                self.owned_suffix = \"\"\n   326\t                proxy.insertText(text)\n   327\t                return\n   328\t            }\n   329\t        }\n   330\t\n   331\t        var composed = \"\"\n   332\t        self.engine.compose_replacement { buffer in\n   333\t            composed = String(utf16CodeUnits: buffer.baseAddress!, count: buffer.count)\n   334\t        }\n   335\t\n   336\t        // Fail safe: never delete host text we cannot account for. If the engine\n   337\t        // produced no replacement, or asks to drop more than we own, reset and\n   338\t        // insert the key literally rather than corrupting the document.\n   339\t        guard !composed.isEmpty, self.remove_owned_suffix_chars(backspaces) else {\n   340\t            self.engine.reset()\n   341\t            self.owned_suffix = \"\"\n   342\t            proxy.insertText(text)\n   343\t            return\n   344\t        }\n   345\t\n   346\t        for _ in 0..<backspaces {\n   347\t            proxy.deleteBackward()\n   348\t        }\n   349\t        proxy.insertText(composed)\n   350\t        self.owned_suffix += composed\n   351\t    }\n   352\t\n   353\t    // Drop `count` characters from the owned-suffix model, mirroring the\n   354\t    // synthetic backspaces sent to the document. Returns false (without\n   355\t    // mutating) when we do not own that many characters — a desync signal.\n   356\t    private func remove_owned_suffix_chars(_ count: Int) -> Bool {\n   357\t        guard count >= 0, count <= self.owned_suffix.count else {\n   358\t            return false\n   359\t        }\n   360\t        for _ in 0..<count {\n   361\t            self.owned_suffix.removeLast()\n   362\t        }\n   363\t        return true\n   364\t    }\n   365\t\n   366\t    private func handle_backspace() {\n   367\t        self.engine.backspace()\n   368\t        self.textDocumentProxy.deleteBackward()\n   369\t        if !self.owned_suffix.isEmpty {\n   370\t            self.owned_suffix.removeLast()\n   371\t        }\n   372\t    }\n   373\t\n   374\t    private func handle_space() {\n   375\t        self.engine.reset()\n   376\t        self.owned_suffix = \"\"\n   377\t        self.textDocumentProxy.insertText(\" \")\n   378\t    }\n   379\t\n   380\t    private func handle_return() {\n   381\t        self.engine.reset()\n   382\t        self.owned_suffix = \"\"\n   383\t        self.textDocumentProxy.insertText(\"\\n\")\n   384\t    }\n   385\t\n   386\t    // MARK: Traits\n   387\t\n   388\t    private func refresh_traits(force: Bool) {\n   389\t        let dark = self.is_dark_appearance()\n   390\t        let return_title = self.return_key_title()\n   391\t        let shows_globe = self.needsInputModeSwitchKey\n   392\t\n   393\t        if !force,\n   394\t            dark == self.applied_dark,\n   395\t            return_title == self.applied_return_title,\n   396\t            shows_globe == self.applied_shows_globe\n   397\t        {\n   398\t            return\n   399\t        }\n   400\t\n   401\t        self.applied_dark = dark\n   402\t        self.applied_return_title = return_title\n   403\t        self.applied_shows_globe = shows_globe\n   404\t\n   405\t        self.keyboard_view.apply_traits(\n   406\t            dark: dark,\n   407\t            shows_globe: shows_globe,\n   408\t            return_title: return_title\n   409\t        )\n   410\t    }\n   411\t\n   412\t    private func is_dark_appearance() -> Bool {\n   413\t        switch self.textDocumentProxy.keyboardAppearance {\n   414\t        case .dark:\n   415\t            return true\n   416\t        case .light:\n   417\t            return false\n   418\t        default:\n   419\t            return self.traitCollection.userInterfaceStyle == .dark\n   420\t        }\n   421\t    }\n   422\t\n   423\t    private func return_key_title() -> String {\n   424\t        switch self.textDocumentProxy.returnKeyType {\n   425\t        case .go:\n   426\t            return \"Go\"\n   427\t        case .google, .yahoo, .search:\n   428\t            return \"Search\"\n   429\t        case .send:\n   430\t            return \"Send\"\n   431\t        case .next:\n   432\t            return \"Next\"\n   433\t        case .done:\n   434\t            return \"Done\"\n   435\t        case .continue:\n   436\t            return \"Continue\"\n   437\t        case .join:\n   438\t            return \"Join\"\n   439\t        case .route:\n   440\t            return \"Route\"\n   441\t        default:\n   442\t            return \"return\"\n   443\t        }\n   444\t    }\n   445\t}\n   446\t\n   447\textension KeyboardViewController: KeyboardViewDelegate {\n   448\t    fileprivate func keyboard_view(_ view: KeyboardView, didEmit action: KeyAction) {\n   449\t        switch action {\n   450\t        case .character(let text):\n   451\t            self.handle_character(text)\n   452\t        case .backspace:\n   453\t            self.handle_backspace()\n   454\t        case .space:\n   455\t            self.handle_space()\n   456\t        case .enter:\n   457\t            self.handle_return()\n   458\t        case .nextKeyboard:\n   459\t            self.advanceToNextInputMode()\n   460\t        case .shift, .plane:\n   461\t            // UI-only state, handled inside KeyboardView.\n   462\t            break\n   463\t        }\n   464\t    }\n   465\t}\n   466\t\n   467\t// MARK: - Keyboard UI model\n   468\t\n   469\tprivate enum KeyAction {\n   470\t    case character(String)\n   471\t    case backspace\n   472\t    case shift\n   473\t    case space\n   474\t    case enter\n   475\t    case nextKeyboard\n   476\t    case plane(KeyPlane)\n   477\t}\n   478\t\n   479\tprivate enum KeyPlane {\n   480\t    case letters, numbers, symbols\n   481\t}\n   482\t\n   483\t// Granularity of a pending keyboard-view update. A structural change alters the\n   484\t// button set or their widths (plane switch, globe show/hide, first build) and\n   485\t// requires rebuilding the view tree and re-laying out. An in-place change only\n   486\t// alters titles or colors of the existing buttons (shift case, return title,\n   487\t// dark/light) and reuses the buttons, frames and hit frames. `structural`\n   488\t// supersedes `in_place` when both are requested before the next apply.\n   489\tprivate enum PendingUpdate {\n   490\t    case none, in_place, structural\n   491\t}\n   492\t\n   493\tprivate enum KeyWidth {\n   494\t    case unit\n   495\t    case fill\n   496\t    case ratio(CGFloat)\n   497\t}\n   498\t\n   499\tprivate enum KeyStyle {\n   500\t    case letter\n   501\t    case function\n   502\t}\n   503\t\n   504\tprivate struct KeyCap {\n   505\t    let action: KeyAction\n   506\t    let display: String\n   507\t    let width: KeyWidth\n   508\t    let style: KeyStyle\n   509\t}\n   510\t\n   511\tprivate enum ShiftState {\n   512\t    case off, on, locked\n   513\t}\n   514\t\n   515\tprivate final class KeyButton: UIButton {\n   516\t    var cap: KeyCap!\n   517\t    var hit_frame: CGRect?\n   518\t\n   519\t    override func point(inside point: CGPoint, with event: UIEvent?) -> Bool {\n   520\t        guard let hit_frame = self.hit_frame, let superview = self.superview else {\n   521\t            return super.point(inside: point, with: event)\n   522\t        }\n   523\t        let point_in_keyboard = self.convert(point, to: superview)\n   524\t        return hit_frame.contains(point_in_keyboard)\n   525\t    }\n   526\t}\n   527\t\n   528\tprivate protocol KeyboardViewDelegate: AnyObject {\n   529\t    func keyboard_view(_ view: KeyboardView, didEmit action: KeyAction)\n   530\t}\n   531\t\n   532\tprivate struct ActiveTouch {\n   533\t    let button: KeyButton\n   534\t    var inside: Bool\n   535\t}\n   536\t\n   537\t// MARK: - Keyboard UI\n   538\t\n   539\tprivate final class KeyboardView: UIView {\n   540\t    private static let trigger_cell_overlap: CGFloat = 2\n   541\t    private static let backspace_initial_repeat_delay: TimeInterval = 0.32\n   542\t    private static let backspace_repeat_interval: TimeInterval = 0.055\n   543\t\n   544\t    weak var delegate: KeyboardViewDelegate?\n   545\t\n   546\t    // Controller-driven state.\n   547\t    var shows_globe: Bool = false\n   548\t    var return_title: String = \"return\"\n   549\t\n   550\t    // UI-only state.\n   551\t    private var plane: KeyPlane = .letters\n   552\t    private var shift_state: ShiftState = .off\n   553\t    private var is_dark: Bool = false\n   554\t    private var last_shift_tap: TimeInterval = 0\n   555\t    private var backspace_timer: Timer?\n   556\t    private var repeating_backspace_touch: ObjectIdentifier?\n   557\t\n   558\t    private var rows: [[KeyButton]] = []\n   559\t    private var active_touches: [ObjectIdentifier: ActiveTouch] = [:]\n   560\t    private var pending_update: PendingUpdate = .none\n   561\t    // The button tree is built lazily once the controller has supplied the\n   562\t    // resolved traits (appearance, return title, globe), so the first paint is\n   563\t    // already correct instead of flashing a default-light layout then\n   564\t    // recolouring. Until then there are no buttons to update in place.\n   565\t    private var did_build = false\n   566\t\n   567\t    override init(frame: CGRect) {\n   568\t        super.init(frame: frame)\n   569\t        // Fast iPhone typing often overlaps touches (for example, the next\n   570\t        // thumb lands before the previous one fully lifts). UIKit views and\n   571\t        // controls default to single-touch tracking, which can drop that second\n   572\t        // key before it reaches the delegate. Keep both the keyboard container\n   573\t        // and every key multi-touch capable so independent key presses are not\n   574\t        // filtered by UIKit before our reconciliation code runs.\n   575\t        self.isMultipleTouchEnabled = true\n   576\t        self.isOpaque = false\n   577\t        // Keep a nearly transparent backing color. A fully transparent custom\n   578\t        // keyboard surface can leave UIKit routing touches only to visible\n   579\t        // subviews in the visual gaps, before our no-gap grid router runs. The\n   580\t        // colour is appearance-independent, so it is set once here rather than\n   581\t        // on every trait change. The first button build is deferred until the\n   582\t        // controller pushes resolved traits via apply_traits.\n   583\t        self.backgroundColor = UIColor(white: 0, alpha: 0.001)\n   584\t    }\n   585\t\n   586\t    required init?(coder: NSCoder) {\n   587\t        fatalError(\"init(coder:) has not been implemented\")\n   588\t    }\n   589\t\n   590\t    deinit {\n   591\t        self.backspace_timer?.invalidate()\n   592\t    }\n   593\t\n   594\t    // Controller entry point for resolved traits. Decides the cheapest update\n   595\t    // that reproduces the previous full-rebuild result: the first call (or a\n   596\t    // globe show/hide, which changes the bottom-row button set) is structural;\n   597\t    // a return-title or appearance change only needs an in-place refresh.\n   598\t    func apply_traits(dark: Bool, shows_globe: Bool, return_title: String) {\n   599\t        let structural_change = shows_globe != self.shows_globe\n   600\t        let needs_update =\n   601\t            !self.did_build\n   602\t            || structural_change\n   603\t            || dark != self.is_dark\n   604\t            || return_title != self.return_title\n   605\t\n   606\t        self.is_dark = dark\n   607\t        self.shows_globe = shows_globe\n   608\t        self.return_title = return_title\n   609\t\n   610\t        guard needs_update else {\n   611\t            return\n   612\t        }\n   613\t\n   614\t        if !self.did_build || structural_change {\n   615\t            self.request_update(.structural)\n   616\t        } else {\n   617\t            self.request_update(.in_place)\n   618\t        }\n   619\t    }\n   620\t\n   621\t    // Schedule an update, preserving the original active-touch deferral: while\n   622\t    // any touch is down the work is recorded (structural wins over in-place)\n   623\t    // and applied once tracking goes idle, so a key press never mutates the\n   624\t    // button the finger is on. When idle, the update is applied immediately.\n   625\t    private func request_update(_ kind: PendingUpdate) {\n   626\t        if !self.active_touches.isEmpty {\n   627\t            self.pending_update = Self.escalate(self.pending_update, kind)\n   628\t            return\n   629\t        }\n   630\t\n   631\t        self.apply_update(kind)\n   632\t    }\n   633\t\n   634\t    private static func escalate(_ current: PendingUpdate, _ next: PendingUpdate) -> PendingUpdate {\n   635\t        if current == .structural || next == .structural {\n   636\t            return .structural\n   637\t        }\n   638\t        if current == .in_place || next == .in_place {\n   639\t            return .in_place\n   640\t        }\n   641\t        return .none\n   642\t    }\n   643\t\n   644\t    private func apply_update(_ kind: PendingUpdate) {\n   645\t        switch kind {\n   646\t        case .structural:\n   647\t            self.rebuild_structure()\n   648\t        case .in_place:\n   649\t            self.refresh_in_place()\n   650\t        case .none:\n   651\t            break\n   652\t        }\n   653\t    }\n   654\t\n   655\t    // Full rebuild: tears down and recreates every button, then re-lays out.\n   656\t    // Used only when the button set or widths change (plane, globe, first\n   657\t    // build). Resets backspace auto-repeat as the old reload did; this only\n   658\t    // runs while idle, so no held backspace is in flight.\n   659\t    private func rebuild_structure() {\n   660\t        self.backspace_timer?.invalidate()\n   661\t        self.backspace_timer = nil\n   662\t        self.repeating_backspace_touch = nil\n   663\t        self.pending_update = .none\n   664\t        self.did_build = true\n   665\t\n   666\t        for row in self.rows {\n   667\t            for button in row {\n   668\t                button.isHighlighted = false\n   669\t                button.removeFromSuperview()\n   670\t            }\n   671\t        }\n   672\t\n   673\t        self.rows = self.build_model().map { row in\n   674\t            row.map { cap in self.make_button(cap) }\n   675\t        }\n   676\t        for row in self.rows {\n   677\t            for button in row {\n   678\t                self.addSubview(button)\n   679\t            }\n   680\t        }\n   681\t        self.setNeedsLayout()\n   682\t    }\n   683\t\n   684\t    // In-place refresh: reuses the existing buttons, updating only their cap,\n   685\t    // title and colors. The structure (button count and widths) is unchanged\n   686\t    // for the cases that route here (shift case, return title, dark/light), so\n   687\t    // frames and hit frames stay valid and no layout is needed. Runs only while\n   688\t    // idle, so no button is highlighted and the backspace timer is untouched.\n   689\t    // If the structure unexpectedly drifts, fall back to a full rebuild.\n   690\t    private func refresh_in_place() {\n   691\t        self.pending_update = .none\n   692\t\n   693\t        guard self.did_build else {\n   694\t            self.rebuild_structure()\n   695\t            return\n   696\t        }\n   697\t\n   698\t        let model = self.build_model()\n   699\t        guard model.count == self.rows.count else {\n   700\t            self.rebuild_structure()\n   701\t            return\n   702\t        }\n   703\t        for (row_index, row) in model.enumerated() {\n   704\t            guard row.count == self.rows[row_index].count else {\n   705\t                self.rebuild_structure()\n   706\t                return\n   707\t            }\n   708\t        }\n   709\t\n   710\t        // Title/color changes on a UIButton can crossfade inside a transition\n   711\t        // context (keyboard presentation is one); the old full rebuild showed\n   712\t        // fresh buttons with no animation, so keep these updates immediate.\n   713\t        UIView.performWithoutAnimation {\n   714\t            for (row_index, row) in model.enumerated() {\n   715\t                let buttons = self.rows[row_index]\n   716\t                for (button_index, cap) in row.enumerated() {\n   717\t                    let button = buttons[button_index]\n   718\t                    button.cap = cap\n   719\t                    button.setTitle(cap.display, for: .normal)\n   720\t                    self.apply_colors(to: button)\n   721\t                }\n   722\t            }\n   723\t            self.layoutIfNeeded()\n   724\t        }\n   725\t    }\n   726\t\n   727\t    override func point(inside point: CGPoint, with event: UIEvent?) -> Bool {\n   728\t        return self.bounds.insetBy(\n   729\t            dx: -Self.trigger_cell_overlap,\n   730\t            dy: -Self.trigger_cell_overlap\n   731\t        ).contains(point)\n   732\t    }\n   733\t\n   734\t    override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {\n   735\t        guard self.point(inside: point, with: event) else {\n   736\t            return nil\n   737\t        }\n   738\t        return self\n   739\t    }\n   740\t\n   741\t    override func draw(_ rect: CGRect) {\n   742\t        // Keep a backing store over the full keyboard bounds. The router maps\n   743\t        // all gap touches to the intended key partitions.\n   744\t        UIColor(white: 0, alpha: 0.001).setFill()\n   745\t        UIRectFill(rect)\n   746\t    }\n   747\t\n   748\t    // MARK: Layout\n   749\t\n   750\t    override func layoutSubviews() {\n   751\t        super.layoutSubviews()\n   752\t\n   753\t        let edge: CGFloat = 6.5\n   754\t        let gap: CGFloat = 6\n   755\t        let top_inset: CGFloat = 8\n   756\t        let bottom_inset = max(self.safeAreaInsets.bottom, 4)\n   757\t        let row_gap: CGFloat = 11\n   758\t        let width = self.bounds.width\n   759\t\n   760\t        guard width > 0, self.rows.count == 4 else {\n   761\t            return\n   762\t        }\n   763\t\n   764\t        let available_height = self.bounds.height - top_inset - bottom_inset\n   765\t        let row_height = (available_height - row_gap * 3) / 4\n   766\t        // Key unit derived from the 10-key top row so every letter key matches\n   767\t        // the system keyboard's width and narrower rows centre naturally.\n   768\t        let key_unit = (width - 2 * edge - 9 * gap) / 10\n   769\t\n   770\t        for (index, row) in self.rows.enumerated() {\n   771\t            let y = top_inset + CGFloat(index) * (row_height + row_gap)\n   772\t            self.layout_row(\n   773\t                row,\n   774\t                y: y,\n   775\t                row_height: row_height,\n   776\t                key_unit: key_unit,\n   777\t                gap: gap,\n   778\t                edge: edge,\n   779\t                total_width: width\n   780\t            )\n   781\t        }\n   782\t\n   783\t        self.layout_hit_frames()\n   784\t    }\n   785\t\n   786\t    private func resolved_width(_ width: KeyWidth, key_unit: CGFloat) -> CGFloat? {\n   787\t        switch width {\n   788\t        case .unit:\n   789\t            return key_unit\n   790\t        case .ratio(let ratio):\n   791\t            return key_unit * ratio\n   792\t        case .fill:\n   793\t            return nil\n   794\t        }\n   795\t    }\n   796\t\n   797\t    private func layout_row(\n   798\t        _ row: [KeyButton],\n   799\t        y: CGFloat,\n   800\t        row_height: CGFloat,\n   801\t        key_unit: CGFloat,\n   802\t        gap: CGFloat,\n   803\t        edge: CGFloat,\n   804\t        total_width: CGFloat\n   805\t    ) {\n   806\t        var fixed_sum: CGFloat = 0\n   807\t        var fill_count = 0\n   808\t        for button in row {\n   809\t            if let resolved = self.resolved_width(button.cap.width, key_unit: key_unit) {\n   810\t                fixed_sum += resolved\n   811\t            } else {\n   812\t                fill_count += 1\n   813\t            }\n   814\t        }\n   815\t\n   816\t        let total_gap = gap * CGFloat(max(row.count - 1, 0))\n   817\t        let row_available = total_width - 2 * edge\n   818\t\n   819\t        var fill_width: CGFloat = 0\n   820\t        if fill_count > 0 {\n   821\t            fill_width = max((row_available - fixed_sum - total_gap) / CGFloat(fill_count), key_unit)\n   822\t        }\n   823\t\n   824\t        // Rows with a fill key start at the edge and span the width; rows\n   825\t        // without (the letter rows) are centred so row 2 indents like iOS.\n   826\t        var x: CGFloat = (fill_count > 0) ? edge : (total_width - (fixed_sum + total_gap)) / 2\n   827\t\n   828\t        for button in row {\n   829\t            let button_width = self.resolved_width(button.cap.width, key_unit: key_unit) ?? fill_width\n   830\t            button.frame = CGRect(x: x, y: y, width: button_width, height: row_height)\n   831\t            x += button_width + gap\n   832\t        }\n   833\t    }\n   834\t\n   835\t    private func layout_hit_frames() {\n   836\t        for (row_index, row) in self.rows.enumerated() {\n   837\t            guard !row.isEmpty else {\n   838\t                continue\n   839\t            }\n   840\t\n   841\t            let row_top: CGFloat\n   842\t            if row_index == 0 {\n   843\t                row_top = self.bounds.minY\n   844\t            } else {\n   845\t                let previous_row = self.rows[row_index - 1]\n   846\t                row_top = (previous_row[0].frame.maxY + row[0].frame.minY) / 2\n   847\t            }\n   848\t\n   849\t            let row_bottom: CGFloat\n   850\t            if row_index == self.rows.count - 1 {\n   851\t                row_bottom = self.bounds.maxY\n   852\t            } else {\n   853\t                let next_row = self.rows[row_index + 1]\n   854\t                row_bottom = (row[0].frame.maxY + next_row[0].frame.minY) / 2\n   855\t            }\n   856\t\n   857\t            for (button_index, button) in row.enumerated() {\n   858\t                let hit_left: CGFloat\n   859\t                if button_index == 0 {\n   860\t                    hit_left = self.bounds.minX\n   861\t                } else {\n   862\t                    let previous_button = row[button_index - 1]\n   863\t                    hit_left = (previous_button.frame.maxX + button.frame.minX) / 2\n   864\t                }\n   865\t\n   866\t                let hit_right: CGFloat\n   867\t                if button_index == row.count - 1 {\n   868\t                    hit_right = self.bounds.maxX\n   869\t                } else {\n   870\t                    let next_button = row[button_index + 1]\n   871\t                    hit_right = (button.frame.maxX + next_button.frame.minX) / 2\n   872\t                }\n   873\t\n   874\t                button.hit_frame = CGRect(\n   875\t                    x: hit_left,\n   876\t                    y: row_top,\n   877\t                    width: hit_right - hit_left,\n   878\t                    height: row_bottom - row_top\n   879\t                )\n   880\t            }\n   881\t        }\n   882\t    }\n   883\t\n   884\t    // MARK: Touch routing\n   885\t\n   886\t    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {\n   887\t        for touch in touches.sorted(by: { $0.timestamp < $1.timestamp }) {\n   888\t            let point = touch.location(in: self)\n   889\t            guard let button = self.key_button(at: point) else {\n   890\t                continue\n   891\t            }\n   892\t\n   893\t            let touch_id = ObjectIdentifier(touch)\n   894\t            self.active_touches[touch_id] = ActiveTouch(button: button, inside: true)\n   895\t            button.isHighlighted = true\n   896\t            self.key_touch_down(button, touch_id: touch_id)\n   897\t        }\n   898\t    }\n   899\t\n   900\t    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {\n   901\t        for touch in touches {\n   902\t            let touch_id = ObjectIdentifier(touch)\n   903\t            guard var active_touch = self.active_touches[touch_id] else {\n   904\t                continue\n   905\t            }\n   906\t\n   907\t            let point = touch.location(in: self)\n   908\t            let inside = self.point(point, inside: active_touch.button)\n   909\t            if inside != active_touch.inside {\n   910\t                active_touch.inside = inside\n   911\t                active_touch.button.isHighlighted = inside\n   912\t                self.active_touches[touch_id] = active_touch\n   913\t\n   914\t                if !inside, case .backspace = active_touch.button.cap.action {\n   915\t                    self.stop_backspace_repeat(touch_id: touch_id)\n   916\t                }\n   917\t            }\n   918\t        }\n   919\t    }\n   920\t\n   921\t    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {\n   922\t        for touch in touches {\n   923\t            let touch_id = ObjectIdentifier(touch)\n   924\t            guard let active_touch = self.active_touches.removeValue(forKey: touch_id) else {\n   925\t                continue\n   926\t            }\n   927\t\n   928\t            active_touch.button.isHighlighted = false\n   929\t\n   930\t            if case .backspace = active_touch.button.cap.action {\n   931\t                self.stop_backspace_repeat(touch_id: touch_id)\n   932\t            }\n   933\t        }\n   934\t\n   935\t        self.flush_pending_update_if_idle()\n   936\t    }\n   937\t\n   938\t    override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {\n   939\t        for touch in touches {\n   940\t            let touch_id = ObjectIdentifier(touch)\n   941\t            guard let active_touch = self.active_touches.removeValue(forKey: touch_id) else {\n   942\t                continue\n   943\t            }\n   944\t\n   945\t            active_touch.button.isHighlighted = false\n   946\t            if case .backspace = active_touch.button.cap.action {\n   947\t                self.stop_backspace_repeat(touch_id: touch_id)\n   948\t            }\n   949\t        }\n   950\t\n   951\t        self.flush_pending_update_if_idle()\n   952\t    }\n   953\t\n   954\t    private func key_button(at point: CGPoint) -> KeyButton? {\n   955\t        self.layoutIfNeeded()\n   956\t\n   957\t        guard !self.rows.isEmpty, !self.bounds.isEmpty else {\n   958\t            return nil\n   959\t        }\n   960\t\n   961\t        let bounded_point = CGPoint(\n   962\t            x: min(max(point.x, self.bounds.minX), self.bounds.maxX),\n   963\t            y: min(max(point.y, self.bounds.minY), self.bounds.maxY)\n   964\t        )\n   965\t\n   966\t        guard let row = self.row(at: bounded_point.y) else {\n   967\t            return nil\n   968\t        }\n   969\t\n   970\t        return self.button(in: row, at: bounded_point.x)\n   971\t    }\n   972\t\n   973\t    private func row(at y: CGFloat) -> [KeyButton]? {\n   974\t        var best_row: [KeyButton]?\n   975\t        var best_distance = CGFloat.greatestFiniteMagnitude\n   976\t\n   977\t        for row in self.rows {\n   978\t            guard let frame = row.first?.hit_frame else {\n   979\t                continue\n   980\t            }\n   981\t\n   982\t            let expanded_frame = frame.insetBy(dx: 0, dy: -Self.trigger_cell_overlap)\n   983\t            if y >= expanded_frame.minY, y <= expanded_frame.maxY {\n   984\t                return row\n   985\t            }\n   986\t\n   987\t            let distance = abs(y - frame.midY)\n   988\t            if distance < best_distance {\n   989\t                best_distance = distance\n   990\t                best_row = row\n   991\t            }\n   992\t        }\n   993\t\n   994\t        return best_row\n   995\t    }\n   996\t\n   997\t    private func button(in row: [KeyButton], at x: CGFloat) -> KeyButton? {\n   998\t        var best_button: KeyButton?\n   999\t        var best_distance = CGFloat.greatestFiniteMagnitude\n  1000\t\n  1001\t        for button in row {\n  1002\t            guard let frame = button.hit_frame else {\n  1003\t                continue\n  1004\t            }\n  1005\t\n  1006\t            let expanded_frame = frame.insetBy(dx: -Self.trigger_cell_overlap, dy: 0)\n  1007\t            if x >= expanded_frame.minX, x <= expanded_frame.maxX {\n  1008\t                return button\n  1009\t            }\n  1010\t\n  1011\t            let distance = abs(x - frame.midX)\n  1012\t            if distance < best_distance {\n  1013\t                best_distance = distance\n  1014\t                best_button = button\n  1015\t            }\n  1016\t        }\n  1017\t\n  1018\t        return best_button\n  1019\t    }\n  1020\t\n  1021\t    private func point(_ point: CGPoint, inside button: KeyButton) -> Bool {\n  1022\t        let frame = button.hit_frame ?? button.frame\n  1023\t        let expanded_frame = frame.insetBy(\n  1024\t            dx: -Self.trigger_cell_overlap,\n  1025\t            dy: -Self.trigger_cell_overlap\n  1026\t        )\n  1027\t        return point.x >= expanded_frame.minX\n  1028\t            && point.x <= expanded_frame.maxX\n  1029\t            && point.y >= expanded_frame.minY\n  1030\t            && point.y <= expanded_frame.maxY\n  1031\t    }\n  1032\t\n  1033\t    private func flush_pending_update_if_idle() {\n  1034\t        if self.active_touches.isEmpty, self.pending_update != .none {\n  1035\t            self.apply_update(self.pending_update)\n  1036\t        }\n  1037\t    }\n  1038\t\n  1039\t    func cancel_tracking() {\n  1040\t        self.backspace_timer?.invalidate()\n  1041\t        self.backspace_timer = nil\n  1042\t        self.repeating_backspace_touch = nil\n  1043\t\n  1044\t        for active_touch in self.active_touches.values {\n  1045\t            active_touch.button.isHighlighted = false\n  1046\t        }\n  1047\t        self.active_touches.removeAll()\n  1048\t\n  1049\t        if self.pending_update != .none {\n  1050\t            self.apply_update(self.pending_update)\n  1051\t        }\n  1052\t    }\n  1053\t\n  1054\t    // MARK: Model\n  1055\t\n  1056\t    private func build_model() -> [[KeyCap]] {\n  1057\t        switch self.plane {\n  1058\t        case .letters:\n  1059\t            let row1 = [\"q\", \"w\", \"e\", \"r\", \"t\", \"y\", \"u\", \"i\", \"o\", \"p\"].map(self.letter_cap)\n  1060\t            let row2 = [\"a\", \"s\", \"d\", \"f\", \"g\", \"h\", \"j\", \"k\", \"l\"].map(self.letter_cap)\n  1061\t            var row3: [KeyCap] = [self.shift_cap()]\n  1062\t            row3 += [\"z\", \"x\", \"c\", \"v\", \"b\", \"n\", \"m\"].map(self.letter_cap)\n  1063\t            row3.append(self.backspace_cap())\n  1064\t            let row4 = self.bottom_row(\n  1065\t                plane_key: KeyCap(action: .plane(.numbers), display: \"123\", width: .ratio(1.4), style: .function)\n  1066\t            )\n  1067\t            return [row1, row2, row3, row4]\n  1068\t\n  1069\t        case .numbers:\n  1070\t            let row1 = [\"1\", \"2\", \"3\", \"4\", \"5\", \"6\", \"7\", \"8\", \"9\", \"0\"].map(self.symbol_cap)\n  1071\t            let row2 = [\"-\", \"/\", \":\", \";\", \"(\", \")\", \"$\", \"&\", \"@\", \"\\\"\"].map(self.symbol_cap)\n  1072\t            var row3: [KeyCap] = [\n  1073\t                KeyCap(action: .plane(.symbols), display: \"#+=\", width: .fill, style: .function)\n  1074\t            ]\n  1075\t            row3 += [\".\", \",\", \"?\", \"!\", \"'\"].map(self.symbol_cap)\n  1076\t            row3.append(self.backspace_cap())\n  1077\t            let row4 = self.bottom_row(\n  1078\t                plane_key: KeyCap(action: .plane(.letters), display: \"ABC\", width: .ratio(1.4), style: .function)\n  1079\t            )\n  1080\t            return [row1, row2, row3, row4]\n  1081\t\n  1082\t        case .symbols:\n  1083\t            let row1 = [\"[\", \"]\", \"{\", \"}\", \"#\", \"%\", \"^\", \"*\", \"+\", \"=\"].map(self.symbol_cap)\n  1084\t            let row2 = [\"_\", \"\\\\\", \"|\", \"~\", \"<\", \">\", \"€\", \"£\", \"¥\", \"•\"].map(self.symbol_cap)\n  1085\t            var row3: [KeyCap] = [\n  1086\t                KeyCap(action: .plane(.numbers), display: \"123\", width: .fill, style: .function)\n  1087\t            ]\n  1088\t            row3 += [\".\", \",\", \"?\", \"!\", \"'\"].map(self.symbol_cap)\n  1089\t            row3.append(self.backspace_cap())\n  1090\t            let row4 = self.bottom_row(\n  1091\t                plane_key: KeyCap(action: .plane(.letters), display: \"ABC\", width: .ratio(1.4), style: .function)\n  1092\t            )\n  1093\t            return [row1, row2, row3, row4]\n  1094\t        }\n  1095\t    }\n  1096\t\n  1097\t    private func letter_cap(_ base: String) -> KeyCap {\n  1098\t        let uppercased = self.shift_state != .off\n  1099\t        let display = uppercased ? base.uppercased() : base\n  1100\t        return KeyCap(action: .character(display), display: display, width: .unit, style: .letter)\n  1101\t    }\n  1102\t\n  1103\t    private func symbol_cap(_ symbol: String) -> KeyCap {\n  1104\t        return KeyCap(action: .character(symbol), display: symbol, width: .unit, style: .letter)\n  1105\t    }\n  1106\t\n  1107\t    private func shift_cap() -> KeyCap {\n  1108\t        let display = (self.shift_state == .locked) ? \"⇪\" : \"⇧\"\n  1109\t        return KeyCap(action: .shift, display: display, width: .fill, style: .function)\n  1110\t    }\n  1111\t\n  1112\t    private func backspace_cap() -> KeyCap {\n  1113\t        return KeyCap(action: .backspace, display: \"⌫\", width: .fill, style: .function)\n  1114\t    }\n  1115\t\n  1116\t    private func bottom_row(plane_key: KeyCap) -> [KeyCap] {\n  1117\t        var row: [KeyCap] = [plane_key]\n  1118\t        // The globe (next-keyboard) key occupies the system's emoji slot; it is\n  1119\t        // only drawn when iOS does not supply its own input-mode switcher. Lex\n  1120\t        // is always Telex, so switching keyboards is how the user types plain\n  1121\t        // Latin / other languages.\n  1122\t        if self.shows_globe {\n  1123\t            row.append(KeyCap(action: .nextKeyboard, display: \"🌐\", width: .ratio(1.4), style: .function))\n  1124\t        }\n  1125\t        row.append(KeyCap(action: .space, display: \"space\", width: .fill, style: .letter))\n  1126\t        row.append(KeyCap(action: .character(\".\"), display: \".\", width: .unit, style: .letter))\n  1127\t        row.append(KeyCap(action: .enter, display: self.return_title, width: .ratio(1.4), style: .function))\n  1128\t        return row\n  1129\t    }\n  1130\t\n  1131\t    // MARK: Buttons\n  1132\t\n  1133\t    private func make_button(_ cap: KeyCap) -> KeyButton {\n  1134\t        let button = KeyButton(type: .system)\n  1135\t        button.cap = cap\n  1136\t        button.isMultipleTouchEnabled = true\n  1137\t        button.isExclusiveTouch = false\n  1138\t        button.setTitle(cap.display, for: .normal)\n  1139\t        button.titleLabel?.font = .systemFont(ofSize: cap.style == .letter ? 25 : 18)\n  1140\t        button.titleLabel?.adjustsFontSizeToFitWidth = true\n  1141\t        button.titleLabel?.minimumScaleFactor = 0.5\n  1142\t        button.layer.cornerRadius = 8\n  1143\t        button.layer.cornerCurve = .continuous\n  1144\t        self.apply_colors(to: button)\n  1145\t        return button\n  1146\t    }\n  1147\t\n  1148\t    private func apply_colors(to button: KeyButton) {\n  1149\t        let letter_bg = self.is_dark ? UIColor(white: 0.42, alpha: 1) : UIColor.white\n  1150\t        let function_bg = self.is_dark ? UIColor(white: 0.27, alpha: 1) : UIColor(white: 0.68, alpha: 1)\n  1151\t        let active_bg = self.is_dark ? UIColor(white: 0.62, alpha: 1) : UIColor.white\n  1152\t        let text_color = self.is_dark ? UIColor.white : UIColor.black\n  1153\t\n  1154\t        button.setTitleColor(text_color, for: .normal)\n  1155\t\n  1156\t        switch button.cap.style {\n  1157\t        case .letter:\n  1158\t            button.backgroundColor = letter_bg\n  1159\t        case .function:\n  1160\t            if case .shift = button.cap.action, self.shift_state != .off {\n  1161\t                button.backgroundColor = active_bg\n  1162\t            } else {\n  1163\t                button.backgroundColor = function_bg\n  1164\t            }\n  1165\t        }\n  1166\t    }\n  1167\t\n  1168\t    // MARK: Actions\n  1169\t\n  1170\t    private func key_touch_down(_ sender: KeyButton, touch_id: ObjectIdentifier) {\n  1171\t        switch sender.cap.action {\n  1172\t        case .backspace:\n  1173\t            self.backspace_touch_down(touch_id: touch_id)\n  1174\t        default:\n  1175\t            self.key_pressed(sender)\n  1176\t        }\n  1177\t    }\n  1178\t\n  1179\t    private func key_pressed(_ sender: KeyButton) {\n  1180\t        let action = sender.cap.action\n  1181\t        switch action {\n  1182\t        case .plane(let target):\n  1183\t            self.plane = target\n  1184\t            // Plane switch changes the button set and widths: structural.\n  1185\t            self.request_update(.structural)\n  1186\t        case .shift:\n  1187\t            self.handle_shift_tap()\n  1188\t            // Only letter titles and the shift key colour change: in-place.\n  1189\t            self.request_update(.in_place)\n  1190\t        case .character:\n  1191\t            self.delegate?.keyboard_view(\n  1192\t                self,\n  1193\t                didEmit: .character(self.character_text(for: sender))\n  1194\t            )\n  1195\t            // One-shot shift reverts after a letter, like the system keyboard.\n  1196\t            if self.plane == .letters, self.shift_state == .on {\n  1197\t                self.shift_state = .off\n  1198\t                // Only letter titles and the shift key colour change: in-place.\n  1199\t                self.request_update(.in_place)\n  1200\t            }\n  1201\t        default:\n  1202\t            self.delegate?.keyboard_view(self, didEmit: action)\n  1203\t        }\n  1204\t    }\n  1205\t\n  1206\t    private func character_text(for sender: KeyButton) -> String {\n  1207\t        guard case .character(let text) = sender.cap.action else {\n  1208\t            return \"\"\n  1209\t        }\n  1210\t\n  1211\t        guard self.plane == .letters,\n  1212\t            text.count == 1,\n  1213\t            text.unicodeScalars.count == 1,\n  1214\t            let scalar = text.unicodeScalars.first\n  1215\t        else {\n  1216\t            return text\n  1217\t        }\n  1218\t\n  1219\t        let value = scalar.value\n  1220\t        let is_ascii_alpha = (value >= 65 && value <= 90) || (value >= 97 && value <= 122)\n  1221\t        guard is_ascii_alpha else {\n  1222\t            return text\n  1223\t        }\n  1224\t\n  1225\t        return (self.shift_state == .off) ? text.lowercased() : text.uppercased()\n  1226\t    }\n  1227\t\n  1228\t    private func handle_shift_tap() {\n  1229\t        let now = Date.timeIntervalSinceReferenceDate\n  1230\t        if self.shift_state == .locked {\n  1231\t            self.shift_state = .off\n  1232\t        } else if now - self.last_shift_tap < 0.3 {\n  1233\t            self.shift_state = .locked\n  1234\t        } else {\n  1235\t            self.shift_state = (self.shift_state == .on) ? .off : .on\n  1236\t        }\n  1237\t        self.last_shift_tap = now\n  1238\t    }\n  1239\t\n  1240\t    private func backspace_touch_down(touch_id: ObjectIdentifier) {\n  1241\t        self.delegate?.keyboard_view(self, didEmit: .backspace)\n  1242\t        self.backspace_timer?.invalidate()\n  1243\t        self.repeating_backspace_touch = touch_id\n  1244\t        // Initial delay, then auto-repeat while held.\n  1245\t        let delay_timer = Timer(\n  1246\t            timeInterval: Self.backspace_initial_repeat_delay,\n  1247\t            repeats: false\n  1248\t        ) { [weak self] _ in\n  1249\t            guard let self, self.repeating_backspace_touch == touch_id else {\n  1250\t                return\n  1251\t            }\n  1252\t            let repeat_timer = Timer(\n  1253\t                timeInterval: Self.backspace_repeat_interval,\n  1254\t                repeats: true\n  1255\t            ) { [weak self] _ in\n  1256\t                guard let self, self.repeating_backspace_touch == touch_id else {\n  1257\t                    return\n  1258\t                }\n  1259\t                self.delegate?.keyboard_view(self, didEmit: .backspace)\n  1260\t            }\n  1261\t            self.backspace_timer = repeat_timer\n  1262\t            RunLoop.main.add(repeat_timer, forMode: .common)\n  1263\t        }\n  1264\t        self.backspace_timer = delay_timer\n  1265\t        RunLoop.main.add(delay_timer, forMode: .common)\n  1266\t    }\n  1267\t\n  1268\t    private func stop_backspace_repeat(touch_id: ObjectIdentifier) {\n  1269\t        guard self.repeating_backspace_touch == touch_id else {\n  1270\t            return\n  1271\t        }\n  1272\t\n  1273\t        self.backspace_timer?.invalidate()\n  1274\t        self.backspace_timer = nil\n  1275\t        self.repeating_backspace_touch = nil\n  1276\t    }\n  1277\t}\n",
+              "exitCode": 0,
+              "truncation": {
+                "prefixLinesOmitted": 94
+              }
+            },
+            "status": "done"
+          },
+          "type": "tool_result",
+          "toolUseID": "TU-033ZlZrgkTpGsyBo7KGglz"
+        }
+      ],
+      "messageId": 7,
+      "protocolMessageID": "M-033ZlZux7PLFB4iwvZ8GJX"
+    },
+    {
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "tool_use"
+      },
+      "usage": {
+        "model": "claude-opus-4-8",
+        "timestamp": "2026-06-17T04:59:54.897Z",
+        "inputTokens": 2,
+        "outputTokens": 104,
+        "maxInputTokens": 300000,
+        "totalInputTokens": 39896,
+        "cacheReadInputTokens": 20424,
+        "cacheCreationInputTokens": 19470
+      },
+      "readAt": null,
+      "content": [
+        {
+          "type": "thinking",
+          "provider": "anthropic",
+          "thinking": " I should check the beginning of the file to get the full context.",
+          "finalTime": 1781672394339,
+          "signature": "<redacted:signature>",
+          "startTime": 1781672393548,
+          "blockState": "complete"
+        },
+        {
+          "id": "TU-033ZlZzzvtLH9iWdkVdTxP",
+          "name": "Bash",
+          "type": "tool_use",
+          "input": {
+            "cmd": "sed -n '1,100p' playground/ios-app/ios/Keyboard.swift"
+          },
+          "complete": true,
+          "blockState": "complete",
+          "providerToolUseId": "toolu_vrtx_01XPZQebKiSZJHAST24ecxdv"
+        }
+      ],
+      "messageId": 8,
+      "protocolMessageID": "M-033ZlZvAfadqh9RJPjdih3"
+    },
+    {
+      "role": "user",
+      "readAt": null,
+      "content": [
+        {
+          "run": {
+            "result": {
+              "output": "import UIKit\n\n// Lex iOS keyboard extension.\n//\n// Adapts the macOS app's idea (engine-driven synthetic-backspace + replacement\n// reconciliation, with liblex as the single source of truth) to a custom\n// keyboard. There is no CGEventTap here: the extension *is* the keyboard, so it\n// reconciles against the host text field through UITextDocumentProxy\n// (insertText / deleteBackward) instead of synthesising key events.\n//\n// File layout:\n//   - LexEngine            : thin Swift wrapper over the liblex C ABI.\n//   - KeyboardViewController: UIInputViewController principal class; owns the\n//                             engine and the tap-to-text reconciliation logic.\n//   - KeyboardView          : from-scratch UIKit US-QWERTY UI (3 planes).\n\n// MARK: - Engine wrapper\n\n// Thin wrapper over the liblex C ABI. Pure C interop, no UIKit; mirrors the\n// macOS app's LexEngine so the proven behaviour carries over verbatim.\nprivate final class LexEngine {\n    // The internal state of the engine. DO NOT READ.\n    private let state: UnsafeMutableRawPointer\n    // The memory to receive the replacement characters from engine.\n    private var replacement_buffer: [UInt16] = [UInt16](\n        repeating: 0,\n        count: Int(lex_replacement_buffer_length)\n    )\n    // The memory to receive the number of replacement characters from engine.\n    private var replacement_count: UInt8 = 0\n\n    init() {\n        let byte_count = Int(lex_state_size)\n        let alignment = Int(lex_state_alignment)\n        let state = UnsafeMutableRawPointer.allocate(\n            byteCount: byte_count,\n            alignment: alignment\n        )\n        lex_init(state)\n        self.state = state\n    }\n\n    deinit {\n        self.state.deallocate()\n    }\n\n    func reset() {\n        lex_init(self.state)\n    }\n\n    func add(_ unicode_scalar: Unicode.Scalar) {\n        guard unicode_scalar.isASCII else {\n            return\n        }\n        lex_add(self.state, UInt8(unicode_scalar.value))\n    }\n\n    func backspace() {\n        if !self.buffer_empty() {\n            lex_backspace(self.state)\n        }\n    }\n\n    func buffer_full() -> Bool {\n        return lex_buffer_full(self.state)\n    }\n\n    func buffer_empty() -> Bool {\n        return lex_buffer_empty(self.state)\n    }\n\n    func buffer_effective_full() -> Bool {\n        return lex_buffer_effective_full(self.state)\n    }\n\n    func synthetic_backspaces() -> Int {\n        return Int(lex_calculate_synthetic_backspaces(self.state))\n    }\n\n    // Compose the current replacement string. The closure is only invoked when\n    // the engine produced at least one character.\n    func compose_replacement(_ body: (UnsafeBufferPointer<UInt16>) -> Void) {\n        self.replacement_count = 0\n        lex_compose_utf16_string_replacement(\n            self.state,\n            &self.replacement_buffer,\n            &self.replacement_count\n        )\n        let count = Int(self.replacement_count)\n        guard count > 0 else {\n            return\n        }\n        self.replacement_buffer.withUnsafeBufferPointer { buffer in\n            guard let base = buffer.baseAddress else {\n                return\n            }\n            body(UnsafeBufferPointer(start: base, count: count))\n        }\n    }\n}\n",
+              "exitCode": 0
+            },
+            "status": "done"
+          },
+          "type": "tool_result",
+          "toolUseID": "TU-033ZlZzzvtLH9iWdkVdTxP"
+        }
+      ],
+      "messageId": 9,
+      "protocolMessageID": "M-033Zla2tOOSnOJGd4w8ySb"
+    },
+    {
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "tool_use"
+      },
+      "usage": {
+        "model": "claude-opus-4-8",
+        "timestamp": "2026-06-17T05:00:05.577Z",
+        "inputTokens": 2,
+        "outputTokens": 513,
+        "maxInputTokens": 300000,
+        "totalInputTokens": 41229,
+        "cacheReadInputTokens": 39894,
+        "cacheCreationInputTokens": 1333
+      },
+      "readAt": "2026-06-17T05:00:05.774Z",
+      "content": [
+        {
+          "type": "thinking",
+          "provider": "anthropic",
+          "thinking": " I see there's a patch file documenting keyboard height-flicker workarounds that are already baked into the current `Keyboard.swift` implementation. The user wants me to strip out all these workarounds since they're ineffective anyway—the flickering is actually an Apple-side bug that can't be fixed on our end.\n\nSo I need to look at the git history and any documentation to understand what the code looked like before these workarounds were added, then rewrite it back to that idiomatic iOS keyboard extension style while also eliminating unnecessary redraws during initialization.",
+          "finalTime": 1781672405030,
+          "signature": "<redacted:signature>",
+          "startTime": 1781672398536,
+          "blockState": "complete"
+        },
+        {
+          "id": "TU-033ZlaGoZurrpUemtzEIXp",
+          "name": "Bash",
+          "type": "tool_use",
+          "input": {
+            "cmd": "cd playground/ios-app && git log --oneline -20 -- ios/Keyboard.swift 2>/dev/null; echo \"---\"; cd . && git log --oneline -20 2>/dev/null | head -30"
+          },
+          "complete": true,
+          "blockState": "complete",
+          "providerToolUseId": "toolu_vrtx_01C56uHFxcouQt5tGCJiMAC7"
+        },
+        {
+          "id": "TU-033ZlaHFBrNmXdKkIp39yI",
+          "name": "Bash",
+          "type": "tool_use",
+          "input": {
+            "cmd": "git -C . log --oneline -30"
+          },
+          "complete": true,
+          "blockState": "complete",
+          "providerToolUseId": "toolu_vrtx_019NoGgTZNhTaGNfyH6nrryW"
+        }
+      ],
+      "messageId": 10,
+      "protocolMessageID": "M-033Zla3813XhBNWKX6irev"
+    },
+    {
+      "role": "user",
+      "readAt": null,
+      "content": [
+        {
+          "run": {
+            "result": {
+              "output": "20da6ce lex: improve UI initialization 2.\n5a97c38 lex: improve UI initialization.\nb23ae01 lex: improve gaps on input 4.\nb79ec46 lex: improve gaps on input 3.\nb5cea5b lex: improve gaps on input 2.\n9c58334 lex: improve gaps on input.\nb2aa69a lex: improve input performance 3.\nd193bde lex: improve input performance 2.\n3255cb0 lex: improve input performance.\n4b063c6 lex: improve keyboard layout with tessellated hit-region model.\naf5862a lex: fix lost key when typing.\nb7cf512 lex: build for real devices.\nfa1434b lex: add wider margin for left and right edges of the keyboard layout.\n99d4101 lex: remove keyboard backgound because ios has built-in box behind the keyboard.\ndd785d5 lex: refine Lex keyboard layout and remove toggle mode button.\na49ff74 lex: added ios-app prototype.\n---\n20da6ce lex: improve UI initialization 2.\n5a97c38 lex: improve UI initialization.\nb23ae01 lex: improve gaps on input 4.\nb79ec46 lex: improve gaps on input 3.\nb5cea5b lex: improve gaps on input 2.\n9c58334 lex: improve gaps on input.\nb2aa69a lex: improve input performance 3.\nd193bde lex: improve input performance 2.\n3255cb0 lex: improve input performance.\n4b063c6 lex: improve keyboard layout with tessellated hit-region model.\naf5862a lex: fix lost key when typing.\nb7cf512 lex: build for real devices.\nfa1434b lex: add wider margin for left and right edges of the keyboard layout.\n99d4101 lex: remove keyboard backgound because ios has built-in box behind the keyboard.\ndd785d5 lex: refine Lex keyboard layout and remove toggle mode button.\n7eaf466 lex: added the different between Lex keyboard and default US keyboard.\nc08cf6a lex: fix linker error.\na49ff74 lex: added ios-app prototype.\ne6d433f lex: start iOS app playground.\n5f7b3f2 lex: improve the build script to run the command directly beside the interactive shell.\n",
+              "exitCode": 0
+            },
+            "status": "done"
+          },
+          "type": "tool_result",
+          "toolUseID": "TU-033ZlaGoZurrpUemtzEIXp"
+        },
+        {
+          "run": {
+            "result": {
+              "output": "20da6ce lex: improve UI initialization 2.\n5a97c38 lex: improve UI initialization.\nb23ae01 lex: improve gaps on input 4.\nb79ec46 lex: improve gaps on input 3.\nb5cea5b lex: improve gaps on input 2.\n9c58334 lex: improve gaps on input.\nb2aa69a lex: improve input performance 3.\nd193bde lex: improve input performance 2.\n3255cb0 lex: improve input performance.\n4b063c6 lex: improve keyboard layout with tessellated hit-region model.\naf5862a lex: fix lost key when typing.\nb7cf512 lex: build for real devices.\nfa1434b lex: add wider margin for left and right edges of the keyboard layout.\n99d4101 lex: remove keyboard backgound because ios has built-in box behind the keyboard.\ndd785d5 lex: refine Lex keyboard layout and remove toggle mode button.\n7eaf466 lex: added the different between Lex keyboard and default US keyboard.\nc08cf6a lex: fix linker error.\na49ff74 lex: added ios-app prototype.\ne6d433f lex: start iOS app playground.\n5f7b3f2 lex: improve the build script to run the command directly beside the interactive shell.\n6b37f28 lex: added build script for bulding Lex.app.\ne6c0e5f guix: update manifests with extracted ampcode and deno.\ncc0f7c8 guix: let private channels track master branch without pinning commit.\nd8cbd95 lex: added agent threads, devlog regarding the QU fix for 0.1.1.\n8ecc365 guix: added fzf integration to vim.\n8cac0bc guix: added dracula theme to vim configuration.\n8f6c708 guix: added vim to home configuration.\nb7d1f95 guix: update lex environment, add git-filter-repo to mirror lex to public repository, refine the script to make environment more isolated.\nd028371 lex: release version 0.1.1 to fix wrong handling for QU.\n9131003 lex: update documentation for 0.1.0 release.\n",
+              "exitCode": 0
+            },
+            "status": "done"
+          },
+          "type": "tool_result",
+          "toolUseID": "TU-033ZlaHFBrNmXdKkIp39yI"
+        }
+      ],
+      "messageId": 11,
+      "protocolMessageID": "M-033ZlaLrOXb80SYXxB2Bdy"
+    },
+    {
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "tool_use"
+      },
+      "usage": {
+        "model": "claude-opus-4-8",
+        "timestamp": "2026-06-17T05:00:14.209Z",
+        "inputTokens": 2,
+        "outputTokens": 159,
+        "maxInputTokens": 300000,
+        "totalInputTokens": 43316,
+        "cacheReadInputTokens": 41227,
+        "cacheCreationInputTokens": 2087
+      },
+      "readAt": null,
+      "content": [
+        {
+          "type": "thinking",
+          "provider": "anthropic",
+          "thinking": " I'm checking what those UI initialization commits actually changed to see what workarounds were implemented.",
+          "finalTime": 1781672413858,
+          "signature": "<redacted:signature>",
+          "startTime": 1781672411339,
+          "blockState": "complete"
+        },
+        {
+          "id": "TU-033ZlaUgqICxNIl0oj2cTb",
+          "name": "Bash",
+          "type": "tool_use",
+          "input": {
+            "cmd": "git -C . show 5a97c38 -- playground/ios-app/ios/Keyboard.swift | head -250"
+          },
+          "complete": true,
+          "blockState": "complete",
+          "providerToolUseId": "toolu_vrtx_016ttCxobnGTFFQy3Z1YnZR5"
+        }
+      ],
+      "messageId": 12,
+      "protocolMessageID": "M-033ZlaM9EVmiAX1Xbv8GFg"
+    },
+    {
+      "role": "user",
+      "readAt": null,
+      "content": [
+        {
+          "run": {
+            "result": {
+              "output": "commit 5a97c3870ccaa2f0d7a62f7aaae6f7b7516ff214\nAuthor: <redacted:git-author>\nDate:   Tue Jun 16 10:14:40 2026 +0700\n\n    lex: improve UI initialization.\n\ndiff --git a/lex/playground/ios-app/ios/Keyboard.swift b/lex/playground/ios-app/ios/Keyboard.swift\nindex 45d8bee..202d860 100644\n--- a/lex/playground/ios-app/ios/Keyboard.swift\n+++ b/lex/playground/ios-app/ios/Keyboard.swift\n@@ -205,7 +205,10 @@ final class KeyboardViewController: UIInputViewController {\n         self.engine.reset()\n         self.owned_suffix = \"\"\n         self.applied_document_identifier = self.textDocumentProxy.documentIdentifier\n-        self.refresh_traits(force: true)\n+        // Re-presentation (app foreground, keyboard switch) must not tear down\n+        // the UI when nothing changed. The trait cache still applies any real\n+        // change (appearance, return title, globe) as a cheap in-place update.\n+        self.refresh_traits(force: false)\n     }\n \n     override func viewWillDisappear(_ animated: Bool) {\n@@ -358,9 +361,11 @@ final class KeyboardViewController: UIInputViewController {\n         self.applied_return_title = return_title\n         self.applied_shows_globe = shows_globe\n \n-        self.keyboard_view.shows_globe = shows_globe\n-        self.keyboard_view.return_title = return_title\n-        self.keyboard_view.apply_appearance(dark: dark)\n+        self.keyboard_view.apply_traits(\n+            dark: dark,\n+            shows_globe: shows_globe,\n+            return_title: return_title\n+        )\n     }\n \n     private func is_dark_appearance() -> Bool {\n@@ -434,6 +439,16 @@ private enum KeyPlane {\n     case letters, numbers, symbols\n }\n \n+// Granularity of a pending keyboard-view update. A structural change alters the\n+// button set or their widths (plane switch, globe show/hide, first build) and\n+// requires rebuilding the view tree and re-laying out. An in-place change only\n+// alters titles or colors of the existing buttons (shift case, return title,\n+// dark/light) and reuses the buttons, frames and hit frames. `structural`\n+// supersedes `in_place` when both are requested before the next apply.\n+private enum PendingUpdate {\n+    case none, in_place, structural\n+}\n+\n private enum KeyWidth {\n     case unit\n     case fill\n@@ -501,7 +516,12 @@ private final class KeyboardView: UIView {\n \n     private var rows: [[KeyButton]] = []\n     private var active_touches: [ObjectIdentifier: ActiveTouch] = [:]\n-    private var pending_reload = false\n+    private var pending_update: PendingUpdate = .none\n+    // The button tree is built lazily once the controller has supplied the\n+    // resolved traits (appearance, return title, globe), so the first paint is\n+    // already correct instead of flashing a default-light layout then\n+    // recolouring. Until then there are no buttons to update in place.\n+    private var did_build = false\n \n     override init(frame: CGRect) {\n         super.init(frame: frame)\n@@ -513,7 +533,13 @@ private final class KeyboardView: UIView {\n         // filtered by UIKit before our reconciliation code runs.\n         self.isMultipleTouchEnabled = true\n         self.isOpaque = false\n-        self.reload()\n+        // Keep a nearly transparent backing color. A fully transparent custom\n+        // keyboard surface can leave UIKit routing touches only to visible\n+        // subviews in the visual gaps, before our no-gap grid router runs. The\n+        // colour is appearance-independent, so it is set once here rather than\n+        // on every trait change. The first button build is deferred until the\n+        // controller pushes resolved traits via apply_traits.\n+        self.backgroundColor = UIColor(white: 0, alpha: 0.001)\n     }\n \n     required init?(coder: NSCoder) {\n@@ -524,29 +550,77 @@ private final class KeyboardView: UIView {\n         self.backspace_timer?.invalidate()\n     }\n \n-    func apply_appearance(dark: Bool) {\n+    // Controller entry point for resolved traits. Decides the cheapest update\n+    // that reproduces the previous full-rebuild result: the first call (or a\n+    // globe show/hide, which changes the bottom-row button set) is structural;\n+    // a return-title or appearance change only needs an in-place refresh.\n+    func apply_traits(dark: Bool, shows_globe: Bool, return_title: String) {\n+        let structural_change = shows_globe != self.shows_globe\n+        let needs_update =\n+            !self.did_build\n+            || structural_change\n+            || dark != self.is_dark\n+            || return_title != self.return_title\n+\n         self.is_dark = dark\n-        // Keep a nearly transparent backing color. A fully transparent custom\n-        // keyboard surface can leave UIKit routing touches only to visible\n-        // subviews in the visual gaps, before our no-gap grid router runs.\n-        self.backgroundColor = UIColor(white: 0, alpha: 0.001)\n-        self.reload()\n+        self.shows_globe = shows_globe\n+        self.return_title = return_title\n+\n+        guard needs_update else {\n+            return\n+        }\n+\n+        if !self.did_build || structural_change {\n+            self.request_update(.structural)\n+        } else {\n+            self.request_update(.in_place)\n+        }\n     }\n \n-    func reload() {\n+    // Schedule an update, preserving the original active-touch deferral: while\n+    // any touch is down the work is recorded (structural wins over in-place)\n+    // and applied once tracking goes idle, so a key press never mutates the\n+    // button the finger is on. When idle, the update is applied immediately.\n+    private func request_update(_ kind: PendingUpdate) {\n         if !self.active_touches.isEmpty {\n-            self.pending_reload = true\n+            self.pending_update = Self.escalate(self.pending_update, kind)\n             return\n         }\n \n-        self.reload_now()\n+        self.apply_update(kind)\n     }\n \n-    private func reload_now() {\n+    private static func escalate(_ current: PendingUpdate, _ next: PendingUpdate) -> PendingUpdate {\n+        if current == .structural || next == .structural {\n+            return .structural\n+        }\n+        if current == .in_place || next == .in_place {\n+            return .in_place\n+        }\n+        return .none\n+    }\n+\n+    private func apply_update(_ kind: PendingUpdate) {\n+        switch kind {\n+        case .structural:\n+            self.rebuild_structure()\n+        case .in_place:\n+            self.refresh_in_place()\n+        case .none:\n+            break\n+        }\n+    }\n+\n+    // Full rebuild: tears down and recreates every button, then re-lays out.\n+    // Used only when the button set or widths change (plane, globe, first\n+    // build). Resets backspace auto-repeat as the old reload did; this only\n+    // runs while idle, so no held backspace is in flight.\n+    private func rebuild_structure() {\n         self.backspace_timer?.invalidate()\n         self.backspace_timer = nil\n         self.repeating_backspace_touch = nil\n-        self.pending_reload = false\n+        self.pending_update = .none\n+        self.did_build = true\n \n         for row in self.rows {\n             for button in row {\n@@ -566,6 +640,49 @@ private final class KeyboardView: UIView {\n         self.setNeedsLayout()\n     }\n \n+    // In-place refresh: reuses the existing buttons, updating only their cap,\n+    // title and colors. The structure (button count and widths) is unchanged\n+    // for the cases that route here (shift case, return title, dark/light), so\n+    // frames and hit frames stay valid and no layout is needed. Runs only while\n+    // idle, so no button is highlighted and the backspace timer is untouched.\n+    // If the structure unexpectedly drifts, fall back to a full rebuild.\n+    private func refresh_in_place() {\n+        self.pending_update = .none\n+\n+        guard self.did_build else {\n+            self.rebuild_structure()\n+            return\n+        }\n+\n+        let model = self.build_model()\n+        guard model.count == self.rows.count else {\n+            self.rebuild_structure()\n+            return\n+        }\n+        for (row_index, row) in model.enumerated() {\n+            guard row.count == self.rows[row_index].count else {\n+                self.rebuild_structure()\n+                return\n+            }\n+        }\n+\n+        // Title/color changes on a UIButton can crossfade inside a transition\n+        // context (keyboard presentation is one); the old full rebuild showed\n+        // fresh buttons with no animation, so keep these updates immediate.\n+        UIView.performWithoutAnimation {\n+            for (row_index, row) in model.enumerated() {\n+                let buttons = self.rows[row_index]\n+                for (button_index, cap) in row.enumerated() {\n+                    let button = buttons[button_index]\n+                    button.cap = cap\n+                    button.setTitle(cap.display, for: .normal)\n+                    self.apply_colors(to: button)\n+                }\n+            }\n+            self.layoutIfNeeded()\n+        }\n+    }\n+\n     override func point(inside point: CGPoint, with event: UIEvent?) -> Bool {\n         return self.bounds.insetBy(\n             dx: -Self.trigger_cell_overlap,\n@@ -774,7 +891,7 @@ private final class KeyboardView: UIView {\n             }\n         }\n \n-        self.flush_pending_reload_if_idle()\n+        self.flush_pending_update_if_idle()\n     }\n \n     override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {\n@@ -790,7 +907,7 @@ private final class KeyboardView: UIView {\n             }\n         }\n \n-        self.flush_pending_reload_if_idle()\n+        self.flush_pending_update_if_idle()\n     }\n \n     private func key_button(at point: CGPoint) -> KeyButton? {\n@@ -872,9 +989,9 @@ private final class KeyboardView: UIView {\n             && point.y <= expanded_frame.maxY\n     }\n \n-    private func flush_pending_reload_if_idle() {\n-        if self.active_touches.isEmpty, self.pending_reload {\n-            self.reload_now()\n+    private func flush_pending_update_if_idle() {\n+        if self.active_touches.isEmpty, self.pending_update != .none {\n+            self.apply_update(self.pending_update)\n",
+              "exitCode": 0
+            },
+            "status": "done"
+          },
+          "type": "tool_result",
+          "toolUseID": "TU-033ZlaUgqICxNIl0oj2cTb"
+        }
+      ],
+      "messageId": 13,
+      "protocolMessageID": "M-033ZlaXSVHKf9bWKoouBd8"
+    },
+    {
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "tool_use"
+      },
+      "usage": {
+        "model": "claude-opus-4-8",
+        "timestamp": "2026-06-17T05:00:23.774Z",
+        "inputTokens": 2,
+        "outputTokens": 186,
+        "maxInputTokens": 300000,
+        "totalInputTokens": 47233,
+        "cacheReadInputTokens": 43314,
+        "cacheCreationInputTokens": 3917
+      },
+      "readAt": null,
+      "content": [
+        {
+          "type": "thinking",
+          "provider": "anthropic",
+          "thinking": " Looking at the second commit that introduced the height-constraint workaround to understand what the baseline behavior was before these fixes were applied.",
+          "finalTime": 1781672418837,
+          "signature": "<redacted:signature>",
+          "startTime": 1781672416986,
+          "blockState": "complete"
+        },
+        {
+          "id": "TU-033ZlacW69qyrzwK6bSNQB",
+          "name": "Bash",
+          "type": "tool_use",
+          "input": {
+            "cmd": "git -C . show 20da6ce -- playground/ios-app/ios/Keyboard.swift"
+          },
+          "complete": true,
+          "blockState": "complete",
+          "providerToolUseId": "toolu_vrtx_015hG85qVS4UVdGToxP78UwH"
+        }
+      ],
+      "messageId": 14,
+      "protocolMessageID": "M-033ZlaXigYU14NSdVLNeJV"
+    },
+    {
+      "role": "user",
+      "readAt": null,
+      "content": [
+        {
+          "run": {
+            "result": {
+              "output": "commit 20da6ce0a14cb318e6b7ee87c1b8a43f71210f75\nAuthor: <redacted:git-author>\nDate:   Tue Jun 16 13:37:14 2026 +0700\n\n    lex: improve UI initialization 2.\n\ndiff --git a/lex/playground/ios-app/ios/Keyboard.swift b/lex/playground/ios-app/ios/Keyboard.swift\nindex 202d860..c2eaf0d 100644\n--- a/lex/playground/ios-app/ios/Keyboard.swift\n+++ b/lex/playground/ios-app/ios/Keyboard.swift\n@@ -160,18 +160,29 @@ final class KeyboardViewController: UIInputViewController {\n         self.view = input_view\n     }\n \n-    override func updateViewConstraints() {\n-        if self.keyboard_height_constraint == nil {\n-            // Priority < required (1000) avoids conflicting with the host's own\n-            // required encapsulated-layout-height during transitions.\n-            let height_constraint = self.view.heightAnchor.constraint(\n-                equalToConstant: Self.keyboard_height\n-            )\n-            height_constraint.priority = UILayoutPriority(999)\n-            height_constraint.isActive = true\n-            self.keyboard_height_constraint = height_constraint\n+    // Install the fixed-height constraint as early as possible. The out-of-\n+    // process keyboard host must pick a keyboard height on first presentation;\n+    // if the root view has no active height assertion yet, the host falls back\n+    // to a default available input region (~2/3 of the portrait screen) and\n+    // then snaps to our height a layout pass later — the initialization flash.\n+    // Creating the constraint here, before the first layout, gives the host the\n+    // correct height up front. Priority < required (1000) still avoids\n+    // conflicting with the host's own required encapsulated-layout-height during\n+    // transitions.\n+    private func install_keyboard_height_constraint() {\n+        guard self.keyboard_height_constraint == nil else {\n+            return\n         }\n+        let height_constraint = self.view.heightAnchor.constraint(\n+            equalToConstant: Self.keyboard_height\n+        )\n+        height_constraint.priority = UILayoutPriority(999)\n+        height_constraint.isActive = true\n+        self.keyboard_height_constraint = height_constraint\n+    }\n \n+    override func updateViewConstraints() {\n+        self.install_keyboard_height_constraint()\n         self.keyboard_height_constraint?.constant = Self.keyboard_height\n \n         super.updateViewConstraints()\n@@ -194,6 +205,13 @@ final class KeyboardViewController: UIInputViewController {\n             self.keyboard_view.bottomAnchor.constraint(equalTo: self.view.bottomAnchor),\n         ])\n \n+        // Assert the keyboard height before the first layout/measurement so the\n+        // host never shows its default region first. The constraint is the\n+        // authoritative sizing contract; preferredContentSize is an advisory\n+        // hint the keyboard-service host may also consult on some paths.\n+        self.install_keyboard_height_constraint()\n+        self.preferredContentSize = CGSize(width: 0, height: Self.keyboard_height)\n+\n         self.refresh_traits(force: true)\n     }\n \n",
+              "exitCode": 0
+            },
+            "status": "done"
+          },
+          "type": "tool_result",
+          "toolUseID": "TU-033ZlacW69qyrzwK6bSNQB"
+        }
+      ],
+      "messageId": 15,
+      "protocolMessageID": "M-033ZlamSAmyIhtw9PCO4MU"
+    },
+    {
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "tool_use"
+      },
+      "usage": {
+        "model": "claude-opus-4-8",
+        "timestamp": "2026-06-17T05:00:30.123Z",
+        "inputTokens": 2,
+        "outputTokens": 224,
+        "maxInputTokens": 300000,
+        "totalInputTokens": 48598,
+        "cacheReadInputTokens": 47231,
+        "cacheCreationInputTokens": 1365
+      },
+      "readAt": null,
+      "content": [
+        {
+          "type": "thinking",
+          "provider": "anthropic",
+          "thinking": " I see there's a patch file that applies the intrinsic_height workaround, and it looks like that patch has already been applied to the working directory since the current file already contains the intrinsic_height version. Let me check what git status shows to understand the state of the repository.",
+          "finalTime": 1781672429179,
+          "signature": "<redacted:signature>",
+          "startTime": 1781672426480,
+          "blockState": "complete"
+        },
+        {
+          "id": "TU-033Zlasm8f6qHitTAnprjo",
+          "name": "Bash",
+          "type": "tool_use",
+          "input": {
+            "cmd": "git -C . status"
+          },
+          "complete": true,
+          "blockState": "complete",
+          "providerToolUseId": "toolu_vrtx_015xU1KezTxDpJsqhip8suH9"
+        }
+      ],
+      "messageId": 16,
+      "protocolMessageID": "M-033Zlammq1KwFxWvViGSqE"
+    },
+    {
+      "role": "user",
+      "readAt": null,
+      "content": [
+        {
+          "run": {
+            "result": {
+              "output": "On branch feature/lex-ios\nYou are in a sparse checkout with 78% of tracked files present.\n\nChanges not staged for commit:\n  (use \"git add <file>...\" to update what will be committed)\n  (use \"git restore <file>...\" to discard changes in working directory)\n\tmodified:   playground/ios-app/ios/Keyboard.swift\n\nUntracked files:\n  (use \"git add <file>...\" to include in what will be committed)\n\tfix_keyboard_ui_glitch.patch\n\nno changes added to commit (use \"git add\" and/or \"git commit -a\")\n",
+              "exitCode": 0
+            },
+            "status": "done"
+          },
+          "type": "tool_result",
+          "toolUseID": "TU-033Zlasm8f6qHitTAnprjo"
+        }
+      ],
+      "messageId": 17,
+      "protocolMessageID": "M-033ZlawUa85572RgEL8opa"
+    },
+    {
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "tool_use"
+      },
+      "usage": {
+        "model": "claude-opus-4-8",
+        "timestamp": "2026-06-17T05:00:51.249Z",
+        "inputTokens": 2,
+        "outputTokens": 1541,
+        "maxInputTokens": 300000,
+        "totalInputTokens": 49031,
+        "cacheReadInputTokens": 48596,
+        "cacheCreationInputTokens": 433
+      },
+      "readAt": null,
+      "content": [
+        {
+          "type": "thinking",
+          "provider": "anthropic",
+          "thinking": " I see that `Keyboard.swift` has uncommitted changes from the patch that's already been applied, including the `intrinsic_height` modifications, and there's an untracked `fix_keyboard_ui_glitch.patch` file. The user wants me to strip out all the keyboard height flickering workarounds since they're ineffective against the underlying Apple bug.\n\nThe key insight is that the standard, idiomatic way to set custom keyboard height is just adding a height constraint on `self.view` in `viewDidLoad` with priority below 1000 — that's the documented approach and should stay. What needs to go are the non-idiomatic hacks like the `intrinsicContentSize` override on `KeyboardInputView` and the `intrinsic_height` property that the patch introduced. I need to identify which changes are legitimate functionality versus which ones are specifically workarounds for the flicker issue. So I need to check those articles to understand what the idiomatic approach should be and confirm whether the height-handling workarounds are actually ineffective against the Apple bug.",
+          "finalTime": 1781672448139,
+          "signature": "<redacted:signature>",
+          "startTime": 1781672433311,
+          "blockState": "complete"
+        },
+        {
+          "text": "I have a clear picture. Let me read the referenced articles to ground the \"idiomatic\" approach.",
+          "type": "text",
+          "finalTime": 1781672448148,
+          "startTime": 1781672448140,
+          "blockState": "complete"
+        },
+        {
+          "id": "TU-033ZlbMbKvJbeK1D33Vt0M",
+          "name": "read_web_page",
+          "type": "tool_use",
+          "input": {
+            "url": "https://developer.apple.com/forums/thread/813579",
+            "objective": "Custom keyboard extension flicker/flash on initial presentation; is it an Apple-side bug; what is the recommended idiomatic way to set custom keyboard height and avoid the initial height flicker"
+          },
+          "complete": true,
+          "blockState": "complete",
+          "providerToolUseId": "toolu_vrtx_01LftKCrwAmEmSoKAyqdXyGd"
+        },
+        {
+          "id": "TU-033ZlbOSSiUNKh2zkckYto",
+          "name": "read_web_page",
+          "type": "tool_use",
+          "input": {
+            "url": "https://www.reddit.com/r/swift/comments/1rowkla/custom_keyboard_flashflicker_on_initial/",
+            "objective": "Custom keyboard flash/flicker on initial presentation; root cause; whether it is an Apple bug; idiomatic height handling"
+          },
+          "complete": true,
+          "blockState": "complete",
+          "providerToolUseId": "toolu_vrtx_01BzJq8AkyXGkfosV2mAdrhJ"
+        }
+      ],
+      "messageId": 18,
+      "protocolMessageID": "M-033ZlawjImee1qFwUUbduC"
+    },
+    {
+      "role": "user",
+      "readAt": null,
+      "content": [
+        {
+          "run": {
+            "result": "# How to set custom height for keyboard extension without resize flicker?\nUI Frameworks UIKit SwiftUI UIKit\nYou’re now watching this thread. If you’ve opted in to email or web notifications, you’ll be notified when there’s activity. Click again to stop watching or visit your profile to manage watched threads and notifications.\nYou’ve stopped watching this thread and will no longer receive emails or web notifications when there’s activity. Click again to start watching.\niminbhed\niminbhed OP\nCreated Jan ’26\nReplies 1\nBoosts 4\nViews 262\nParticipants 2\nDescription\nI'm developing a custom keyboard extension using UIInputViewController and need to set a specific height of 268 points. The keyboard functions correctly, but there's a visible flicker and resize animation during launch that I cannot eliminate.\nThe Problem\nWhen the keyboard launches, iOS provides incorrect heights before settling on the correct one. At launch, the view starts at 0×0. Around 295ms later, iOS sets the frame to 440×956 which is full screen height and wrong. Around 373ms, iOS changes it to 440×452 which is still wrong. Finally around 390ms, iOS settles at 440×268 which matches our constraint.\nThis causes visible flicker as the view resizes three times rapidly. The keyboard appears to shrink from full screen down to the correct height, and users can clearly see this animation happening.\nWhat I've Tried\nI've tried adding a height constraint on `self.view` which gives me the correct height but causes the visible flicker.\nI created a custom `UIInputView` subclass and overrode `intrinsicContentSize` to return my desired height. iOS completely ignores this and gives random heights like 471pt, 680pt, or 956pt instead.\nI set `allowsSelfSizing` to true on my UIInputView subclass. iOS ignores this property.\nI set `preferredContentSize` on the view controller. iOS ignores this as well.\nI tried adding the constraint in `viewDidAppear` instead of `viewDidLoad` , thinking iOS might have settled by then. It still causes flicker.\nI overrode the frame and bounds setters on my `UIInputView` to clamp the height to my desired value. iOS bypasses these overrides somehow.\nI overrode `layoutSubviews` to force the correct height after the super call. iOS still applies its own height.\nSpecific Question\nWhat is the correct API or technique to specify a keyboard extension's height that iOS will respect immediately upon launch, without triggering the resize animation sequence?\nOther third-party keyboards like Grammarly and SwiftKey appear to have solved this problem. Their keyboards appear at the correct height without any visible flicker. How do they achieve this?\nExpected Outcome\nThe keyboard should appear at 268pt height on the first frame with no visible resize animation.\nSteps to Reproduce\nCreate a new iOS App project in Xcode and add a Keyboard Extension target. In KeyboardViewController.swift, add a height constraint in viewDidLoad:\nCopy Code\n`| |override func viewDidLoad () { | | --- | --- | | |super .viewDidLoad() | | | | | |let heightConstraint = view.heightAnchor.constraint(equalToConstant: 268 ) | | |heightConstraint.priority = .defaultHigh | | |heightConstraint.isActive = true | | | | | |let label = UILabel () | | |label.text = \"Demo Keyboard\" | | |label.textAlignment = .center | | |label.translatesAutoresizingMaskIntoConstraints = false | | |view.addSubview(label) | | |NSLayoutConstraint .activate([ | | |label.centerXAnchor.constraint(equalTo: view.centerXAnchor), | | |label.centerYAnchor.constraint(equalTo: view.centerYAnchor) | | |]) | | |} | `\nBuild and run on a physical device. Enable the keyboard in Settings, then General, then Keyboard, then Keyboards. Open any app with a text field and switch to the custom keyboard using the globe button. Observe the height changing from around 956pt to 452pt to 268pt with visible animation.\nEnvironment\niOS 17 and iOS 18 and 26.2, Xcode 16 and Xcode 26, affects all iPhone models tested, reproducible on both simulator and physical device.\nBoost\n􀈂\nCopy to clipboard\nReplies 1\nBoosts 4\nViews 262\nParticipants 2\ndylanpardue\ndylanpardue OP\n1w\nI'm having the same issue and have not been able to find a solution. Did you find one?\n0 comments\n0\n􀈂\nCopy to clipboard\nLoad more Add comment\nJan 23\n1 / 2\nJan 23\nJun 3\nHow to set custom height for keyboard extension without resize flicker?\nFirst post date Last post date\nQ\n\n## Developer Footer\nThis site contains user submitted content, comments and opinions and is for informational purposes only. Apple disclaims any and all liability for the acts, omissions and conduct of any third parties in connection with or related to your use of the site. All postings and use of the content on this site are subject to the [Apple Developer Forums Agreement](https://developer.apple.com/support/downloads/terms/apple-developer-forums/Apple-Developer-Forums-Agreement-English.pdf) and Apple provided code is subject to the [Apple Sample Code License](https://developer.apple.com/support/downloads/terms/apple-sample-code/Apple-Sample-Code-License.pdf) .\nView the latest [developer news](https://developer.apple.com/news/) .\n[Terms of Use](https://www.apple.com/legal/internet-services/terms/site.html) [Privacy Policy](https://www.apple.com/legal/privacy/en-ww/) [License Agreements](https://developer.apple.com/terms/)\nPlease try again in a few minutes.",
+            "status": "done"
+          },
+          "type": "tool_result",
+          "toolUseID": "TU-033ZlbMbKvJbeK1D33Vt0M"
+        },
+        {
+          "run": {
+            "result": "# Custom keyboard flash/flicker on initial presentation\nQuestion\nHas anyone else experienced a brief flash (~100-200ms) when switching to a custom keyboard extension via the globe button?\nsetup is minimal:\n- UIInputViewController subclass\n- A UIHostingController wrapping our SwiftUI view, added as a child view controller\n- The hosting controller's view is pinned to\nself.view with Auto Layout constraints (leading,\ntrailing, top, bottom)\n- The SwiftUI view has a fixed .frame(height: 260)\n- No custom UIInputView, no allowsSelfSizing\nI’ve tried:\nexplicit frames, height constraints, UIInputView vs direct self.view, disabling UIHostingController keyboard avoidance, runtime overrides of _UIHostingView notification handlers).\nNone had any effect.\nSeems many other keyboards have the same issue too. Share",
+            "status": "done"
+          },
+          "type": "tool_result",
+          "toolUseID": "TU-033ZlbOSSiUNKh2zkckYto"
+        }
+      ],
+      "messageId": 19,
+      "protocolMessageID": "M-033Zlc9QC0NTKe8yqPvYeg"
+    },
+    {
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "tool_use"
+      },
+      "usage": {
+        "model": "claude-opus-4-8",
+        "timestamp": "2026-06-17T05:01:46.328Z",
+        "inputTokens": 2,
+        "outputTokens": 2121,
+        "maxInputTokens": 300000,
+        "totalInputTokens": 52908,
+        "cacheReadInputTokens": 49029,
+        "cacheCreationInputTokens": 3877
+      },
+      "readAt": null,
+      "content": [
+        {
+          "type": "thinking",
+          "provider": "anthropic",
+          "thinking": " The research confirms that the initial resize flicker is an Apple bug that can't be fixed with the usual techniques like intrinsicContentSize or layoutSubviews overrides—the proper solution is setting a height constraint on the view controller's view in viewDidLoad with a priority below required. Now I need to clean up the implementation by removing unnecessary code.\n\nI'll strip out the custom intrinsicContentSize property and the redundant height assignments, then consolidate to a single height constraint installed once in viewDidLoad with priority 999. The legitimate init-flicker reduction from deferred building and trait caching should stay since that addresses re-renders during initialization. I'm deciding whether to keep updateViewConstraints or just rely on the one-time constraint installation, especially since viewWillAppear calls setNeedsUpdateConstraints.\n\nIf I move the constraint to viewDidLoad and keep it permanently active, I don't need updateViewConstraints or the setNeedsUpdateConstraints call anymore. Since the height is a fixed constant and never changes, I can remove the keyboard_height_constraint property entirely and just create the constraint directly in viewDidLoad. For loadView, I'll keep the KeyboardInputView for its legitimate hit-testing functionality but strip out the intrinsic height parts.",
+          "finalTime": 1781672497574,
+          "signature": "<redacted:signature>",
+          "startTime": 1781672480850,
+          "blockState": "complete"
+        },
+        {
+          "text": "Both articles confirm: the initial resize flicker (0→full-screen→correct) is an Apple-side bug that `intrinsicContentSize`, `allowsSelfSizing`, `preferredContentSize`, and frame/layout overrides all fail to fix. The idiomatic approach is a single height constraint on `self.view`. Let me strip the workarounds.",
+          "type": "text",
+          "finalTime": 1781672499265,
+          "startTime": 1781672497575,
+          "blockState": "complete"
+        },
+        {
+          "id": "TU-033Zlcey88xlUu8b3NXCZU",
+          "name": "edit_file",
+          "type": "tool_use",
+          "input": {
+            "path": "playground/ios-app/ios/Keyboard.swift",
+            "new_str": "private final class KeyboardInputView: UIInputView {\n    weak var keyboard_view: KeyboardView?\n\n    override func point(inside point: CGPoint, with event: UIEvent?) -> Bool {",
+            "old_str": "private final class KeyboardInputView: UIInputView {\n    weak var keyboard_view: KeyboardView?\n\n    // Fixed portrait keyboard height, surfaced through Auto Layout's intrinsic\n    // content size. Per the docs the system owns the keyboard width and derives\n    // the keyboard region (its required UIView-Encapsulated-Layout-Height) from\n    // this view's fitting size. With only an optional height constraint and no\n    // intrinsic height, the first fitting yields the full available region\n    // (~2/3 of the portrait screen), which is then resized down to our height —\n    // the initialization flash. Advertising an intrinsic height makes the very\n    // first size negotiation already resolve to the final height. This feeds\n    // systemLayoutSizeFitting regardless of allowsSelfSizing, so we keep\n    // self-sizing off (it can leave stale full-screen geometry across app\n    // hide/show transitions) and still win the first frame.\n    var intrinsic_height: CGFloat = 0 {\n        didSet {\n            guard self.intrinsic_height != oldValue else {\n                return\n            }\n            self.invalidateIntrinsicContentSize()\n        }\n    }\n\n    override var intrinsicContentSize: CGSize {\n        return CGSize(width: UIView.noIntrinsicMetric, height: self.intrinsic_height)\n    }\n\n    override func point(inside point: CGPoint, with event: UIEvent?) -> Bool {"
+          },
+          "complete": true,
+          "blockState": "complete",
+          "providerToolUseId": "toolu_vrtx_01KXuF736MytKe8sEbU83TdD"
+        }
+      ],
+      "messageId": 20,
+      "protocolMessageID": "M-033Zlc9cNO8tYbbuvmROJh"
+    },
+    {
+      "role": "user",
+      "readAt": null,
+      "content": [
+        {
+          "run": {
+            "result": {
+              "diff": "```diff\n--- playground/ios-app/ios/Keyboard.swift\toriginal\n+++ playground/ios-app/ios/Keyboard.swift\tmodified\n@@ -103,32 +103,8 @@\n \n private final class KeyboardInputView: UIInputView {\n     weak var keyboard_view: KeyboardView?\n \n-    // Fixed portrait keyboard height, surfaced through Auto Layout's intrinsic\n-    // content size. Per the docs the system owns the keyboard width and derives\n-    // the keyboard region (its required UIView-Encapsulated-Layout-Height) from\n-    // this view's fitting size. With only an optional height constraint and no\n-    // intrinsic height, the first fitting yields the full available region\n-    // (~2/3 of the portrait screen), which is then resized down to our height —\n-    // the initialization flash. Advertising an intrinsic height makes the very\n-    // first size negotiation already resolve to the final height. This feeds\n-    // systemLayoutSizeFitting regardless of allowsSelfSizing, so we keep\n-    // self-sizing off (it can leave stale full-screen geometry across app\n-    // hide/show transitions) and still win the first frame.\n-    var intrinsic_height: CGFloat = 0 {\n-        didSet {\n-            guard self.intrinsic_height != oldValue else {\n-                return\n-            }\n-            self.invalidateIntrinsicContentSize()\n-        }\n-    }\n-\n-    override var intrinsicContentSize: CGSize {\n-        return CGSize(width: UIView.noIntrinsicMetric, height: self.intrinsic_height)\n-    }\n-\n     override func point(inside point: CGPoint, with event: UIEvent?) -> Bool {\n         return self.bounds.contains(point)\n     }\n \n```",
+              "lineRange": [
+                104,
+                107
+              ]
+            },
+            "status": "done",
+            "progress": {}
+          },
+          "type": "tool_result",
+          "toolUseID": "TU-033Zlcey88xlUu8b3NXCZU"
+        }
+      ],
+      "messageId": 21,
+      "protocolMessageID": "M-033ZlcrygHbeYLCH56Y2zZ"
+    },
+    {
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "tool_use"
+      },
+      "usage": {
+        "model": "claude-opus-4-8",
+        "timestamp": "2026-06-17T05:01:54.389Z",
+        "inputTokens": 2,
+        "outputTokens": 239,
+        "maxInputTokens": 300000,
+        "totalInputTokens": 55724,
+        "cacheReadInputTokens": 52906,
+        "cacheCreationInputTokens": 2816
+      },
+      "readAt": "2026-06-17T05:01:54.330Z",
+      "content": [
+        {
+          "text": "Now the controller. Simplify `loadView`, the height-constraint installation, and `updateViewConstraints` to the idiomatic single-constraint approach:",
+          "type": "text",
+          "finalTime": 1781672512823,
+          "startTime": 1781672511787,
+          "blockState": "complete"
+        },
+        {
+          "id": "TU-033Zld0I3hHHOwh7IQG16N",
+          "name": "edit_file",
+          "type": "tool_use",
+          "input": {
+            "path": "playground/ios-app/ios/Keyboard.swift",
+            "new_str": "    private let engine = LexEngine()",
+            "old_str": "    private let engine = LexEngine()\n    private var keyboard_height_constraint: NSLayoutConstraint?"
+          },
+          "complete": true,
+          "blockState": "complete",
+          "providerToolUseId": "toolu_vrtx_01GeyudDJEbhFe9NebvVhzUA"
+        }
+      ],
+      "messageId": 22,
+      "protocolMessageID": "M-033ZlcsKQ5hbsC2UBchD3T"
+    },
+    {
+      "role": "user",
+      "readAt": null,
+      "content": [
+        {
+          "run": {
+            "result": {
+              "diff": "```diff\n--- playground/ios-app/ios/Keyboard.swift\toriginal\n+++ playground/ios-app/ios/Keyboard.swift\tmodified\n@@ -128,9 +128,8 @@\n     // Fixed portrait-iPhone keyboard height (v1 scope: portrait only).\n     private static let keyboard_height: CGFloat = 216\n \n     private let engine = LexEngine()\n-    private var keyboard_height_constraint: NSLayoutConstraint?\n \n     // The text we believe sits immediately before the cursor (the engine's\n     // currently composed word). Used as a guardrail to detect external changes\n     // (cursor moves, host edits): if the document no longer ends with this, the\n```",
+              "lineRange": [
+                131,
+                131
+              ]
+            },
+            "status": "done",
+            "progress": {}
+          },
+          "type": "tool_result",
+          "toolUseID": "TU-033Zld0I3hHHOwh7IQG16N"
+        }
+      ],
+      "messageId": 23,
+      "protocolMessageID": "M-033Zld4ktshJPTLfBnNP6K"
+    },
+    {
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "tool_use"
+      },
+      "usage": {
+        "model": "claude-opus-4-8",
+        "timestamp": "2026-06-17T05:02:07.257Z",
+        "inputTokens": 2,
+        "outputTokens": 1059,
+        "maxInputTokens": 300000,
+        "totalInputTokens": 56287,
+        "cacheReadInputTokens": 55722,
+        "cacheCreationInputTokens": 563
+      },
+      "readAt": null,
+      "content": [
+        {
+          "id": "TU-033Zld7JCx58G76qtYbvRv",
+          "name": "edit_file",
+          "type": "tool_use",
+          "input": {
+            "path": "playground/ios-app/ios/Keyboard.swift",
+            "new_str": "    // Provide the controller's root input view. We use a UIInputView subclass\n    // only to route touches through our no-gap hit grid; the keyboard width is\n    // owned by the system and the height is set by the Auto Layout constraint in\n    // viewDidLoad.\n    override func loadView() {\n        let input_view = KeyboardInputView(\n            frame: CGRect(x: 0, y: 0, width: 0, height: Self.keyboard_height),\n            inputViewStyle: .keyboard\n        )\n        input_view.isMultipleTouchEnabled = true\n        input_view.allowsSelfSizing = false\n\n        self.view = input_view\n    }\n\n    override func viewDidLoad() {",
+            "old_str": "    // Provide the controller's root input view. The docs say the system sets\n    // the keyboard width and the height comes from Auto Layout on this view, so\n    // we drive height two ways that agree on the same value: an intrinsic\n    // content height (wins the first size negotiation) and the explicit height\n    // constraint below (the documented, maintained contract). Self-sizing stays\n    // off because it can leave stale full-screen geometry across app hide/show.\n    override func loadView() {\n        let input_view = KeyboardInputView(\n            frame: CGRect(x: 0, y: 0, width: 0, height: Self.keyboard_height),\n            inputViewStyle: .keyboard\n        )\n        input_view.isMultipleTouchEnabled = true\n        input_view.allowsSelfSizing = false\n        input_view.intrinsic_height = Self.keyboard_height\n\n        self.view = input_view\n    }\n\n    // The documented way to set a custom keyboard's height: an Auto Layout\n    // height constraint on the controller's view. It is the maintained contract\n    // (reasserted in updateViewConstraints, e.g. on appearance) that holds the\n    // height steady after the first frame, while the input view's intrinsic\n    // content height wins the host's initial size negotiation. Priority <\n    // required (1000) avoids conflicting with the host's own required\n    // encapsulated-layout-height during transitions.\n    private func install_keyboard_height_constraint() {\n        guard self.keyboard_height_constraint == nil else {\n            return\n        }\n        let height_constraint = self.view.heightAnchor.constraint(\n            equalToConstant: Self.keyboard_height\n        )\n        height_constraint.priority = UILayoutPriority(999)\n        height_constraint.isActive = true\n        self.keyboard_height_constraint = height_constraint\n    }\n\n    override func updateViewConstraints() {\n        self.install_keyboard_height_constraint()\n        self.keyboard_height_constraint?.constant = Self.keyboard_height\n\n        super.updateViewConstraints()\n    }\n\n    override func viewDidLoad() {"
+          },
+          "complete": true,
+          "blockState": "complete",
+          "providerToolUseId": "toolu_vrtx_01UjS1UsJ3EWnzfs4BqEMmNm"
+        }
+      ],
+      "messageId": 24,
+      "protocolMessageID": "M-033Zld5553tXUngjHkKUbT"
+    },
+    {
+      "role": "user",
+      "readAt": null,
+      "content": [
+        {
+          "run": {
+            "result": {
+              "diff": "```diff\n--- playground/ios-app/ios/Keyboard.swift\toriginal\n+++ playground/ios-app/ios/Keyboard.swift\tmodified\n@@ -143,52 +143,23 @@\n     private var applied_return_title: String?\n     private var applied_shows_globe: Bool?\n     private var applied_document_identifier: UUID?\n \n-    // Provide the controller's root input view. The docs say the system sets\n-    // the keyboard width and the height comes from Auto Layout on this view, so\n-    // we drive height two ways that agree on the same value: an intrinsic\n-    // content height (wins the first size negotiation) and the explicit height\n-    // constraint below (the documented, maintained contract). Self-sizing stays\n-    // off because it can leave stale full-screen geometry across app hide/show.\n+    // Provide the controller's root input view. We use a UIInputView subclass\n+    // only to route touches through our no-gap hit grid; the keyboard width is\n+    // owned by the system and the height is set by the Auto Layout constraint in\n+    // viewDidLoad.\n     override func loadView() {\n         let input_view = KeyboardInputView(\n             frame: CGRect(x: 0, y: 0, width: 0, height: Self.keyboard_height),\n             inputViewStyle: .keyboard\n         )\n         input_view.isMultipleTouchEnabled = true\n         input_view.allowsSelfSizing = false\n-        input_view.intrinsic_height = Self.keyboard_height\n \n         self.view = input_view\n     }\n \n-    // The documented way to set a custom keyboard's height: an Auto Layout\n-    // height constraint on the controller's view. It is the maintained contract\n-    // (reasserted in updateViewConstraints, e.g. on appearance) that holds the\n-    // height steady after the first frame, while the input view's intrinsic\n-    // content height wins the host's initial size negotiation. Priority <\n-    // required (1000) avoids conflicting with the host's own required\n-    // encapsulated-layout-height during transitions.\n-    private func install_keyboard_height_constraint() {\n-        guard self.keyboard_height_constraint == nil else {\n-            return\n-        }\n-        let height_constraint = self.view.heightAnchor.constraint(\n-            equalToConstant: Self.keyboard_height\n-        )\n-        height_constraint.priority = UILayoutPriority(999)\n-        height_constraint.isActive = true\n-        self.keyboard_height_constraint = height_constraint\n-    }\n-\n-    override func updateViewConstraints() {\n-        self.install_keyboard_height_constraint()\n-        self.keyboard_height_constraint?.constant = Self.keyboard_height\n-\n-        super.updateViewConstraints()\n-    }\n-\n     override func viewDidLoad() {\n         super.viewDidLoad()\n \n         self.keyboard_view.translatesAutoresizingMaskIntoConstraints = false\n```",
+              "lineRange": [
+                147,
+                162
+              ]
+            },
+            "status": "done",
+            "progress": {}
+          },
+          "type": "tool_result",
+          "toolUseID": "TU-033Zld7JCx58G76qtYbvRv"
+        }
+      ],
+      "messageId": 25,
+      "protocolMessageID": "M-033ZldP4FJ3I6Bam7x5E5Z"
+    },
+    {
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "tool_use"
+      },
+      "usage": {
+        "model": "claude-opus-4-8",
+        "timestamp": "2026-06-17T05:02:17.618Z",
+        "inputTokens": 2,
+        "outputTokens": 796,
+        "maxInputTokens": 300000,
+        "totalInputTokens": 58423,
+        "cacheReadInputTokens": 56285,
+        "cacheCreationInputTokens": 2136
+      },
+      "readAt": null,
+      "content": [
+        {
+          "text": "Now update `viewDidLoad`'s constraint setup and remove the early-install comment:",
+          "type": "text",
+          "finalTime": 1781672531097,
+          "startTime": 1781672530107,
+          "blockState": "complete"
+        },
+        {
+          "id": "TU-033ZldT1POzAf2TqQusF94",
+          "name": "edit_file",
+          "type": "tool_use",
+          "input": {
+            "path": "playground/ios-app/ios/Keyboard.swift",
+            "new_str": "        // Set the keyboard height with an Auto Layout constraint on the root\n        // view, the documented way to size a custom keyboard. Priority < required\n        // (1000) avoids conflicting with the host's own required encapsulated-\n        // layout-height during transitions.\n        let height_constraint = self.view.heightAnchor.constraint(\n            equalToConstant: Self.keyboard_height\n        )\n        height_constraint.priority = UILayoutPriority(999)\n\n        NSLayoutConstraint.activate([\n            self.keyboard_view.leadingAnchor.constraint(equalTo: self.view.leadingAnchor),\n            self.keyboard_view.trailingAnchor.constraint(equalTo: self.view.trailingAnchor),\n            self.keyboard_view.topAnchor.constraint(equalTo: self.view.topAnchor),\n            self.keyboard_view.bottomAnchor.constraint(equalTo: self.view.bottomAnchor),\n            height_constraint,\n        ])\n\n        self.refresh_traits(force: true)\n    }",
+            "old_str": "        NSLayoutConstraint.activate([\n            self.keyboard_view.leadingAnchor.constraint(equalTo: self.view.leadingAnchor),\n            self.keyboard_view.trailingAnchor.constraint(equalTo: self.view.trailingAnchor),\n            self.keyboard_view.topAnchor.constraint(equalTo: self.view.topAnchor),\n            self.keyboard_view.bottomAnchor.constraint(equalTo: self.view.bottomAnchor),\n        ])\n\n        // Install the explicit height constraint before the first layout so it\n        // exists for the first measurement; the intrinsic content height set in\n        // loadView is what actually wins the host's first size negotiation.\n        self.install_keyboard_height_constraint()\n\n        self.refresh_traits(force: true)\n    }"
+          },
+          "complete": true,
+          "blockState": "complete",
+          "providerToolUseId": "toolu_vrtx_014KMUa4vHz2o5uhgTfohsaf"
+        }
+      ],
+      "messageId": 26,
+      "protocolMessageID": "M-033ZldPJwTqoF9e2Sele0a"
+    },
+    {
+      "role": "user",
+      "readAt": null,
+      "content": [
+        {
+          "run": {
+            "result": {
+              "diff": "```diff\n--- playground/ios-app/ios/Keyboard.swift\toriginal\n+++ playground/ios-app/ios/Keyboard.swift\tmodified\n@@ -168,20 +168,25 @@\n             input_view.keyboard_view = self.keyboard_view\n         }\n         self.view.addSubview(self.keyboard_view)\n \n+        // Set the keyboard height with an Auto Layout constraint on the root\n+        // view, the documented way to size a custom keyboard. Priority < required\n+        // (1000) avoids conflicting with the host's own required encapsulated-\n+        // layout-height during transitions.\n+        let height_constraint = self.view.heightAnchor.constraint(\n+            equalToConstant: Self.keyboard_height\n+        )\n+        height_constraint.priority = UILayoutPriority(999)\n+\n         NSLayoutConstraint.activate([\n             self.keyboard_view.leadingAnchor.constraint(equalTo: self.view.leadingAnchor),\n             self.keyboard_view.trailingAnchor.constraint(equalTo: self.view.trailingAnchor),\n             self.keyboard_view.topAnchor.constraint(equalTo: self.view.topAnchor),\n             self.keyboard_view.bottomAnchor.constraint(equalTo: self.view.bottomAnchor),\n+            height_constraint,\n         ])\n \n-        // Install the explicit height constraint before the first layout so it\n-        // exists for the first measurement; the intrinsic content height set in\n-        // loadView is what actually wins the host's first size negotiation.\n-        self.install_keyboard_height_constraint()\n-\n         self.refresh_traits(force: true)\n     }\n \n     override func viewWillAppear(_ animated: Bool) {\n```",
+              "lineRange": [
+                172,
+                190
+              ]
+            },
+            "status": "done",
+            "progress": {}
+          },
+          "type": "tool_result",
+          "toolUseID": "TU-033ZldT1POzAf2TqQusF94"
+        }
+      ],
+      "messageId": 27,
+      "protocolMessageID": "M-033ZldfQv08KbKu5NnCU1e"
+    },
+    {
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "tool_use"
+      },
+      "usage": {
+        "model": "claude-opus-4-8",
+        "timestamp": "2026-06-17T05:02:26.159Z",
+        "inputTokens": 2,
+        "outputTokens": 323,
+        "maxInputTokens": 300000,
+        "totalInputTokens": 59901,
+        "cacheReadInputTokens": 58421,
+        "cacheCreationInputTokens": 1478
+      },
+      "readAt": "2026-06-17T06:43:25.845Z",
+      "content": [
+        {
+          "text": "Now remove the now-orphaned `setNeedsUpdateConstraints()` call in `viewWillAppear` (no `updateViewConstraints` override anymore):",
+          "type": "text",
+          "finalTime": 1781672543310,
+          "startTime": 1781672542367,
+          "blockState": "complete"
+        },
+        {
+          "id": "TU-033ZldmDdqgJhoH9FRqmJ4",
+          "name": "edit_file",
+          "type": "tool_use",
+          "input": {
+            "path": "playground/ios-app/ios/Keyboard.swift",
+            "new_str": "        super.viewWillAppear(animated)\n        self.keyboard_view.cancel_tracking()\n        // Fresh document / re-presentation: start a clean composition.",
+            "old_str": "        super.viewWillAppear(animated)\n        self.keyboard_view.cancel_tracking()\n        self.view.setNeedsUpdateConstraints()\n        // Fresh document / re-presentation: start a clean composition."
+          },
+          "complete": true,
+          "blockState": "complete",
+          "providerToolUseId": "toolu_vrtx_016fHzFL9d26LyLNwANhnezQ"
+        }
+      ],
+      "messageId": 28,
+      "protocolMessageID": "M-033Zldfj37a9TDUfFaEk5X"
+    },
+    {
+      "role": "user",
+      "readAt": null,
+      "content": [
+        {
+          "run": {
+            "result": {
+              "diff": "```diff\n--- playground/ios-app/ios/Keyboard.swift\toriginal\n+++ playground/ios-app/ios/Keyboard.swift\tmodified\n@@ -191,9 +191,8 @@\n \n     override func viewWillAppear(_ animated: Bool) {\n         super.viewWillAppear(animated)\n         self.keyboard_view.cancel_tracking()\n-        self.view.setNeedsUpdateConstraints()\n         // Fresh document / re-presentation: start a clean composition.\n         self.engine.reset()\n         self.owned_suffix = \"\"\n         self.applied_document_identifier = self.textDocumentProxy.documentIdentifier\n```",
+              "lineRange": [
+                193,
+                195
+              ]
+            },
+            "status": "done",
+            "progress": {}
+          },
+          "type": "tool_result",
+          "toolUseID": "TU-033ZldmDdqgJhoH9FRqmJ4"
+        }
+      ],
+      "messageId": 29,
+      "protocolMessageID": "M-033ZldsfhTFPZMh7QF33Hr"
+    },
+    {
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "tool_use"
+      },
+      "usage": {
+        "model": "claude-opus-4-8",
+        "timestamp": "2026-06-17T05:02:35.419Z",
+        "inputTokens": 2,
+        "outputTokens": 521,
+        "maxInputTokens": 300000,
+        "totalInputTokens": 60535,
+        "cacheReadInputTokens": 59899,
+        "cacheCreationInputTokens": 634
+      },
+      "readAt": "2026-06-17T05:02:35.362Z",
+      "content": [
+        {
+          "type": "thinking",
+          "provider": "anthropic",
+          "thinking": " I need to clean up the patch file since it's the workaround artifact the user wants removed, though I should be careful to follow the confirmation protocol outlined in the guidelines.",
+          "finalTime": 1781672554282,
+          "signature": "<redacted:signature>",
+          "startTime": 1781672549212,
+          "blockState": "complete"
+        },
+        {
+          "text": "Let me verify the resulting controller section and check the build setup:",
+          "type": "text",
+          "finalTime": 1781672554404,
+          "startTime": 1781672554285,
+          "blockState": "complete"
+        },
+        {
+          "id": "TU-033Zle3fBSE1zQ81cET55l",
+          "name": "Bash",
+          "type": "tool_use",
+          "input": {
+            "cmd": "sed -n '100,215p' playground/ios-app/ios/Keyboard.swift"
+          },
+          "complete": true,
+          "blockState": "complete",
+          "providerToolUseId": "toolu_vrtx_01JiZZiJTrtRoJTAYASm3w8V"
+        },
+        {
+          "id": "TU-033Zle4R2qJdbPWO0vxDLq",
+          "name": "Bash",
+          "type": "tool_use",
+          "input": {
+            "cmd": "ls playground/ios-app; echo \"---scripts---\"; ls scripts"
+          },
+          "complete": true,
+          "blockState": "complete",
+          "providerToolUseId": "toolu_vrtx_01Xg1xfqUzy4ZfmZuXUkhf7W"
+        }
+      ],
+      "messageId": 30,
+      "protocolMessageID": "M-033Zldt1LEHuZiuAFJmO8b"
+    },
+    {
+      "role": "user",
+      "readAt": null,
+      "content": [
+        {
+          "run": {
+            "result": {
+              "output": "}\n\n// MARK: - Keyboard view controller (principal class)\n\nprivate final class KeyboardInputView: UIInputView {\n    weak var keyboard_view: KeyboardView?\n\n    override func point(inside point: CGPoint, with event: UIEvent?) -> Bool {\n        return self.bounds.contains(point)\n    }\n\n    override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {\n        guard self.point(inside: point, with: event) else {\n            return nil\n        }\n\n        if let keyboard_view = self.keyboard_view {\n            let point_in_keyboard = keyboard_view.convert(point, from: self)\n            if keyboard_view.point(inside: point_in_keyboard, with: event) {\n                return keyboard_view\n            }\n        }\n\n        return super.hitTest(point, with: event)\n    }\n}\n\nfinal class KeyboardViewController: UIInputViewController {\n    // Fixed portrait-iPhone keyboard height (v1 scope: portrait only).\n    private static let keyboard_height: CGFloat = 216\n\n    private let engine = LexEngine()\n\n    // The text we believe sits immediately before the cursor (the engine's\n    // currently composed word). Used as a guardrail to detect external changes\n    // (cursor moves, host edits): if the document no longer ends with this, the\n    // world changed under us and we start a fresh composition.\n    private var owned_suffix: String = \"\"\n\n    private let keyboard_view = KeyboardView()\n\n    // Cached traits, to avoid rebuilding the keyboard on every keystroke.\n    private var applied_dark: Bool?\n    private var applied_return_title: String?\n    private var applied_shows_globe: Bool?\n    private var applied_document_identifier: UUID?\n\n    // Provide the controller's root input view. We use a UIInputView subclass\n    // only to route touches through our no-gap hit grid; the keyboard width is\n    // owned by the system and the height is set by the Auto Layout constraint in\n    // viewDidLoad.\n    override func loadView() {\n        let input_view = KeyboardInputView(\n            frame: CGRect(x: 0, y: 0, width: 0, height: Self.keyboard_height),\n            inputViewStyle: .keyboard\n        )\n        input_view.isMultipleTouchEnabled = true\n        input_view.allowsSelfSizing = false\n\n        self.view = input_view\n    }\n\n    override func viewDidLoad() {\n        super.viewDidLoad()\n\n        self.keyboard_view.translatesAutoresizingMaskIntoConstraints = false\n        self.keyboard_view.delegate = self\n        if let input_view = self.view as? KeyboardInputView {\n            input_view.keyboard_view = self.keyboard_view\n        }\n        self.view.addSubview(self.keyboard_view)\n\n        // Set the keyboard height with an Auto Layout constraint on the root\n        // view, the documented way to size a custom keyboard. Priority < required\n        // (1000) avoids conflicting with the host's own required encapsulated-\n        // layout-height during transitions.\n        let height_constraint = self.view.heightAnchor.constraint(\n            equalToConstant: Self.keyboard_height\n        )\n        height_constraint.priority = UILayoutPriority(999)\n\n        NSLayoutConstraint.activate([\n            self.keyboard_view.leadingAnchor.constraint(equalTo: self.view.leadingAnchor),\n            self.keyboard_view.trailingAnchor.constraint(equalTo: self.view.trailingAnchor),\n            self.keyboard_view.topAnchor.constraint(equalTo: self.view.topAnchor),\n            self.keyboard_view.bottomAnchor.constraint(equalTo: self.view.bottomAnchor),\n            height_constraint,\n        ])\n\n        self.refresh_traits(force: true)\n    }\n\n    override func viewWillAppear(_ animated: Bool) {\n        super.viewWillAppear(animated)\n        self.keyboard_view.cancel_tracking()\n        // Fresh document / re-presentation: start a clean composition.\n        self.engine.reset()\n        self.owned_suffix = \"\"\n        self.applied_document_identifier = self.textDocumentProxy.documentIdentifier\n        // Re-presentation (app foreground, keyboard switch) must not tear down\n        // the UI when nothing changed. The trait cache still applies any real\n        // change (appearance, return title, globe) as a cheap in-place update.\n        self.refresh_traits(force: false)\n    }\n\n    override func viewWillDisappear(_ animated: Bool) {\n        super.viewWillDisappear(animated)\n        self.keyboard_view.cancel_tracking()\n    }\n\n    // The host text/selection changed. We do NOT reset here: this fires for our\n    // own edits too, and resetting would break multi-key Telex composition.\n    // Reset only when the active document identity changes; destructive edit\n    // guards still validate the owned suffix before deleting host text.\n    override func textDidChange(_ textInput: UITextInput?) {\n        let document_identifier = self.textDocumentProxy.documentIdentifier\n",
+              "exitCode": 0
+            },
+            "status": "done"
+          },
+          "type": "tool_result",
+          "toolUseID": "TU-033Zle3fBSE1zQ81cET55l"
+        },
+        {
+          "run": {
+            "result": {
+              "output": "README.md\nbuild.zig\nbuild.zig.zon\nios\nsrc\ntest_ui\nzig-out\n---scripts---\nbuild-env.sh\n",
+              "exitCode": 0
+            },
+            "status": "done"
+          },
+          "type": "tool_result",
+          "toolUseID": "TU-033Zle4R2qJdbPWO0vxDLq"
+        }
+      ],
+      "messageId": 31,
+      "protocolMessageID": "M-033Zle9fSeJFL9FMjqdZm8"
+    },
+    {
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "tool_use"
+      },
+      "usage": {
+        "model": "claude-opus-4-8",
+        "timestamp": "2026-06-17T05:02:43.662Z",
+        "inputTokens": 2,
+        "outputTokens": 231,
+        "maxInputTokens": 300000,
+        "totalInputTokens": 62917,
+        "cacheReadInputTokens": 60533,
+        "cacheCreationInputTokens": 2382
+      },
+      "readAt": "2026-06-17T05:02:43.860Z",
+      "content": [
+        {
+          "type": "thinking",
+          "provider": "anthropic",
+          "thinking": " I've cleaned up the code to be more idiomatic, but I'm realizing I can't actually build this iOS keyboard extension since I'm on a Linux arm64 system without Xcode. Let me see if I can at least run a basic syntax check with Swift, though it's probably not installed here.",
+          "finalTime": 1781672563412,
+          "signature": "<redacted:signature>",
+          "startTime": 1781672560235,
+          "blockState": "complete"
+        },
+        {
+          "id": "TU-033ZleHpNhnb5Pd8AvRZjU",
+          "name": "Bash",
+          "type": "tool_use",
+          "input": {
+            "cmd": "which swiftc swift xcodebuild 2>/dev/null; echo \"exit: $?\"; cat playground/ios-app/README.md 2>/dev/null | head -40"
+          },
+          "complete": true,
+          "blockState": "complete",
+          "providerToolUseId": "toolu_vrtx_01HxtR6NjMSLaVZi26VLyJfc"
+        }
+      ],
+      "messageId": 32,
+      "protocolMessageID": "M-033Zle9yxI8d579LK8c4ak"
+    },
+    {
+      "role": "user",
+      "readAt": null,
+      "content": [
+        {
+          "run": {
+            "result": {
+              "output": "exit: 1\n# ios-app — Lex iOS keyboard extension\n\nAn iOS custom keyboard for the Lex Telex Vietnamese input engine. It adapts the\nmacOS app's idea — engine-driven synthetic-backspace + replacement\nreconciliation with `liblex` as the single source of truth — to a custom\nkeyboard extension. There is no `CGEventTap`: the extension *is* the keyboard,\nso it reconciles against the host text field through `UITextDocumentProxy`\n(`insertText` / `deleteBackward`) instead of synthesising key events.\n\n## Architecture\n\n```\n╭──────────────────────────────────────────────────────────╮\n│ KeyboardView (UIKit)  — from-scratch US-QWERTY, 3 planes  │\n╰───────────────┬──────────────────────────────────────────╯\n                │ KeyAction (tap events)\n╭───────────────▼──────────────────────────────────────────╮\n│ KeyboardViewController (UIInputViewController)             │\n│  reconciliation: delete N + insert composed replacement   │\n╰───────────────┬───────────────────────┬──────────────────╯\n        C ABI   │                        │ textDocumentProxy\n╭───────────────▼─────────╮   ╭──────────▼──────────────────╮\n│ LexEngine (Swift wrap)  │   │ host app text field          │\n│ over liblex C ABI       │   ╰──────────────────────────────╯\n╰─────────────────────────╯\n```\n\n- The engine knows nothing about iOS; the UI knows nothing about Telex; the\n  view controller is the only place that reconciles engine state with text\n  proxy operations.\n- Per letter tap (ASCII a–z/A–Z): feed the engine, `deleteBackward` the\n  engine-reported synthetic-backspace count, then insert the composed\n  replacement. Digits/symbols/space/return reset the composition and insert\n  literally. Lex is always Telex; to type plain Latin or another language the\n  user switches keyboards with the globe key.\n- An external-change guard (compare `documentContextBeforeInput` against the\n  suffix we believe we own) resets the engine when the cursor or text moves\n  under us. The keyboard is **not** reset on every `textDidChange`, which would\n  break multi-key composition.\n\n",
+              "exitCode": 0
+            },
+            "status": "done"
+          },
+          "type": "tool_result",
+          "toolUseID": "TU-033ZleHpNhnb5Pd8AvRZjU"
+        }
+      ],
+      "messageId": 33,
+      "protocolMessageID": "M-033ZleKb2olf1xuSdja3lV"
+    },
+    {
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "tool_use"
+      },
+      "usage": {
+        "model": "claude-opus-4-8",
+        "timestamp": "2026-06-17T05:02:53.847Z",
+        "inputTokens": 2,
+        "outputTokens": 366,
+        "maxInputTokens": 300000,
+        "totalInputTokens": 63944,
+        "cacheReadInputTokens": 62915,
+        "cacheCreationInputTokens": 1027
+      },
+      "readAt": null,
+      "content": [
+        {
+          "type": "thinking",
+          "provider": "anthropic",
+          "thinking": " Since I don't have Swift compilation available on this Linux system, I'm doing a manual code review instead to verify the changes are syntactically sound. Now I'm checking whether there are any lingering references to the symbols I removed.",
+          "finalTime": 1781672572452,
+          "signature": "<redacted:signature>",
+          "startTime": 1781672567148,
+          "blockState": "complete"
+        },
+        {
+          "text": "No Swift/Xcode toolchain here (this builds via Xcode on macOS), so I'll verify by checking no dangling references to removed symbols remain:",
+          "type": "text",
+          "finalTime": 1781672572506,
+          "startTime": 1781672572457,
+          "blockState": "complete"
+        },
+        {
+          "id": "TU-033ZleW7lewFmKfJkK1BVK",
+          "name": "Bash",
+          "type": "tool_use",
+          "input": {
+            "cmd": "grep -nE \"keyboard_height_constraint|install_keyboard_height_constraint|intrinsic_height|intrinsicContentSize|updateViewConstraints|setNeedsUpdateConstraints|preferredContentSize|allowsSelfSizing\" playground/ios-app/ios/Keyboard.swift"
+          },
+          "complete": true,
+          "blockState": "complete",
+          "providerToolUseId": "toolu_vrtx_01VkzNrMJ3XNCrmo16a95uVo"
+        }
+      ],
+      "messageId": 34,
+      "protocolMessageID": "M-033ZleKsUg4GfeQGvfy17C"
+    },
+    {
+      "role": "user",
+      "readAt": null,
+      "content": [
+        {
+          "run": {
+            "result": {
+              "output": "157:        input_view.allowsSelfSizing = false\n",
+              "exitCode": 0
+            },
+            "status": "done"
+          },
+          "type": "tool_result",
+          "toolUseID": "TU-033ZleW7lewFmKfJkK1BVK"
+        }
+      ],
+      "messageId": 35,
+      "protocolMessageID": "M-033ZleaLzNgbF4Izwuw4Dt"
+    },
+    {
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "tool_use"
+      },
+      "usage": {
+        "model": "claude-opus-4-8",
+        "timestamp": "2026-06-17T05:03:02.487Z",
+        "inputTokens": 2,
+        "outputTokens": 397,
+        "maxInputTokens": 300000,
+        "totalInputTokens": 64354,
+        "cacheReadInputTokens": 63942,
+        "cacheCreationInputTokens": 410
+      },
+      "readAt": "2026-06-17T05:03:02.657Z",
+      "content": [
+        {
+          "type": "thinking",
+          "provider": "anthropic",
+          "thinking": " The workaround patch file should be removed as part of the cleanup since the user wants all workarounds eliminated. I'm hesitating slightly on whether to proceed, but given the explicit request, I'll go ahead with the deletion.",
+          "finalTime": 1781672580730,
+          "signature": "<redacted:signature>",
+          "startTime": 1781672577081,
+          "blockState": "complete"
+        },
+        {
+          "text": "All workaround symbols are gone; only the idiomatic `allowsSelfSizing = false` (the default) remains. Now removing the workaround patch artifact at the repo root:",
+          "type": "text",
+          "finalTime": 1781672580802,
+          "startTime": 1781672580732,
+          "blockState": "complete"
+        },
+        {
+          "id": "TU-033ZlejAMnM8Il2WXy93oD",
+          "name": "Bash",
+          "type": "tool_use",
+          "input": {
+            "cmd": "rm -f fix_keyboard_ui_glitch.patch && git -C . status --short"
+          },
+          "complete": true,
+          "blockState": "complete",
+          "providerToolUseId": "toolu_vrtx_01KFAxRFDFX3pYwoT45EhhRa"
+        }
+      ],
+      "messageId": 36,
+      "protocolMessageID": "M-033ZleafgBVfebIdAp8xH5"
+    },
+    {
+      "role": "user",
+      "readAt": null,
+      "content": [
+        {
+          "run": {
+            "result": {
+              "output": " M playground/ios-app/ios/Keyboard.swift\n",
+              "exitCode": 0
+            },
+            "status": "done"
+          },
+          "type": "tool_result",
+          "toolUseID": "TU-033ZlejAMnM8Il2WXy93oD"
+        }
+      ],
+      "messageId": 37,
+      "protocolMessageID": "M-033ZleoKILQGhgmaAPcDay"
+    },
+    {
+      "role": "assistant",
+      "state": {
+        "type": "complete",
+        "stopReason": "end_turn"
+      },
+      "usage": {
+        "model": "claude-opus-4-8",
+        "timestamp": "2026-06-17T05:03:14.955Z",
+        "inputTokens": 2,
+        "outputTokens": 642,
+        "maxInputTokens": 300000,
+        "totalInputTokens": 64797,
+        "cacheReadInputTokens": 64352,
+        "cacheCreationInputTokens": 443
+      },
+      "readAt": "2026-06-17T05:03:15.395Z",
+      "content": [
+        {
+          "text": "Done. Here's what I changed in [Keyboard.swift](playground/ios-app/ios/Keyboard.swift).\n\n## Removed height-flicker workarounds (Apple-side bug, ineffective)\n\nThe articles confirm the 0→full-screen→correct resize sequence on first presentation is an iOS bug; `intrinsicContentSize`, `allowsSelfSizing`, `preferredContentSize`, and frame/layout overrides all fail to suppress it. Removed:\n\n- `KeyboardInputView.intrinsic_height` property + `intrinsicContentSize` override (the dual-drive hack).\n- `input_view.intrinsic_height = …` in `loadView`.\n- `install_keyboard_height_constraint()` helper, the `keyboard_height_constraint` ivar, the `updateViewConstraints` override that re-asserted height, and the `self.view.setNeedsUpdateConstraints()` call in `viewWillAppear`.\n- The `fix_keyboard_ui_glitch.patch` artifact at the repo root.\n\n## Idiomatic height handling\n\nHeight is now set the documented way: a single Auto Layout height constraint on the root view, created once in `viewDidLoad` with priority 999 (< required, so it won't fight the host's encapsulated-layout-height during transitions).\n\n## Kept (these reduce re-render during init, not the height bug)\n\nThe deferred first build (`did_build`), the trait cache, and structural-vs-in-place updates remain — they ensure the first paint is already correct (no light-then-dark recolor, no rebuild on re-presentation), which is the part you flagged as important.\n\nNote: I couldn't compile-verify — there's no Swift/Xcode toolchain on this Linux host (the project builds via Xcode on macOS). I verified by grepping that no removed symbols are still referenced.",
+          "type": "text",
+          "finalTime": 1781672593423,
+          "startTime": 1781672585617,
+          "blockState": "complete"
+        }
+      ],
+      "messageId": 38,
+      "turnElapsedMs": 224284,
+      "protocolMessageID": "M-033ZleoefXD12G2MNC5UCg"
+    }
+  ],
+  "agentMode": "smart",
+  "nextMessageId": 39,
+  "reasoningEffort": "high",
+  "creatorUserID": "<redacted:creator-user-id>",
+  "pinned": false,
+  "updatedAt": "2026-06-17T04:59:30.641Z"
+}
