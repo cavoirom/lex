@@ -36,6 +36,8 @@ pub fn build(b: *std.Build) void {
             // Debug build for tests to surface issues (extra safety checks,
             // better diagnostics) earlier than the ReleaseSafe production build.
             .optimize = .Debug,
+            // Zig 0.16.0's fuzz test runner does not compile with Debug error tracing enabled.
+            .error_tracing = false,
         }),
     });
     const run_lib_tests = b.addRunArtifact(lib_tests);

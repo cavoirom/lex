@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## 0.1.2
+
+### Fixed
+
+- Wrong handling for _QU_, this is a consonant, but the program allows putting _tone_ for _U_ in case: `qunf`.
+
+### Added
+
+- Fuzzy tests to catch unexpected cases. It catched the `qunf` case.
+
 ## 0.1.1
 
 ### Fixed

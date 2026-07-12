@@ -588,9 +588,9 @@ const Pseudoword = struct {
     start: u8,
     // The end position of the word on State.buffer_effective.
     end: u8,
-    // The start position of the vowels on State.buffer_effective.
+    // The start position of the toneable vowels on State.buffer_effective.
     vowels_start: ?u8,
-    // The end position of the vowels on State.buffer_effective.
+    // The end position of the toneable vowels on State.buffer_effective.
     vowels_end: ?u8,
     // The length of the word.
     length: u8,
@@ -823,19 +823,6 @@ const State = struct {
                     break :input_f;
                 }
 
-                // From here, the word has vowels, but that doesn't mean it is applicable for all cases.
-                if (word.has_vowels() and word.length == 2 and self.buffer_effective[word.start].equals_ignore_case_diacritic_tone('Q') and self.buffer_effective[word.end].equals_ignore_case('U', .empty, .level)) {
-                    // 5. Exact 'QU', 'U' is a part of the consonant, append literally.
-                    self.append_literal(c);
-                    // Set modification index to null because we didn't modify any existing span.
-                    self.buffer_modification_index = null;
-                    // Set literal_index because 'F' doesn't appear in formal Vietnamese spelling.
-                    if (self.literal_index == null) {
-                        self.literal_index = self.buffer_length - 1;
-                    }
-                    break :input_f;
-                }
-
                 // Find tone position.
                 const vowels_start = word.vowels_start.?;
                 const vowels_end = word.vowels_end.?;
@@ -924,19 +911,6 @@ const State = struct {
 
                 if (!word.has_vowels()) {
                     // 4. Pseudoword doesn't have any vowels, append literally.
-                    self.append_literal(c);
-                    // Set modification index to null because we didn't modify any existing span.
-                    self.buffer_modification_index = null;
-                    // Set literal_index because 'J' doesn't appear in formal Vietnamese spelling.
-                    if (self.literal_index == null) {
-                        self.literal_index = self.buffer_length - 1;
-                    }
-                    break :input_j;
-                }
-
-                // From here, the word has vowels, but that doesn't mean it is applicable for all cases.
-                if (word.has_vowels() and word.length == 2 and self.buffer_effective[word.start].equals_ignore_case_diacritic_tone('Q') and self.buffer_effective[word.end].equals_ignore_case_diacritic_tone('U')) {
-                    // 5. Exact 'QU', 'U' is a part of the consonant, append literally.
                     self.append_literal(c);
                     // Set modification index to null because we didn't modify any existing span.
                     self.buffer_modification_index = null;
@@ -1145,15 +1119,6 @@ const State = struct {
                     break :input_r;
                 }
 
-                // From here, the word has vowels, but that doesn't mean it is applicable for all cases.
-                if (word.length == 2 and self.buffer_effective[word.start].equals_ignore_case_diacritic_tone('Q') and self.buffer_effective[word.end].equals_ignore_case('U', .empty, .level)) {
-                    // 5. Exact 'QU', 'U' is a part of the consonant, append literally.
-                    self.append_literal(c);
-                    // Set modification index to null because we didn't modify any existing span.
-                    self.buffer_modification_index = null;
-                    break :input_r;
-                }
-
                 // Find tone position.
                 const vowels_start = word.vowels_start.?;
                 const vowels_end = word.vowels_end.?;
@@ -1203,15 +1168,6 @@ const State = struct {
 
                 if (!word.has_vowels()) {
                     // 4. Pseudoword doesn't have any vowels, append literally.
-                    self.append_literal(c);
-                    // Set modification index to null because we didn't modify any existing span.
-                    self.buffer_modification_index = null;
-                    break :input_s;
-                }
-
-                // From here, the word has vowels, but that doesn't mean it is applicable for all cases.
-                if (word.length == 2 and self.buffer_effective[word.start].equals_ignore_case_diacritic_tone('Q') and self.buffer_effective[word.end].equals_ignore_case('U', .empty, .level)) {
-                    // 5. Exact 'QU', 'U' is a part of the consonant, append literally.
                     self.append_literal(c);
                     // Set modification index to null because we didn't modify any existing span.
                     self.buffer_modification_index = null;
@@ -1436,15 +1392,6 @@ const State = struct {
                     break :input_x;
                 }
 
-                // From here, the word has vowels, but that doesn't mean it is applicable for all cases.
-                if (word.length == 2 and self.buffer_effective[word.start].equals_ignore_case_diacritic_tone('Q') and self.buffer_effective[word.end].equals_ignore_case('U', .empty, .level)) {
-                    // 5. Exact 'QU', 'U' is a part of the consonant, append literally.
-                    self.append_literal(c);
-                    // Set modification index to null because we didn't modify any existing span.
-                    self.buffer_modification_index = null;
-                    break :input_x;
-                }
-
                 // Find tone position.
                 const vowels_start = word.vowels_start.?;
                 const vowels_end = word.vowels_end.?;
@@ -1610,6 +1557,17 @@ const State = struct {
                 vowels_start = index + 1;
                 // 2. Set the current index to word_start.
                 word_start = index;
+                // 3. Handle 'QU' case, in this case, U is a part of the consonant 'QU'.
+                const starts_with_qu = sp.equals_ignore_case_diacritic_tone('Q') and
+                    self.buffer_effective[vowels_start.?].equals_ignore_case('U', .empty, .level);
+                if (starts_with_qu and vowels_start.? < vowels_end.?) {
+                    // Has another vowel next to 'U', exclude 'U' from the vowel range.
+                    vowels_start = vowels_start.? + 1;
+                } else if (starts_with_qu and vowels_start.? == vowels_end.?) {
+                    // No other vowels, reset the range to null.
+                    vowels_start = null;
+                    vowels_end = null;
+                }
                 break;
             } else if (index == 0 and is_vowel and vowels_end != null and vowels_start == null) {
                 // Vowel found, but could not find consonant until the beginning of the buffer.
@@ -1657,9 +1615,10 @@ const State = struct {
         // The word must have vowels.
         assert(word.has_vowels());
 
-        // Exclude 'QU' because we treat them as consonant.
+        // Exclude exact 'QU' (unadorned 'U') because the pseudo-word scan treats it as a
+        // consonant cluster and never provides it as a toneable vowel.
         if (word.length == 2) {
-            assert(!(self.buffer_effective[word.start].equals_ignore_case_diacritic_tone('Q') and self.buffer_effective[word.end].equals_ignore_case_diacritic_tone('U')));
+            assert(!(self.buffer_effective[word.start].equals_ignore_case_diacritic_tone('Q') and self.buffer_effective[word.end].equals_ignore_case('U', .empty, .level)));
         }
 
         // Existing vowels must have a level tone.
@@ -1676,6 +1635,10 @@ const State = struct {
 
         // One vowel, put tone on this vowel.
         if (vowels_start == vowels_end) {
+            // The tone must never land on the 'U' of a 'QU' consonant cluster.
+            if (vowels_start > 0) {
+                assert(!(self.buffer_effective[vowels_start - 1].equals_ignore_case_diacritic_tone('Q') and self.buffer_effective[vowels_start].equals_ignore_case_diacritic_tone('U')));
+            }
             const vowel = self.buffer_effective[vowels_start];
             self.buffer_effective[vowels_start] = Span.init_diacritic_tone(vowel.base, vowel.diacritic, tone);
             self.buffer_modification_index = vowels_start;
@@ -1688,12 +1651,10 @@ const State = struct {
         // Multiple vowels, scan the vowels to determine the cases.
         var vowel_special_index: ?u8 = null;
 
-        // Special consonant: `GI`, `QU`.
-        var consonant_special_start_exists: bool = false;
+        // Special consonant: `GI`.
+        var gi_special_start_exists: bool = false;
         if (self.buffer_effective[word.start].equals_ignore_case_diacritic_tone('G') and self.buffer_effective[word.start + 1].equals_ignore_case_diacritic_tone('I')) {
-            consonant_special_start_exists = true;
-        } else if (self.buffer_effective[word.start].equals_ignore_case_diacritic_tone('Q') and self.buffer_effective[word.start + 1].equals_ignore_case_tone('U', .empty)) {
-            consonant_special_start_exists = true;
+            gi_special_start_exists = true;
         }
 
         var index: u8 = vowels_end + 1;
@@ -1729,8 +1690,8 @@ const State = struct {
         } else if (vowel_special_index) |i| {
             // Special group.
             tone_index = i;
-        } else if (consonant_special_start_exists) {
-            // 'GI', 'QU', skip the first vowel because it's 'I', 'U', put tone on next vowel.
+        } else if (gi_special_start_exists) {
+            // 'GI', skip the first vowel because it's 'I', put tone on next vowel.
             tone_index = vowels_start + 1;
         } else if ((vowels_end - vowels_start) == 1 and vowels_end == word.end and self.buffer_effective[vowels_start].equals_ignore_case_tone('O', .empty) and self.buffer_effective[vowels_end].equals_ignore_case_tone('A', .empty)) {
             // Exact 'OA', put tone on first vowel.
@@ -1759,6 +1720,11 @@ const State = struct {
         } else {
             // Other cases, put on first vowel.
             tone_index = vowels_start;
+        }
+
+        // The tone must never land on the 'U' of a 'QU' consonant cluster.
+        if (tone_index > 0) {
+            assert(!(self.buffer_effective[tone_index - 1].equals_ignore_case_diacritic_tone('Q') and self.buffer_effective[tone_index].equals_ignore_case_diacritic_tone('U')));
         }
 
         const sp = self.buffer_effective[tone_index];
@@ -2887,8 +2853,20 @@ test "expect State.add switches to literal input when appending W (ignore cases)
     }
 }
 
-test "expect State.add switches to literal input when appending F or J (ignore cases) on word without placeable tone" {
-    const inputs = [_]u8{ 'F', 'f', 'J', 'j' };
+test "expect State.add appends tone triggers literally on word without placeable tone" {
+    const Input = struct { trigger: u8, starts_literal_tail: bool };
+    const inputs = [_]Input{
+        .{ .trigger = 'F', .starts_literal_tail = true },
+        .{ .trigger = 'f', .starts_literal_tail = true },
+        .{ .trigger = 'J', .starts_literal_tail = true },
+        .{ .trigger = 'j', .starts_literal_tail = true },
+        .{ .trigger = 'R', .starts_literal_tail = false },
+        .{ .trigger = 'r', .starts_literal_tail = false },
+        .{ .trigger = 'S', .starts_literal_tail = false },
+        .{ .trigger = 's', .starts_literal_tail = false },
+        .{ .trigger = 'X', .starts_literal_tail = false },
+        .{ .trigger = 'x', .starts_literal_tail = false },
+    };
 
     // Sub-block A: single-consonant pseudo-word (no vowel).
     const SingleCase = struct { base: u8 };
@@ -2905,12 +2883,13 @@ test "expect State.add switches to literal input when appending F or J (ignore c
             state.buffer_length = 1;
 
             // Act
-            state.add(input);
+            state.add(input.trigger);
 
             // Assert
             try expectEqual(2, state.buffer_length);
             try expectEqual(null, state.buffer_modification_index);
-            try expectEqual(1, state.literal_index);
+            const expected_literal_index: ?u8 = if (input.starts_literal_tail) 1 else null;
+            try expectEqual(expected_literal_index, state.literal_index);
 
             const sp_previous = state.buffer_effective[0];
             try expectEqual(c.base, sp_previous.base);
@@ -2918,7 +2897,7 @@ test "expect State.add switches to literal input when appending F or J (ignore c
             try expectEqual(.level, sp_previous.tone);
 
             const sp_new = state.buffer_effective[1];
-            try expectEqual(input, sp_new.base);
+            try expectEqual(input.trigger, sp_new.base);
             try expectEqual(.empty, sp_new.diacritic);
             try expectEqual(.level, sp_new.tone);
         }
@@ -2949,12 +2928,13 @@ test "expect State.add switches to literal input when appending F or J (ignore c
             state.buffer_length = 2;
 
             // Act
-            state.add(input);
+            state.add(input.trigger);
 
             // Assert
             try expectEqual(3, state.buffer_length);
             try expectEqual(null, state.buffer_modification_index);
-            try expectEqual(2, state.literal_index);
+            const expected_literal_index: ?u8 = if (input.starts_literal_tail) 2 else null;
+            try expectEqual(expected_literal_index, state.literal_index);
 
             const sp_previous0 = state.buffer_effective[0];
             try expectEqual(c.base0, sp_previous0.base);
@@ -2967,7 +2947,7 @@ test "expect State.add switches to literal input when appending F or J (ignore c
             try expectEqual(.level, sp_previous1.tone);
 
             const sp_new = state.buffer_effective[2];
-            try expectEqual(input, sp_new.base);
+            try expectEqual(input.trigger, sp_new.base);
             try expectEqual(.empty, sp_new.diacritic);
             try expectEqual(.level, sp_new.tone);
         }
@@ -3016,6 +2996,8 @@ test "expect State.add appends Z literally when pseudo-word has no vowel" {
     const pair_cases = [_]PairCase{
         .{ .base0 = 'n', .base1 = 'g' },
         .{ .base0 = 'N', .base1 = 'g' },
+        .{ .base0 = 'q', .base1 = 'u' },
+        .{ .base0 = 'Q', .base1 = 'U' },
     };
 
     for (pair_cases) |c| {
@@ -3048,6 +3030,95 @@ test "expect State.add appends Z literally when pseudo-word has no vowel" {
             try expectEqual(input, sp_new.base);
             try expectEqual(.empty, sp_new.diacritic);
             try expectEqual(.level, sp_new.tone);
+        }
+    }
+
+    // Sub-block C: QU with trailing consonant is still a pseudo-word without a toneable vowel.
+    const TripleCase = struct { base0: u8, base1: u8, base2: u8 };
+    const triple_cases = [_]TripleCase{
+        .{ .base0 = 'q', .base1 = 'u', .base2 = 'n' },
+        .{ .base0 = 'Q', .base1 = 'U', .base2 = 'N' },
+    };
+
+    for (triple_cases) |c| {
+        for (inputs) |input| {
+            var state: State = undefined;
+            state.init();
+            state.buffer_effective[0] = Span.init(c.base0);
+            state.buffer_effective[1] = Span.init(c.base1);
+            state.buffer_effective[2] = Span.init(c.base2);
+            state.buffer_length = 3;
+
+            // Act
+            state.add(input);
+
+            // Assert
+            try expectEqual(4, state.buffer_length);
+            try expectEqual(null, state.buffer_modification_index);
+            try expectEqual(null, state.literal_index);
+
+            const sp_previous0 = state.buffer_effective[0];
+            try expectEqual(c.base0, sp_previous0.base);
+            try expectEqual(.empty, sp_previous0.diacritic);
+            try expectEqual(.level, sp_previous0.tone);
+
+            const sp_previous1 = state.buffer_effective[1];
+            try expectEqual(c.base1, sp_previous1.base);
+            try expectEqual(.empty, sp_previous1.diacritic);
+            try expectEqual(.level, sp_previous1.tone);
+
+            const sp_previous2 = state.buffer_effective[2];
+            try expectEqual(c.base2, sp_previous2.base);
+            try expectEqual(.empty, sp_previous2.diacritic);
+            try expectEqual(.level, sp_previous2.tone);
+
+            const sp_new = state.buffer_effective[3];
+            try expectEqual(input, sp_new.base);
+            try expectEqual(.empty, sp_new.diacritic);
+            try expectEqual(.level, sp_new.tone);
+        }
+    }
+}
+
+test "expect State.add resets non-level tone with Z on the real vowel after 'QU'" {
+    const InputCase = struct { input: u8 };
+    const input_cases = [_]InputCase{
+        .{ .input = 'Z' },
+        .{ .input = 'z' },
+    };
+    const tones = [_]Tone{ .rising, .falling, .dipping_rising, .rising_glottalized, .falling_glottalized };
+
+    for (input_cases) |input_case| {
+        for (tones) |tone| {
+            var state: State = undefined;
+            state.init();
+            state.buffer_effective[0] = Span.init('q');
+            state.buffer_effective[1] = Span.init('u');
+            state.buffer_effective[2] = Span.init_diacritic_tone('a', .empty, tone);
+            state.buffer_length = 3;
+
+            // Act
+            state.add(input_case.input);
+
+            // Assert
+            try expectEqual(3, state.buffer_length);
+            try expectEqual(2, state.buffer_modification_index);
+            try expectEqual(null, state.literal_index);
+
+            const sp_q = state.buffer_effective[0];
+            try expectEqual(@as(u8, 'q'), sp_q.base);
+            try expectEqual(.empty, sp_q.diacritic);
+            try expectEqual(.level, sp_q.tone);
+
+            const sp_u = state.buffer_effective[1];
+            try expectEqual(@as(u8, 'u'), sp_u.base);
+            try expectEqual(.empty, sp_u.diacritic);
+            try expectEqual(.level, sp_u.tone);
+
+            const sp_a = state.buffer_effective[2];
+            try expectEqual(@as(u8, 'a'), sp_a.base);
+            try expectEqual(.empty, sp_a.diacritic);
+            try expectEqual(.level, sp_a.tone);
         }
     }
 }
@@ -3095,11 +3166,15 @@ test "expect State.apply_tone places tone at the correct vowel for every non-lev
         // Extended OA / OE / UY (more vowels) -> second vowel.
         .{ .seeds = &.{ Span.init('x'), Span.init('o'), Span.init('a'), Span.init('y') }, .word_start = 0, .word_end = 3, .vowels_start = 1, .vowels_end = 3, .expected_index = 2 },
 
-        // GI / QU consonant-vowel special: tone on next vowel.
+        // GI consonant-vowel special: tone on next vowel.
         .{ .seeds = &.{ Span.init('g'), Span.init('i'), Span.init('a') }, .word_start = 0, .word_end = 2, .vowels_start = 1, .vowels_end = 2, .expected_index = 2 },
-        .{ .seeds = &.{ Span.init('q'), Span.init('u'), Span.init('a') }, .word_start = 0, .word_end = 2, .vowels_start = 1, .vowels_end = 2, .expected_index = 2 },
         .{ .seeds = &.{ Span.init('g'), Span.init('i'), Span.init('a'), Span.init('n') }, .word_start = 0, .word_end = 3, .vowels_start = 1, .vowels_end = 2, .expected_index = 2 },
-        .{ .seeds = &.{ Span.init('q'), Span.init('u'), Span.init('a'), Span.init('n') }, .word_start = 0, .word_end = 3, .vowels_start = 1, .vowels_end = 2, .expected_index = 2 },
+
+        // QU consonant-vowel words: the U in QU is not part of the toneable vowel range.
+        .{ .seeds = &.{ Span.init('q'), Span.init('u'), Span.init('a') }, .word_start = 0, .word_end = 2, .vowels_start = 2, .vowels_end = 2, .expected_index = 2 },
+        .{ .seeds = &.{ Span.init('q'), Span.init('u'), Span.init('a'), Span.init('n') }, .word_start = 0, .word_end = 3, .vowels_start = 2, .vowels_end = 2, .expected_index = 2 },
+        .{ .seeds = &.{ Span.init('q'), Span.init('u'), Span.init('a'), Span.init('y') }, .word_start = 0, .word_end = 3, .vowels_start = 2, .vowels_end = 3, .expected_index = 2 },
+        .{ .seeds = &.{ Span.init('q'), Span.init('u'), Span.init('y'), Span.init_diacritic('e', .circumflex), Span.init('n') }, .word_start = 0, .word_end = 4, .vowels_start = 2, .vowels_end = 3, .expected_index = 3 },
 
         // Ơ has the highest priority among the special vowels.
         .{ .seeds = &.{ Span.init('u'), Span.init_diacritic('o', .horn), Span.init('p') }, .word_start = 0, .word_end = 2, .vowels_start = 0, .vowels_end = 1, .expected_index = 1 },
@@ -3254,6 +3329,72 @@ test "expect State.add applies non-level tones for representative cases" {
 
             // Assert: the trigger character is NOT appended; the requested tone lands on the
             // expected vowel and bookkeeping fields stay clean.
+            try expectEqual(@as(u8, @intCast(c.seeds.len)), state.buffer_length);
+            try expectEqual(@as(?u8, c.expected_index), state.buffer_modification_index);
+            try expectEqual(null, state.literal_index);
+
+            for (c.seeds, 0..) |s, i| {
+                const sp = state.buffer_effective[i];
+                try expectEqual(s.base, sp.base);
+                try expectEqual(s.diacritic, sp.diacritic);
+                const expected_tone: Tone = if (i == @as(usize, c.expected_index))
+                    tone_case.tone
+                else
+                    .level;
+                try expectEqual(expected_tone, sp.tone);
+            }
+        }
+    }
+}
+
+test "expect State.add applies non-level tones to the real vowel after 'QU'" {
+    const ToneCase = struct { tone: Tone, trigger: u8 };
+    const Case = struct { seeds: []const Span, expected_index: u8 };
+
+    const tone_cases = [_]ToneCase{
+        .{ .tone = .rising, .trigger = 's' },
+        .{ .tone = .falling, .trigger = 'f' },
+        .{ .tone = .dipping_rising, .trigger = 'r' },
+        .{ .tone = .rising_glottalized, .trigger = 'x' },
+        .{ .tone = .falling_glottalized, .trigger = 'j' },
+    };
+    const cases = [_]Case{
+        // Single real vowel after QU.
+        .{ .seeds = &.{ Span.init('q'), Span.init('u'), Span.init('a') }, .expected_index = 2 },
+        .{ .seeds = &.{ Span.init('q'), Span.init('u'), Span.init('e') }, .expected_index = 2 },
+        .{ .seeds = &.{ Span.init('q'), Span.init('u'), Span.init('i') }, .expected_index = 2 },
+        .{ .seeds = &.{ Span.init('q'), Span.init('u'), Span.init('o') }, .expected_index = 2 },
+        .{ .seeds = &.{ Span.init('q'), Span.init('u'), Span.init('y') }, .expected_index = 2 },
+
+        // Multi-vowel valid Vietnamese word starts.
+        .{ .seeds = &.{ Span.init('q'), Span.init('u'), Span.init('a'), Span.init('y') }, .expected_index = 2 },
+        .{ .seeds = &.{ Span.init('q'), Span.init('u'), Span.init_diacritic('o', .horn), Span.init('i') }, .expected_index = 2 },
+        .{
+            .seeds = &.{
+                Span.init('q'),
+                Span.init('u'),
+                Span.init('y'),
+                Span.init_diacritic('e', .circumflex),
+                Span.init('n'),
+            },
+            .expected_index = 3,
+        },
+    };
+
+    for (tone_cases) |tone_case| {
+        for (cases) |c| {
+            var state: State = undefined;
+            state.init();
+            for (c.seeds, 0..) |s, i| {
+                state.buffer_effective[i] = s;
+            }
+            state.buffer_length = @intCast(c.seeds.len);
+
+            // Act
+            state.add(tone_case.trigger);
+
+            // Assert: the trigger character is NOT appended; QU remains a consonant cluster and the
+            // requested tone lands on the real vowel after QU.
             try expectEqual(@as(u8, @intCast(c.seeds.len)), state.buffer_length);
             try expectEqual(@as(?u8, c.expected_index), state.buffer_modification_index);
             try expectEqual(null, state.literal_index);
@@ -3488,9 +3629,9 @@ test "expect State.add cancels an existing matching non-level tone at the last s
 
 test "expect State.pseudoword scans and provides a pseudoword correctly" {
     // Arrange. Each case seeds buffer_effective directly, then asks the
-    // pseudo-word scanner for structural indexes only. Cases with a leading
-    // consonant include multiple consonant characters to verify that the scan
-    // includes only the consonant immediately before the vowel run.
+    // pseudo-word scanner for word boundaries and toneable vowel indexes. Cases with a leading
+    // consonant include multiple consonant characters to verify that the scan includes only the
+    // consonant immediately before the vowel run.
     const Case = struct {
         seeds: []const Span,
         word_start: u8,
@@ -3511,7 +3652,7 @@ test "expect State.pseudoword scans and provides a pseudoword correctly" {
         .{ .seeds = &.{ Span.init('k'), Span.init('h'), Span.init('o'), Span.init('a') }, .word_start = 1, .word_end = 3, .vowels_start = 2, .vowels_end = 3, .length = 3 },
         .{ .seeds = &.{ Span.init('t'), Span.init('h'), Span.init('u'), Span.init('y') }, .word_start = 1, .word_end = 3, .vowels_start = 2, .vowels_end = 3, .length = 3 },
         .{ .seeds = &.{ Span.init('n'), Span.init('g'), Span.init('i'), Span.init('a') }, .word_start = 1, .word_end = 3, .vowels_start = 2, .vowels_end = 3, .length = 3 },
-        .{ .seeds = &.{ Span.init('s'), Span.init('q'), Span.init('u'), Span.init('a') }, .word_start = 1, .word_end = 3, .vowels_start = 2, .vowels_end = 3, .length = 3 },
+        .{ .seeds = &.{ Span.init('s'), Span.init('q'), Span.init('u'), Span.init('a') }, .word_start = 1, .word_end = 3, .vowels_start = 3, .vowels_end = 3, .length = 3 },
 
         // Vowels with trailing consonants.
         .{ .seeds = &.{ Span.init('a'), Span.init('n') }, .word_start = 0, .word_end = 1, .vowels_start = 0, .vowels_end = 0, .length = 2 },
@@ -3521,9 +3662,17 @@ test "expect State.pseudoword scans and provides a pseudoword correctly" {
         // Multiple consonants before vowels and trailing consonants.
         .{ .seeds = &.{ Span.init('t'), Span.init('r'), Span.init('a'), Span.init('n') }, .word_start = 1, .word_end = 3, .vowels_start = 2, .vowels_end = 2, .length = 3 },
         .{ .seeds = &.{ Span.init('k'), Span.init('h'), Span.init('o'), Span.init('a'), Span.init('n') }, .word_start = 1, .word_end = 4, .vowels_start = 2, .vowels_end = 3, .length = 4 },
-        .{ .seeds = &.{ Span.init('s'), Span.init('q'), Span.init('u'), Span.init('a'), Span.init('n') }, .word_start = 1, .word_end = 4, .vowels_start = 2, .vowels_end = 3, .length = 4 },
+        .{ .seeds = &.{ Span.init('s'), Span.init('q'), Span.init('u'), Span.init('a'), Span.init('n') }, .word_start = 1, .word_end = 4, .vowels_start = 3, .vowels_end = 3, .length = 4 },
         .{ .seeds = &.{ Span.init('n'), Span.init('g'), Span.init('i'), Span.init('a'), Span.init('n') }, .word_start = 1, .word_end = 4, .vowels_start = 2, .vowels_end = 3, .length = 4 },
         .{ .seeds = &.{ Span.init('t'), Span.init('h'), Span.init('u'), Span.init('y'), Span.init('n'), Span.init('h') }, .word_start = 1, .word_end = 5, .vowels_start = 2, .vowels_end = 3, .length = 5 },
+
+        // The U in leading QU is part of the consonant cluster, not a toneable vowel.
+        .{ .seeds = &.{ Span.init('q'), Span.init('u') }, .word_start = 0, .word_end = 1, .vowels_start = null, .vowels_end = null, .length = 2 },
+        .{ .seeds = &.{ Span.init('q'), Span.init('u'), Span.init('n') }, .word_start = 0, .word_end = 2, .vowels_start = null, .vowels_end = null, .length = 3 },
+        .{ .seeds = &.{ Span.init('Q'), Span.init('U'), Span.init('N') }, .word_start = 0, .word_end = 2, .vowels_start = null, .vowels_end = null, .length = 3 },
+        .{ .seeds = &.{ Span.init('q'), Span.init('u'), Span.init('a'), Span.init('y') }, .word_start = 0, .word_end = 3, .vowels_start = 2, .vowels_end = 3, .length = 4 },
+        .{ .seeds = &.{ Span.init('q'), Span.init('u'), Span.init_diacritic('o', .horn), Span.init('i') }, .word_start = 0, .word_end = 3, .vowels_start = 2, .vowels_end = 3, .length = 4 },
+        .{ .seeds = &.{ Span.init('q'), Span.init('u'), Span.init('y'), Span.init_diacritic('e', .circumflex), Span.init('n') }, .word_start = 0, .word_end = 4, .vowels_start = 2, .vowels_end = 3, .length = 5 },
 
         // Vowels with diacritics are still classified by their base letters.
         .{ .seeds = &.{ Span.init('t'), Span.init('r'), Span.init('u'), Span.init_diacritic('o', .horn), Span.init('p') }, .word_start = 1, .word_end = 4, .vowels_start = 2, .vowels_end = 3, .length = 4 },
@@ -3535,7 +3684,7 @@ test "expect State.pseudoword scans and provides a pseudoword correctly" {
         // Only the trailing pseudo-word is returned.
         .{ .seeds = &.{ Span.init('t'), Span.init('h'), Span.init('e'), Span.init('t'), Span.init('h'), Span.init('u'), Span.init('y') }, .word_start = 4, .word_end = 6, .vowels_start = 5, .vowels_end = 6, .length = 3 },
         .{ .seeds = &.{ Span.init('v'), Span.init('a'), Span.init('n'), Span.init('t'), Span.init('h'), Span.init('o'), Span.init('a') }, .word_start = 4, .word_end = 6, .vowels_start = 5, .vowels_end = 6, .length = 3 },
-        .{ .seeds = &.{ Span.init('b'), Span.init('a'), Span.init('o'), Span.init('s'), Span.init('q'), Span.init('u'), Span.init('a'), Span.init('n') }, .word_start = 4, .word_end = 7, .vowels_start = 5, .vowels_end = 6, .length = 4 },
+        .{ .seeds = &.{ Span.init('b'), Span.init('a'), Span.init('o'), Span.init('s'), Span.init('q'), Span.init('u'), Span.init('a'), Span.init('n') }, .word_start = 4, .word_end = 7, .vowels_start = 6, .vowels_end = 6, .length = 4 },
         .{ .seeds = &.{ Span.init('b'), Span.init('o'), Span.init('n'), Span.init('g'), Span.init('i'), Span.init('a'), Span.init('n') }, .word_start = 3, .word_end = 6, .vowels_start = 4, .vowels_end = 5, .length = 4 },
 
         // No-vowel suffixes return null vowel bounds.
@@ -4195,4 +4344,800 @@ export fn lex_buffer_empty(state: *anyopaque) bool {
 
     const s: *State = @ptrCast(@alignCast(state));
     return s.buffer_length == 0;
+}
+
+const FuzzHarness = struct {
+    const visible_capacity = 1024;
+    const replacement_sentinel = 0xFFFF;
+    const Smith = std.testing.Smith;
+    const Weight = Smith.Weight;
+
+    // Operation-count limits shared between the fuzz bodies and the corpus encoders. A corpus
+    // count above the fuzz body's limit would silently decode to 0 (see encode_draws), so the
+    // encoders assert against these same constants.
+    const app_flow_operation_count_max = 160;
+    const metamorphic_operation_count_max = 80;
+    const erase_add_count_min = 1;
+    const erase_add_count_max = 24;
+
+    const AppOperation = enum(u8) {
+        add,
+        backspace,
+        reset,
+        query,
+        add_again,
+    };
+
+    const MutatingOperation = enum(u8) {
+        add,
+        backspace,
+        reset,
+    };
+
+    const AddBackspaceOperation = enum(u8) {
+        add,
+        backspace,
+    };
+
+    // Keep plans fixed-shape so every fuzzed step consumes an operation draw followed by a
+    // character draw. The character is used by add and is intentionally ignored by backspace and
+    // reset, which also keeps metamorphic corpus encoding and decoding unconditional.
+    const PlannedOperation = struct {
+        operation: MutatingOperation,
+        character: u8,
+    };
+
+    const AddBackspacePlan = struct {
+        operation: AddBackspaceOperation,
+        character: u8,
+    };
+
+    // One step of an app-flow corpus entry. The payload carries the character draw that the
+    // app-flow fuzz body performs for add operations only.
+    const CorpusAppStep = union(AppOperation) {
+        add: u8,
+        backspace: void,
+        reset: void,
+        query: void,
+        add_again: u8,
+    };
+
+    // Encode Smith draws for corpus mode. When the test binary is not built for fuzzing, every
+    // Smith weighted draw consumes exactly 8 bytes little-endian from the corpus entry. A value
+    // outside the draw's weight ranges, or a truncated entry, silently falls back to the first
+    // weight's minimum, so entries must encode one in-range u64 per draw, in draw order.
+    fn encode_draws(comptime draws: []const u64) []const u8 {
+        const Encoded = struct {
+            const bytes: [draws.len * 8]u8 = build: {
+                var buffer: [draws.len * 8]u8 = undefined;
+                for (draws, 0..) |draw, index| {
+                    std.mem.writeInt(u64, buffer[index * 8 ..][0..8], draw, .little);
+                }
+                break :build buffer;
+            };
+        };
+        return &Encoded.bytes;
+    }
+
+    // Encode one corpus entry for "fuzz public ABI app-flow operation streams", mirroring its
+    // draw order: the operation count, then per operation the AppOperation tag and, for add
+    // operations only, the character.
+    fn encode_app_flow_corpus(comptime steps: []const CorpusAppStep) []const u8 {
+        const draws = comptime build: {
+            assert(steps.len <= app_flow_operation_count_max);
+
+            var draws: []const u64 = &.{steps.len};
+            for (steps) |step| {
+                draws = draws ++ &[_]u64{@intFromEnum(step)};
+                switch (step) {
+                    .add, .add_again => |character| {
+                        assert(isAlphabetic(character));
+                        draws = draws ++ &[_]u64{character};
+                    },
+                    .backspace, .reset, .query => {},
+                }
+            }
+            break :build draws;
+        };
+        return encode_draws(draws);
+    }
+
+    // Encode one corpus entry for "fuzz public ABI metamorphic equivalences", mirroring its draw
+    // order across the three properties: the query-insertion operations (operation and character
+    // are both drawn for every step, the character is a dummy for backspace and reset), the reset
+    // prefix and suffix counts then their operations, and finally the erase-property characters.
+    fn encode_metamorphic_corpus(
+        comptime query_insertion_operations: []const PlannedOperation,
+        comptime reset_prefix_operations: []const AddBackspacePlan,
+        comptime reset_suffix_operations: []const AddBackspacePlan,
+        comptime erase_characters: []const u8,
+        comptime erase_final_character: u8,
+    ) []const u8 {
+        const draws = comptime build: {
+            assert(query_insertion_operations.len <= metamorphic_operation_count_max);
+            assert(reset_prefix_operations.len <= metamorphic_operation_count_max);
+            assert(reset_suffix_operations.len <= metamorphic_operation_count_max);
+            assert(erase_characters.len >= erase_add_count_min);
+            assert(erase_characters.len <= erase_add_count_max);
+            assert(isAlphabetic(erase_final_character));
+
+            var draws: []const u64 = &.{query_insertion_operations.len};
+            for (query_insertion_operations) |operation| {
+                assert(isAlphabetic(operation.character));
+                draws = draws ++ &[_]u64{ @intFromEnum(operation.operation), operation.character };
+            }
+
+            draws = draws ++ &[_]u64{ reset_prefix_operations.len, reset_suffix_operations.len };
+            for (reset_prefix_operations) |operation| {
+                assert(isAlphabetic(operation.character));
+                draws = draws ++ &[_]u64{ @intFromEnum(operation.operation), operation.character };
+            }
+            for (reset_suffix_operations) |operation| {
+                assert(isAlphabetic(operation.character));
+                draws = draws ++ &[_]u64{ @intFromEnum(operation.operation), operation.character };
+            }
+
+            draws = draws ++ &[_]u64{erase_characters.len};
+            for (erase_characters) |character| {
+                assert(isAlphabetic(character));
+                draws = draws ++ &[_]u64{character};
+            }
+            draws = draws ++ &[_]u64{erase_final_character};
+
+            break :build draws;
+        };
+        return encode_draws(draws);
+    }
+
+    const Engine = struct {
+        raw_pointer: [*]u8,
+        visible_buffer: [visible_capacity]u16 = undefined,
+        visible_length: usize = 0,
+        word_start: usize = 0,
+
+        fn init() !Engine {
+            const raw_pointer = std.testing.allocator.rawAlloc(lex_state_size, .fromByteUnits(lex_state_alignment), @returnAddress()) orelse return error.OutOfMemory;
+            lex_init(raw_pointer);
+
+            var engine = Engine{ .raw_pointer = raw_pointer };
+            try engine.expect_reset_state();
+            return engine;
+        }
+
+        fn deinit(self: *Engine) void {
+            std.testing.allocator.rawFree(self.raw_pointer[0..lex_state_size], .fromByteUnits(lex_state_alignment), @returnAddress());
+        }
+
+        fn add_app_path(self: *Engine, c: u8) !void {
+            if (lex_buffer_full(self.raw_pointer)) {
+                try self.reset();
+            }
+
+            if (lex_buffer_effective_full(self.raw_pointer)) {
+                lex_add(self.raw_pointer, c);
+                try self.append_visible(c);
+            } else {
+                lex_add(self.raw_pointer, c);
+
+                const synthetic_backspaces = lex_calculate_synthetic_backspaces(self.raw_pointer);
+                try std.testing.expect(synthetic_backspaces <= self.visible_length - self.word_start);
+                self.visible_length -= synthetic_backspaces;
+
+                var replacement_buffer: [lex_replacement_buffer_length]u16 = undefined;
+                @memset(&replacement_buffer, replacement_sentinel);
+                var replacement_count: u8 = undefined;
+                lex_compose_utf16_string_replacement(self.raw_pointer, &replacement_buffer, &replacement_count);
+
+                try std.testing.expect(replacement_count > 0);
+                try std.testing.expect(replacement_count <= lex_replacement_buffer_length);
+
+                const replacement_length: usize = replacement_count;
+                try expect_allowed_replacement(replacement_buffer[0..replacement_length]);
+                try expect_replacement_tail_unchanged(replacement_buffer[replacement_length..]);
+                try self.append_visible_slice(replacement_buffer[0..replacement_length]);
+            }
+
+            try std.testing.expect(!lex_buffer_empty(self.raw_pointer));
+            try self.query_invariants();
+        }
+
+        fn backspace(self: *Engine) !void {
+            if (!lex_buffer_empty(self.raw_pointer)) {
+                try std.testing.expect(self.visible_length > self.word_start);
+                lex_backspace(self.raw_pointer);
+                self.visible_length -= 1;
+                try self.query_invariants();
+            }
+        }
+
+        fn reset(self: *Engine) !void {
+            lex_init(self.raw_pointer);
+            self.word_start = self.visible_length;
+            try self.expect_reset_state();
+        }
+
+        fn apply_mutating(self: *Engine, operation: PlannedOperation) !void {
+            switch (operation.operation) {
+                .add => try self.add_app_path(operation.character),
+                .backspace => try self.backspace(),
+                .reset => try self.reset(),
+            }
+        }
+
+        fn apply_add_backspace(self: *Engine, operation: AddBackspacePlan) !void {
+            switch (operation.operation) {
+                .add => try self.add_app_path(operation.character),
+                .backspace => try self.backspace(),
+            }
+        }
+
+        fn append_visible(self: *Engine, character: u16) !void {
+            try std.testing.expect(self.visible_length < self.visible_buffer.len);
+            self.visible_buffer[self.visible_length] = character;
+            self.visible_length += 1;
+        }
+
+        fn append_visible_slice(self: *Engine, characters: []const u16) !void {
+            try std.testing.expect(self.visible_length + characters.len <= self.visible_buffer.len);
+            for (characters) |character| {
+                self.visible_buffer[self.visible_length] = character;
+                self.visible_length += 1;
+            }
+        }
+
+        fn visible(self: *const Engine) []const u16 {
+            return self.visible_buffer[0..self.visible_length];
+        }
+
+        fn visible_word(self: *const Engine) []const u16 {
+            return self.visible_buffer[self.word_start..self.visible_length];
+        }
+
+        fn expect_reset_state(self: *Engine) !void {
+            try expectEqual(true, lex_buffer_empty(self.raw_pointer));
+            try expectEqual(false, lex_buffer_full(self.raw_pointer));
+            try expectEqual(false, lex_buffer_effective_full(self.raw_pointer));
+            try self.query_invariants();
+        }
+
+        fn query_invariants(self: *Engine) !void {
+            const buffer_empty = lex_buffer_empty(self.raw_pointer);
+            const buffer_full = lex_buffer_full(self.raw_pointer);
+            const buffer_effective_full = lex_buffer_effective_full(self.raw_pointer);
+
+            try expectEqual(buffer_empty, lex_buffer_empty(self.raw_pointer));
+            try expectEqual(buffer_full, lex_buffer_full(self.raw_pointer));
+            try expectEqual(buffer_effective_full, lex_buffer_effective_full(self.raw_pointer));
+
+            if (buffer_empty) {
+                try std.testing.expect(!buffer_full);
+                try std.testing.expect(!buffer_effective_full);
+            }
+
+            if (buffer_full) {
+                try std.testing.expect(buffer_effective_full);
+            }
+        }
+    };
+
+    fn choose_app_operation(smith: *Smith) AppOperation {
+        return smith.valueWeighted(AppOperation, &.{
+            .value(AppOperation, .add, 64),
+            .value(AppOperation, .backspace, 12),
+            .value(AppOperation, .reset, 4),
+            .value(AppOperation, .query, 2),
+            .value(AppOperation, .add_again, 18),
+        });
+    }
+
+    fn choose_mutating_operation(smith: *Smith) MutatingOperation {
+        return smith.valueWeighted(MutatingOperation, &.{
+            .value(MutatingOperation, .add, 70),
+            .value(MutatingOperation, .backspace, 20),
+            .value(MutatingOperation, .reset, 10),
+        });
+    }
+
+    fn choose_add_backspace_operation(smith: *Smith) AddBackspaceOperation {
+        return smith.valueWeighted(AddBackspaceOperation, &.{
+            .value(AddBackspaceOperation, .add, 75),
+            .value(AddBackspaceOperation, .backspace, 25),
+        });
+    }
+
+    fn choose_character(smith: *Smith) u8 {
+        return smith.valueWeighted(u8, &.{
+            .value(u8, 'A', 8),
+            .value(u8, 'a', 8),
+            .value(u8, 'E', 8),
+            .value(u8, 'e', 8),
+            .value(u8, 'O', 8),
+            .value(u8, 'o', 8),
+            .value(u8, 'U', 8),
+            .value(u8, 'u', 8),
+            .value(u8, 'I', 6),
+            .value(u8, 'i', 6),
+            .value(u8, 'Y', 6),
+            .value(u8, 'y', 6),
+            .value(u8, 'D', 8),
+            .value(u8, 'd', 8),
+            .value(u8, 'W', 10),
+            .value(u8, 'w', 10),
+            .value(u8, 'S', 8),
+            .value(u8, 's', 8),
+            .value(u8, 'F', 8),
+            .value(u8, 'f', 8),
+            .value(u8, 'R', 8),
+            .value(u8, 'r', 8),
+            .value(u8, 'X', 8),
+            .value(u8, 'x', 8),
+            .value(u8, 'J', 8),
+            .value(u8, 'j', 8),
+            .value(u8, 'Z', 8),
+            .value(u8, 'z', 8),
+            .value(u8, 'G', 5),
+            .value(u8, 'g', 5),
+            .value(u8, 'Q', 5),
+            .value(u8, 'q', 5),
+            .value(u8, 'C', 5),
+            .value(u8, 'c', 5),
+            .value(u8, 'M', 5),
+            .value(u8, 'm', 5),
+            .value(u8, 'N', 5),
+            .value(u8, 'n', 5),
+            .value(u8, 'P', 5),
+            .value(u8, 'p', 5),
+            .value(u8, 'T', 5),
+            .value(u8, 't', 5),
+            .rangeAtMost(u8, 'A', 'Z', 1),
+            .rangeAtMost(u8, 'a', 'z', 1),
+        });
+    }
+
+    fn expect_allowed_replacement(characters: []const u16) !void {
+        for (characters) |character| {
+            try std.testing.expect(is_allowed_replacement_character(character));
+        }
+    }
+
+    fn expect_replacement_tail_unchanged(characters: []const u16) !void {
+        for (characters) |character| {
+            try expectEqual(@as(u16, replacement_sentinel), character);
+        }
+    }
+
+    fn is_allowed_replacement_character(character: u16) bool {
+        if ((character >= 'A' and character <= 'Z') or (character >= 'a' and character <= 'z')) {
+            return true;
+        }
+
+        return switch (character) {
+            0x00C0,
+            0x00C1,
+            0x00C2,
+            0x00C3,
+            0x00C8,
+            0x00C9,
+            0x00CA,
+            0x00CC,
+            0x00CD,
+            0x00D2,
+            0x00D3,
+            0x00D4,
+            0x00D5,
+            0x00D9,
+            0x00DA,
+            0x00DD,
+            0x00E0,
+            0x00E1,
+            0x00E2,
+            0x00E3,
+            0x00E8,
+            0x00E9,
+            0x00EA,
+            0x00EC,
+            0x00ED,
+            0x00F2,
+            0x00F3,
+            0x00F4,
+            0x00F5,
+            0x00F9,
+            0x00FA,
+            0x00FD,
+            0x0102,
+            0x0103,
+            0x0110,
+            0x0111,
+            0x0128,
+            0x0129,
+            0x0168,
+            0x0169,
+            0x01A0,
+            0x01A1,
+            0x01AF,
+            0x01B0,
+            0x1EA0,
+            0x1EA1,
+            0x1EA2,
+            0x1EA3,
+            0x1EA4,
+            0x1EA5,
+            0x1EA6,
+            0x1EA7,
+            0x1EA8,
+            0x1EA9,
+            0x1EAA,
+            0x1EAB,
+            0x1EAC,
+            0x1EAD,
+            0x1EAE,
+            0x1EAF,
+            0x1EB0,
+            0x1EB1,
+            0x1EB2,
+            0x1EB3,
+            0x1EB4,
+            0x1EB5,
+            0x1EB6,
+            0x1EB7,
+            0x1EB8,
+            0x1EB9,
+            0x1EBA,
+            0x1EBB,
+            0x1EBC,
+            0x1EBD,
+            0x1EBE,
+            0x1EBF,
+            0x1EC0,
+            0x1EC1,
+            0x1EC2,
+            0x1EC3,
+            0x1EC4,
+            0x1EC5,
+            0x1EC6,
+            0x1EC7,
+            0x1EC8,
+            0x1EC9,
+            0x1ECA,
+            0x1ECB,
+            0x1ECC,
+            0x1ECD,
+            0x1ECE,
+            0x1ECF,
+            0x1ED0,
+            0x1ED1,
+            0x1ED2,
+            0x1ED3,
+            0x1ED4,
+            0x1ED5,
+            0x1ED6,
+            0x1ED7,
+            0x1ED8,
+            0x1ED9,
+            0x1EDA,
+            0x1EDB,
+            0x1EDC,
+            0x1EDD,
+            0x1EDE,
+            0x1EDF,
+            0x1EE0,
+            0x1EE1,
+            0x1EE2,
+            0x1EE3,
+            0x1EE4,
+            0x1EE5,
+            0x1EE6,
+            0x1EE7,
+            0x1EE8,
+            0x1EE9,
+            0x1EEA,
+            0x1EEB,
+            0x1EEC,
+            0x1EED,
+            0x1EEE,
+            0x1EEF,
+            0x1EF0,
+            0x1EF1,
+            0x1EF2,
+            0x1EF3,
+            0x1EF4,
+            0x1EF5,
+            0x1EF6,
+            0x1EF7,
+            0x1EF8,
+            0x1EF9,
+            => true,
+            else => false,
+        };
+    }
+};
+
+test "expect public ABI does not apply tone to 'QU' before trailing consonant" {
+    var engine = try FuzzHarness.Engine.init();
+    defer engine.deinit();
+
+    // Regression for a fuzz-found crash: the old behavior toned U in `qun` on `f`; after
+    // backspace exposed `qù`, the next tone trigger tried to retone exact `QU`.
+    try engine.add_app_path('q');
+    try engine.add_app_path('u');
+    try engine.add_app_path('n');
+    try engine.add_app_path('f');
+    try engine.backspace();
+    try engine.add_app_path('s');
+
+    try std.testing.expectEqualSlices(u16, &.{ 'q', 'u', 'n', 's' }, engine.visible());
+}
+
+test "fuzz public ABI app-flow operation streams" {
+    const Harness = struct {
+        fn fuzz_one(_: void, smith: *std.testing.Smith) !void {
+            var engine = try FuzzHarness.Engine.init();
+            defer engine.deinit();
+
+            const operation_count = smith.valueRangeAtMost(u8, 0, FuzzHarness.app_flow_operation_count_max);
+            for (0..operation_count) |_| {
+                const operation = FuzzHarness.choose_app_operation(smith);
+                switch (operation) {
+                    .add, .add_again => try engine.add_app_path(FuzzHarness.choose_character(smith)),
+                    .backspace => try engine.backspace(),
+                    .reset => try engine.reset(),
+                    .query => try engine.query_invariants(),
+                }
+            }
+        }
+    };
+
+    const corpus = [_][]const u8{
+        // Empty smoke.
+        FuzzHarness.encode_app_flow_corpus(&.{}),
+        // Literal 'f' at word start.
+        FuzzHarness.encode_app_flow_corpus(&.{.{ .add = 'f' }}),
+        // Literal 'j' at word start.
+        FuzzHarness.encode_app_flow_corpus(&.{.{ .add = 'j' }}),
+        // Literal 'w' at word start.
+        FuzzHarness.encode_app_flow_corpus(&.{.{ .add = 'w' }}),
+        // Literal 'z' at word start.
+        FuzzHarness.encode_app_flow_corpus(&.{.{ .add = 'z' }}),
+        // Circumflex apply: 'aa' -> 'â'.
+        FuzzHarness.encode_app_flow_corpus(&.{ .{ .add = 'a' }, .{ .add = 'a' } }),
+        // Breve apply: 'aw' -> 'ă'.
+        FuzzHarness.encode_app_flow_corpus(&.{ .{ .add = 'a' }, .{ .add = 'w' } }),
+        // Horn apply: 'ow' -> 'ơ'.
+        FuzzHarness.encode_app_flow_corpus(&.{ .{ .add = 'o' }, .{ .add = 'w' } }),
+        // Stroke apply: 'dd' -> 'đ'.
+        FuzzHarness.encode_app_flow_corpus(&.{ .{ .add = 'd' }, .{ .add = 'd' } }),
+        // Circumflex cancel and literal tail: 'aaa' -> 'aaa'.
+        FuzzHarness.encode_app_flow_corpus(&.{ .{ .add = 'a' }, .{ .add = 'a' }, .{ .add = 'a' } }),
+        // Autofill family: 'nuowc' -> 'nươc'.
+        FuzzHarness.encode_app_flow_corpus(&.{ .{ .add = 'n' }, .{ .add = 'u' }, .{ .add = 'o' }, .{ .add = 'w' }, .{ .add = 'c' } }),
+        // QU tone exception family, the fuzz-found crash sequence: 'qunf', backspace, 's'.
+        FuzzHarness.encode_app_flow_corpus(&.{ .{ .add = 'q' }, .{ .add = 'u' }, .{ .add = 'n' }, .{ .add = 'f' }, .backspace, .{ .add = 's' } }),
+        // GI tone placement family: 'gias' -> 'giá'.
+        FuzzHarness.encode_app_flow_corpus(&.{ .{ .add = 'g' }, .{ .add = 'i' }, .{ .add = 'a' }, .{ .add = 's' } }),
+        // OA tone placement family: 'oas' -> 'óa'.
+        FuzzHarness.encode_app_flow_corpus(&.{ .{ .add = 'o' }, .{ .add = 'a' }, .{ .add = 's' } }),
+        // Reset before suffix: 'af' -> 'à', new word, 'as' -> 'á'.
+        FuzzHarness.encode_app_flow_corpus(&.{ .{ .add = 'a' }, .{ .add = 'f' }, .reset, .{ .add = 'a' }, .{ .add = 's' } }),
+        // Backspace past the literal point resumes Vietnamese input: 'aaa' -> 'aa' literal tail,
+        // erase back to empty, then 'aa' -> 'â' again.
+        FuzzHarness.encode_app_flow_corpus(&.{ .{ .add = 'a' }, .{ .add = 'a' }, .{ .add = 'a' }, .backspace, .backspace, .{ .add = 'a' }, .{ .add = 'a' } }),
+        // Query and add_again coverage: 'a', query invariants, 'a' again -> 'â'.
+        FuzzHarness.encode_app_flow_corpus(&.{ .{ .add = 'a' }, .query, .{ .add_again = 'a' } }),
+    };
+
+    try std.testing.fuzz({}, Harness.fuzz_one, .{ .corpus = &corpus });
+}
+
+test "fuzz public ABI full-buffer boundaries" {
+    const Harness = struct {
+        fn fuzz_one(_: void, smith: *std.testing.Smith) !void {
+            var engine = try FuzzHarness.Engine.init();
+            defer engine.deinit();
+
+            var header: [1]u8 = undefined;
+            smith.bytes(&header);
+            const target_count: usize = header[0];
+
+            for (0..target_count) |i| {
+                try engine.add_app_path('B');
+                const count = i + 1;
+
+                if (count == 15) {
+                    try expectEqual(false, lex_buffer_effective_full(engine.raw_pointer));
+                    try expectEqual(false, lex_buffer_full(engine.raw_pointer));
+                } else if (count == 16) {
+                    try expectEqual(true, lex_buffer_effective_full(engine.raw_pointer));
+                    try expectEqual(false, lex_buffer_full(engine.raw_pointer));
+                } else if (count == maxInt(u8)) {
+                    try expectEqual(true, lex_buffer_effective_full(engine.raw_pointer));
+                    try expectEqual(true, lex_buffer_full(engine.raw_pointer));
+                    try engine.reset();
+                }
+            }
+        }
+    };
+
+    const corpus = [_][]const u8{
+        &.{0},
+        &.{15},
+        &.{16},
+        &.{17},
+        &.{254},
+        &.{255},
+    };
+
+    try std.testing.fuzz({}, Harness.fuzz_one, .{ .corpus = &corpus });
+}
+
+test "fuzz public ABI metamorphic equivalences" {
+    const Harness = struct {
+        const max_operation_count = FuzzHarness.metamorphic_operation_count_max;
+
+        fn fuzz_one(_: void, smith: *std.testing.Smith) !void {
+            try query_insertion_equivalence(smith);
+            try reset_suffix_equivalence(smith);
+            try backspace_to_empty_equivalence(smith);
+        }
+
+        fn query_insertion_equivalence(smith: *std.testing.Smith) !void {
+            var operations: [max_operation_count]FuzzHarness.PlannedOperation = undefined;
+            const operation_count = smith.valueRangeAtMost(u8, 0, max_operation_count);
+            for (operations[0..operation_count]) |*operation| {
+                operation.* = .{
+                    .operation = FuzzHarness.choose_mutating_operation(smith),
+                    .character = FuzzHarness.choose_character(smith),
+                };
+            }
+
+            var normal = try FuzzHarness.Engine.init();
+            defer normal.deinit();
+            var queried = try FuzzHarness.Engine.init();
+            defer queried.deinit();
+
+            for (operations[0..operation_count]) |operation| {
+                try normal.apply_mutating(operation);
+
+                try queried.query_invariants();
+                try queried.apply_mutating(operation);
+                try queried.query_invariants();
+            }
+
+            try std.testing.expectEqualSlices(u16, normal.visible(), queried.visible());
+        }
+
+        fn reset_suffix_equivalence(smith: *std.testing.Smith) !void {
+            var prefix: [max_operation_count]FuzzHarness.AddBackspacePlan = undefined;
+            var suffix: [max_operation_count]FuzzHarness.AddBackspacePlan = undefined;
+            const prefix_count = smith.valueRangeAtMost(u8, 0, max_operation_count);
+            const suffix_count = smith.valueRangeAtMost(u8, 0, max_operation_count);
+
+            for (prefix[0..prefix_count]) |*operation| {
+                operation.* = .{
+                    .operation = FuzzHarness.choose_add_backspace_operation(smith),
+                    .character = FuzzHarness.choose_character(smith),
+                };
+            }
+            for (suffix[0..suffix_count]) |*operation| {
+                operation.* = .{
+                    .operation = FuzzHarness.choose_add_backspace_operation(smith),
+                    .character = FuzzHarness.choose_character(smith),
+                };
+            }
+
+            var prefixed = try FuzzHarness.Engine.init();
+            defer prefixed.deinit();
+            var fresh = try FuzzHarness.Engine.init();
+            defer fresh.deinit();
+
+            for (prefix[0..prefix_count]) |operation| {
+                try prefixed.apply_add_backspace(operation);
+            }
+            try prefixed.reset();
+
+            for (suffix[0..suffix_count]) |operation| {
+                try prefixed.apply_add_backspace(operation);
+                try fresh.apply_add_backspace(operation);
+            }
+
+            try std.testing.expectEqualSlices(u16, prefixed.visible_word(), fresh.visible());
+        }
+
+        fn backspace_to_empty_equivalence(smith: *std.testing.Smith) !void {
+            var erased = try FuzzHarness.Engine.init();
+            defer erased.deinit();
+            var fresh = try FuzzHarness.Engine.init();
+            defer fresh.deinit();
+
+            const add_count = smith.valueRangeAtMost(u8, FuzzHarness.erase_add_count_min, FuzzHarness.erase_add_count_max);
+            for (0..add_count) |_| {
+                try erased.add_app_path(FuzzHarness.choose_character(smith));
+            }
+            while (!lex_buffer_empty(erased.raw_pointer)) {
+                try erased.backspace();
+            }
+
+            const c = FuzzHarness.choose_character(smith);
+            try erased.add_app_path(c);
+            try fresh.add_app_path(c);
+
+            try std.testing.expectEqualSlices(u16, erased.visible(), fresh.visible());
+        }
+    };
+
+    const corpus = [_][]const u8{
+        // Minimal smoke: no mutating operations, erase a single 'a'.
+        FuzzHarness.encode_metamorphic_corpus(&.{}, &.{}, &.{}, "a", 'a'),
+        // Circumflex and backspace family.
+        FuzzHarness.encode_metamorphic_corpus(
+            &.{
+                .{ .operation = .add, .character = 'a' },
+                .{ .operation = .add, .character = 'a' },
+                .{ .operation = .backspace, .character = 'a' },
+            },
+            &.{
+                .{ .operation = .add, .character = 'a' },
+                .{ .operation = .add, .character = 'a' },
+            },
+            &.{
+                .{ .operation = .add, .character = 'a' },
+                .{ .operation = .add, .character = 's' },
+            },
+            "aa",
+            'b',
+        ),
+        // Autofill family: 'nuowc' -> 'nươc'.
+        FuzzHarness.encode_metamorphic_corpus(
+            &.{
+                .{ .operation = .add, .character = 'n' },
+                .{ .operation = .add, .character = 'u' },
+                .{ .operation = .add, .character = 'o' },
+                .{ .operation = .add, .character = 'w' },
+                .{ .operation = .add, .character = 'c' },
+            },
+            &.{
+                .{ .operation = .add, .character = 'u' },
+                .{ .operation = .add, .character = 'w' },
+            },
+            &.{
+                .{ .operation = .add, .character = 'n' },
+                .{ .operation = .add, .character = 'u' },
+                .{ .operation = .add, .character = 'o' },
+                .{ .operation = .add, .character = 'w' },
+                .{ .operation = .add, .character = 'c' },
+            },
+            "nuowc",
+            'w',
+        ),
+        // QU tone exception family with the fuzz-found crash sequence and a reset in the
+        // mutating stream.
+        FuzzHarness.encode_metamorphic_corpus(
+            &.{
+                .{ .operation = .add, .character = 'q' },
+                .{ .operation = .add, .character = 'u' },
+                .{ .operation = .add, .character = 'n' },
+                .{ .operation = .add, .character = 'f' },
+                .{ .operation = .backspace, .character = 'a' },
+                .{ .operation = .add, .character = 's' },
+                .{ .operation = .reset, .character = 'a' },
+                .{ .operation = .add, .character = 'q' },
+                .{ .operation = .add, .character = 'u' },
+                .{ .operation = .add, .character = 'a' },
+                .{ .operation = .add, .character = 'f' },
+            },
+            &.{
+                .{ .operation = .add, .character = 'q' },
+                .{ .operation = .add, .character = 'u' },
+            },
+            &.{
+                .{ .operation = .add, .character = 'q' },
+                .{ .operation = .add, .character = 'u' },
+                .{ .operation = .add, .character = 'a' },
+                .{ .operation = .add, .character = 'f' },
+            },
+            "qunf",
+            'q',
+        ),
+    };
+
+    try std.testing.fuzz({}, Harness.fuzz_one, .{ .corpus = &corpus });
 }
