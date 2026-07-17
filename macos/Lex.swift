@@ -8,10 +8,6 @@ private let toggle_input_mode_hot_key_id = EventHotKeyID(
     signature: OSType(0x4C455821),
     id: 1
 )
-private let toggle_keyboard_lock_hot_key_id = EventHotKeyID(
-    signature: OSType(0x4C455821),
-    id: 2
-)
 // Tag: LEX!
 // Use for identify Lex's synthetic event when processing event tap.
 private let synthetic_event_source_user_data: Int64 = 0x4C455821
@@ -157,7 +153,6 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
     private var lock_keyboard_item: NSMenuItem?
     private var hot_key_event_handler_ref: EventHandlerRef?
     private var toggle_input_mode_hot_key_ref: EventHotKeyRef?
-    private var toggle_keyboard_lock_hot_key_ref: EventHotKeyRef?
     private var toggle_input_mode_sound: NSSound?
 
     private var event_tap: CFMachPort?
@@ -224,11 +219,6 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
                     DispatchQueue.main.async {
                         app_delegate.toggle_input_mode()
                     }
-                } else if hot_key_id.signature == toggle_keyboard_lock_hot_key_id.signature &&
-                        hot_key_id.id == toggle_keyboard_lock_hot_key_id.id {
-                    DispatchQueue.main.async {
-                        app_delegate.toggle_keyboard_lock()
-                    }
                 }
                 return noErr
             },
@@ -247,33 +237,12 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
             0,
             &self.toggle_input_mode_hot_key_ref
         )
-
-        guard self.event_tap != nil else {
-            return
-        }
-        let keyboard_lock_id = toggle_keyboard_lock_hot_key_id
-        let status = RegisterEventHotKey(
-            UInt32(kVK_ANSI_L),
-            UInt32(controlKey | optionKey | cmdKey),
-            keyboard_lock_id,
-            GetApplicationEventTarget(),
-            0,
-            &self.toggle_keyboard_lock_hot_key_ref
-        )
-        if status != noErr {
-            print("Failed to register keyboard lock hot key: \(status)")
-        }
     }
 
     private func unregister_hot_keys() {
         if let toggle_input_mode_hot_key_ref = self.toggle_input_mode_hot_key_ref {
             UnregisterEventHotKey(toggle_input_mode_hot_key_ref)
             self.toggle_input_mode_hot_key_ref = nil
-        }
-
-        if let toggle_keyboard_lock_hot_key_ref = self.toggle_keyboard_lock_hot_key_ref {
-            UnregisterEventHotKey(toggle_keyboard_lock_hot_key_ref)
-            self.toggle_keyboard_lock_hot_key_ref = nil
         }
 
         if let hot_key_event_handler_ref = self.hot_key_event_handler_ref {
@@ -297,7 +266,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
         self.toggle_input_mode_sound?.play()
     }
 
-    private func toggle_keyboard_lock() {
+    func toggle_keyboard_lock() {
         guard self.keyboard_locked || self.event_tap != nil else {
             return
         }
@@ -531,7 +500,26 @@ private func event_tap_callback(
         case .keyDown:
             // Handle key down.
 
+            // Keep the shortcut blocked while locked; use the menu to unlock.
             if app_delegate.is_keyboard_locked() {
+                return nil
+            }
+
+            // VoiceOver can reserve this chord, so handle it directly from the event tap.
+            let shortcut_modifier_mask: CGEventFlags = [
+                .maskCommand,
+                .maskAlternate,
+                .maskControl,
+                .maskShift,
+            ]
+            let keyboard_lock_modifiers: CGEventFlags = [
+                .maskCommand,
+                .maskAlternate,
+                .maskControl,
+            ]
+            if event.getIntegerValueField(.keyboardEventKeycode) == Int64(kVK_ANSI_L) &&
+                    event.flags.intersection(shortcut_modifier_mask) == keyboard_lock_modifiers {
+                app_delegate.toggle_keyboard_lock()
                 return nil
             }
 
