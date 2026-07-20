@@ -505,7 +505,7 @@ private func event_tap_callback(
                 return nil
             }
 
-            // VoiceOver can reserve this chord, so handle it directly from the event tap.
+            // Match the logical key so the shortcut works with non-ANSI keyboard layouts.
             let shortcut_modifier_mask: CGEventFlags = [
                 .maskCommand,
                 .maskAlternate,
@@ -517,8 +517,9 @@ private func event_tap_callback(
                 .maskAlternate,
                 .maskControl,
             ]
-            if event.getIntegerValueField(.keyboardEventKeycode) == Int64(kVK_ANSI_L) &&
-                    event.flags.intersection(shortcut_modifier_mask) == keyboard_lock_modifiers {
+            let characters = NSEvent(cgEvent: event)?.charactersIgnoringModifiers?.lowercased()
+            if event.flags.intersection(shortcut_modifier_mask) == keyboard_lock_modifiers &&
+                    characters == "l" {
                 app_delegate.toggle_keyboard_lock()
                 return nil
             }
