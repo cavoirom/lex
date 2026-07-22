@@ -71,7 +71,7 @@ Yêu cầu:
 Biên dịch liblex.a:
 
 ```
-zig build-obj -target aarch64-macos.26.0 -O ReleaseSafe src/lex.zig -femit-bin=liblex.o \
+zig build-obj -target aarch64-macos.26.0 -O ReleaseFast src/lex.zig -femit-bin=liblex.o \
     && xcrun libtool -static -o liblex.a liblex.o
 ```
 

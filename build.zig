@@ -2,8 +2,8 @@ const std = @import("std");
 const OptimizeMode = std.builtin.OptimizeMode;
 
 pub fn build(b: *std.Build) void {
-    // Production builds always use ReleaseSafe (see AGENTS.md).
-    const optimize: OptimizeMode = .ReleaseSafe;
+    // Production builds always use ReleaseFast for maximum runtime performance (see AGENTS.md).
+    const optimize: OptimizeMode = .ReleaseFast;
 
     const host = b.graph.host;
     const host_arch = host.result.cpu.arch;
@@ -33,8 +33,8 @@ pub fn build(b: *std.Build) void {
         .root_module = b.createModule(.{
             .root_source_file = b.path("src/lex.zig"),
             .target = host,
-            // Debug build for tests to surface issues (extra safety checks,
-            // better diagnostics) earlier than the ReleaseSafe production build.
+            // Debug builds retain safety checks and diagnostics that the
+            // performance-focused ReleaseFast production build omits.
             .optimize = .Debug,
             // Zig 0.16.0's fuzz test runner does not compile with Debug error tracing enabled.
             .error_tracing = false,

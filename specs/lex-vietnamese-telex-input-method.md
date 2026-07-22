@@ -223,3 +223,10 @@ The process of applying tone to a word go through many steps:
   - Otherwise, put on first vowel.
 - Preserve case and diacritic on existing vowels.
 - Could not put tone for other cases.
+
+## Lex macOS application architecture
+
+### Keyboard
+
+The application is designed to work on US ANSI keyboard, with default keymap or Dvorak configured on macOS.
+

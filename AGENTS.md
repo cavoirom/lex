@@ -14,6 +14,8 @@ Instruction for coding agents.
 
 - `ripgrep` is not installed in the working environment.
 - _busybox_ is available instead of _coreutils_.
+- `deno` is available for formatting outside Zig code.
+- `zig` v0.16.0 is available.
 
 ## General coding conventions
 
@@ -48,4 +50,4 @@ Instruction for coding agents.
   - Every `State.add` action must decide the value for `State.buffer_modification_index` because the
     caller will need it to calculate synthetic backspaces.
   - Rewrite C header `lex.h` as a part of the edit for `lex.zig` when we changed the C ABI.
-- On production build, always use `ReleaseSafe`.
+- On production build, always use `ReleaseFast` for maximum runtime performance.
