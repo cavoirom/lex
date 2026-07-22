@@ -204,12 +204,12 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
         let handler_status = InstallEventHandler(
             GetApplicationEventTarget(),
             { _, event, userData -> OSStatus in
-                guard let userData else {
+                guard let event, let userData else {
                     return OSStatus(eventNotHandledErr)
                 }
                 var hot_key_id = EventHotKeyID()
-                GetEventParameter(
-                    event!,
+                let parameter_status = GetEventParameter(
+                    event,
                     EventParamName(kEventParamDirectObject),
                     EventParamType(typeEventHotKeyID),
                     nil,
@@ -217,6 +217,9 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
                     nil,
                     &hot_key_id
                 )
+                guard parameter_status == noErr else {
+                    return OSStatus(eventNotHandledErr)
+                }
                 let app_delegate = Unmanaged<AppDelegate>
                     .fromOpaque(userData)
                     .takeUnretainedValue()
@@ -225,13 +228,15 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
                     DispatchQueue.main.async {
                         app_delegate.toggle_input_mode()
                     }
+                    return noErr
                 } else if hot_key_id.signature == toggle_keyboard_lock_hot_key_id.signature &&
                         hot_key_id.id == toggle_keyboard_lock_hot_key_id.id {
                     DispatchQueue.main.async {
                         app_delegate.toggle_keyboard_lock()
                     }
+                    return noErr
                 }
-                return noErr
+                return OSStatus(eventNotHandledErr)
             },
             1,
             &event_type,
@@ -590,25 +595,33 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
         return self.keyboard_locked
     }
 
-    func matches_keyboard_lock_hot_key(_ event: CGEvent) -> Bool {
+    func registered_keyboard_lock_key_code() -> CGKeyCode? {
         guard self.toggle_keyboard_lock_hot_key_ref != nil,
               let key_code = self.toggle_keyboard_lock_key_code else {
-            return false
+            return nil
         }
-        let shortcut_modifier_mask: CGEventFlags = [
-            .maskCommand,
-            .maskAlternate,
-            .maskControl,
-            .maskShift,
-        ]
-        let keyboard_lock_modifiers: CGEventFlags = [
-            .maskCommand,
-            .maskAlternate,
-            .maskControl,
-        ]
-        return event.getIntegerValueField(.keyboardEventKeycode) == Int64(key_code) &&
-            event.flags.intersection(shortcut_modifier_mask) == keyboard_lock_modifiers
+        return key_code
     }
+}
+
+private func matches_keyboard_lock_hot_key(
+    key_code: CGKeyCode,
+    event_key_code: Int64,
+    event_flags: CGEventFlags
+) -> Bool {
+    let shortcut_modifier_mask: CGEventFlags = [
+        .maskCommand,
+        .maskAlternate,
+        .maskControl,
+        .maskShift,
+    ]
+    let keyboard_lock_modifiers: CGEventFlags = [
+        .maskCommand,
+        .maskAlternate,
+        .maskControl,
+    ]
+    return event_key_code == Int64(key_code) &&
+        event_flags.intersection(shortcut_modifier_mask) == keyboard_lock_modifiers
 }
 
 private func event_tap_callback(
@@ -650,7 +663,12 @@ private func event_tap_callback(
             // Handle key down.
 
             // Let the registered hot key handler lock or unlock the keyboard.
-            if app_delegate.matches_keyboard_lock_hot_key(event) {
+            if let key_code = app_delegate.registered_keyboard_lock_key_code(),
+                    matches_keyboard_lock_hot_key(
+                        key_code: key_code,
+                        event_key_code: event.getIntegerValueField(.keyboardEventKeycode),
+                        event_flags: event.flags
+                    ) {
                 return Unmanaged.passUnretained(event)
             }
 
