@@ -28,7 +28,7 @@ trách nhiệm cho toàn bộ chương trình.
 - [x] Chỉ hiện biểu tượng trên thanh Menu của macOS.
 - [x] Khởi động khi đăng nhập.
 - [ ] Phím tắt để xóa trạng thái gõ Tiếng Việt: `Ctrl (left)`.
-- [ ] Khóa bàn phím.
+- [x] Khóa bàn phím bằng lựa chọn trên thanh Menu hoặc tổ hợp phím: `Ctrl + Opt + Cmd + L`.
 
 Lưu ý: chương trình được thiết lập mặc định theo những chức năng trên và không thể tùy chỉnh. Người
 dùng có thể tắt chức năng _Khởi động khi đăng nhập_ trong menu (macOS 26): System Settings \>
@@ -55,7 +55,7 @@ Khởi động Lex sau khi đã cấp quyền.
   - [x] Khởi động khi đăng nhập.
 - [ ] 0.2.x
   - [ ] Phím tắt để xóa trạng thái gõ Tiếng Việt: `Ctrl (left)`.
-  - [ ] Khóa bàn phím.
+  - [x] Khóa bàn phím bằng lựa chọn trên thanh Menu hoặc tổ hợp phím: `Ctrl + Opt + Cmd + L`.
 - [ ] 0.3.x
   - [ ] Hoàn thiện cơ chế kiểm thử.
 - [ ] 1.0.x - tất cả chức năng đã hoàn thành.

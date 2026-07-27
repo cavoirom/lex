@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## 0.2.0
+
+### Added
+
+- Toggle keyboard lock by shortcut: `Ctrl + Opt + Cmd + L` or selection on MenuBar.
+
 ## 0.1.2
 
 ### Fixed
