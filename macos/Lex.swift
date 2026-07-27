@@ -427,16 +427,16 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         if self.keyboard_locked {
             button.image = self.keyboard_locked_image
-            button.toolTip = "Lex — Keyboard locked"
-            button.setAccessibilityLabel("Lex — Keyboard locked")
+            button.toolTip = "Lex - Keyboard locked"
+            button.setAccessibilityLabel("Lex - Keyboard locked")
         } else if self.input_mode == .telex {
             button.image = self.telex_image
-            button.toolTip = "Lex — Telex input"
-            button.setAccessibilityLabel("Lex — Telex input")
+            button.toolTip = "Lex - Telex input"
+            button.setAccessibilityLabel("Lex - Telex input")
         } else {
             button.image = self.literal_image
-            button.toolTip = "Lex — Literal input"
-            button.setAccessibilityLabel("Lex — Literal input")
+            button.toolTip = "Lex - Literal input"
+            button.setAccessibilityLabel("Lex - Literal input")
         }
     }
 
