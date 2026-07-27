@@ -122,34 +122,48 @@ private final class LexEngine {
 private final class AppDelegate: NSObject, NSApplicationDelegate {
     fileprivate let engine = LexEngine()
     private var status_item: NSStatusItem?
-    private let telex_image: NSImage? = {
-        // TODO: should remove optional.
-        let image = NSImage(
+    private let telex_image: NSImage = {
+        guard let image = NSImage(
             systemSymbolName: "pencil",
-            accessibilityDescription: "Lex"
-        )
-        image?.isTemplate = true
+            accessibilityDescription: "Lex - Telex input"
+        ) else {
+            fatalError("Missing required system symbol: pencil")
+        }
+        image.isTemplate = true
         return image
     }()
-    private let literal_image: NSImage? = {
-        // TODO: should remove optional.
-        let image = NSImage(
+    private let literal_image: NSImage = {
+        guard let image = NSImage(
             systemSymbolName: "pencil.slash",
-            accessibilityDescription: "Lex"
-        )
-        image?.isTemplate = true
+            accessibilityDescription: "Lex - Literal input"
+        ) else {
+            fatalError("Missing required system symbol: pencil.slash")
+        }
+        image.isTemplate = true
         return image
     }()
-    private let keyboard_locked_image: NSImage? = {
-        let image = NSImage(
+    private let keyboard_locked_image: NSImage = {
+        guard let image = NSImage(
             systemSymbolName: "lock.fill",
-            accessibilityDescription: "Keyboard locked"
-        )
-        image?.isTemplate = true
+            accessibilityDescription: "Lex - Keyboard locked"
+        ) else {
+            fatalError("Missing required system symbol: lock.fill")
+        }
+        image.isTemplate = true
         return image
     }()
-    private let telex_sound: NSSound? = NSSound(named: "Pop")
-    private let literal_sound: NSSound? = NSSound(named: "Tink")
+    private let telex_sound: NSSound = {
+        guard let sound = NSSound(named: "Pop") else {
+            fatalError("Missing required system sound: Pop")
+        }
+        return sound
+    }()
+    private let literal_sound: NSSound = {
+        guard let sound = NSSound(named: "Tink") else {
+            fatalError("Missing required system sound: Tink")
+        }
+        return sound
+    }()
 
     private var signal_sources: [DispatchSourceSignal] = []
     private var input_mode: InputMode = .telex
@@ -159,7 +173,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
     private var toggle_input_mode_hot_key_ref: EventHotKeyRef?
     private var toggle_keyboard_lock_hot_key_ref: EventHotKeyRef?
     private var toggle_keyboard_lock_key_code: CGKeyCode?
-    private var toggle_input_mode_sound: NSSound?
+    private lazy var toggle_input_mode_sound: NSSound = self.telex_sound
 
     private var event_tap: CFMachPort?
     private var event_tap_run_loop_source: CFRunLoopSource?
@@ -395,9 +409,9 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
         // Reset state.
         self.engine.reset()
         // Play sound when toggling mode.
-        self.toggle_input_mode_sound?.stop()
+        self.toggle_input_mode_sound.stop()
         self.toggle_input_mode_sound = self.input_mode == .telex ? self.telex_sound : self.literal_sound
-        self.toggle_input_mode_sound?.play()
+        self.toggle_input_mode_sound.play()
     }
 
     private func toggle_keyboard_lock() {
