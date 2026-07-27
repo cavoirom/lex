@@ -120,7 +120,7 @@ private final class LexEngine {
 }
 
 private final class AppDelegate: NSObject, NSApplicationDelegate {
-    fileprivate let engine = LexEngine()
+    let engine = LexEngine()
     private var status_item: NSStatusItem?
     private let telex_image: NSImage = {
         guard let image = NSImage(
@@ -169,8 +169,9 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
     private var input_mode: InputMode = .telex
     private var keyboard_locked = false
     private var lock_keyboard_item: NSMenuItem?
-    private var hot_key_event_handler_ref: EventHandlerRef?
+    private var toggle_input_mode_hot_key_event_handler_ref: EventHandlerRef?
     private var toggle_input_mode_hot_key_ref: EventHotKeyRef?
+    private var toggle_keyboard_lock_hot_key_event_handler_ref: EventHandlerRef?
     private var toggle_keyboard_lock_hot_key_ref: EventHotKeyRef?
     private var toggle_keyboard_lock_key_code: CGKeyCode?
     private lazy var toggle_input_mode_sound: NSSound = self.telex_sound
@@ -187,12 +188,14 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
         self.initialize_status_item()
         self.initialize_synthetic_event_source()
         self.start_event_tap()
-        self.register_hot_keys()
+        self.register_input_mode_hot_key()
+        self.register_keyboard_lock_hot_key()
     }
     
     func applicationWillTerminate(_ notification: Notification) {
         print("Shutting down...")
-        self.unregister_hot_keys()
+        self.unregister_input_mode_hot_key()
+        self.unregister_keyboard_lock_hot_key()
         self.stop_event_tap()
         self.destroy_synthetic_event_source()
         self.destroy_status_item()
@@ -209,7 +212,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
         self.signal_sources.append(source)
     }
 
-    private func register_hot_keys() {
+    private func register_input_mode_hot_key() {
         let self_pointer = Unmanaged.passUnretained(self).toOpaque()
         var event_type = EventTypeSpec(
             eventClass: OSType(kEventClassKeyboard),
@@ -217,48 +220,14 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
         )
         let handler_status = InstallEventHandler(
             GetApplicationEventTarget(),
-            { _, event, userData -> OSStatus in
-                guard let event, let userData else {
-                    return OSStatus(eventNotHandledErr)
-                }
-                var hot_key_id = EventHotKeyID()
-                let parameter_status = GetEventParameter(
-                    event,
-                    EventParamName(kEventParamDirectObject),
-                    EventParamType(typeEventHotKeyID),
-                    nil,
-                    MemoryLayout<EventHotKeyID>.size,
-                    nil,
-                    &hot_key_id
-                )
-                guard parameter_status == noErr else {
-                    return OSStatus(eventNotHandledErr)
-                }
-                let app_delegate = Unmanaged<AppDelegate>
-                    .fromOpaque(userData)
-                    .takeUnretainedValue()
-                if hot_key_id.signature == toggle_input_mode_hot_key_id.signature &&
-                        hot_key_id.id == toggle_input_mode_hot_key_id.id {
-                    DispatchQueue.main.async {
-                        app_delegate.toggle_input_mode()
-                    }
-                    return noErr
-                } else if hot_key_id.signature == toggle_keyboard_lock_hot_key_id.signature &&
-                        hot_key_id.id == toggle_keyboard_lock_hot_key_id.id {
-                    DispatchQueue.main.async {
-                        app_delegate.toggle_keyboard_lock()
-                    }
-                    return noErr
-                }
-                return OSStatus(eventNotHandledErr)
-            },
+            handle_input_mode_hot_key,
             1,
             &event_type,
             self_pointer,
-            &self.hot_key_event_handler_ref
+            &self.toggle_input_mode_hot_key_event_handler_ref
         )
         guard handler_status == noErr else {
-            print("Failed to install hot key event handler: \(handler_status)")
+            print("Failed to install input mode hot key event handler: \(handler_status)")
             return
         }
 
@@ -274,38 +243,49 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
         if input_mode_status != noErr {
             print("Failed to register input mode hot key: \(input_mode_status)")
         }
-
-        self.register_keyboard_lock_hot_key()
-        DistributedNotificationCenter.default().addObserver(
-            self,
-            selector: #selector(keyboard_input_source_changed(_:)),
-            name: Notification.Name(kTISNotifySelectedKeyboardInputSourceChanged as String),
-            object: nil,
-            suspensionBehavior: .deliverImmediately
-        )
     }
 
-    private func unregister_hot_keys() {
-        DistributedNotificationCenter.default().removeObserver(
-            self,
-            name: Notification.Name(kTISNotifySelectedKeyboardInputSourceChanged as String),
-            object: nil
-        )
-
+    private func unregister_input_mode_hot_key() {
         if let toggle_input_mode_hot_key_ref = self.toggle_input_mode_hot_key_ref {
             UnregisterEventHotKey(toggle_input_mode_hot_key_ref)
             self.toggle_input_mode_hot_key_ref = nil
         }
 
-        self.unregister_keyboard_lock_hot_key()
-
-        if let hot_key_event_handler_ref = self.hot_key_event_handler_ref {
-            RemoveEventHandler(hot_key_event_handler_ref)
-            self.hot_key_event_handler_ref = nil
+        if let event_handler_ref = self.toggle_input_mode_hot_key_event_handler_ref {
+            RemoveEventHandler(event_handler_ref)
+            self.toggle_input_mode_hot_key_event_handler_ref = nil
         }
     }
 
     private func register_keyboard_lock_hot_key() {
+        if self.toggle_keyboard_lock_hot_key_event_handler_ref == nil {
+            let self_pointer = Unmanaged.passUnretained(self).toOpaque()
+            var event_type = EventTypeSpec(
+                eventClass: OSType(kEventClassKeyboard),
+                eventKind: UInt32(kEventHotKeyPressed)
+            )
+            let handler_status = InstallEventHandler(
+                GetApplicationEventTarget(),
+                handle_keyboard_lock_hot_key,
+                1,
+                &event_type,
+                self_pointer,
+                &self.toggle_keyboard_lock_hot_key_event_handler_ref
+            )
+            guard handler_status == noErr else {
+                print("Failed to install keyboard lock hot key event handler: \(handler_status)")
+                return
+            }
+
+            DistributedNotificationCenter.default().addObserver(
+                self,
+                selector: #selector(keyboard_input_source_changed(_:)),
+                name: Notification.Name(kTISNotifySelectedKeyboardInputSourceChanged as String),
+                object: nil,
+                suspensionBehavior: .deliverImmediately
+            )
+        }
+
         guard self.event_tap != nil else {
             return
         }
@@ -318,7 +298,12 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
-        self.unregister_keyboard_lock_hot_key()
+        if let hot_key_ref = self.toggle_keyboard_lock_hot_key_ref {
+            UnregisterEventHotKey(hot_key_ref)
+        }
+        self.toggle_keyboard_lock_hot_key_ref = nil
+        self.toggle_keyboard_lock_key_code = nil
+
         let keyboard_lock_id = toggle_keyboard_lock_hot_key_id
         var hot_key_ref: EventHotKeyRef?
         let status = RegisterEventHotKey(
@@ -338,11 +323,22 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func unregister_keyboard_lock_hot_key() {
+        DistributedNotificationCenter.default().removeObserver(
+            self,
+            name: Notification.Name(kTISNotifySelectedKeyboardInputSourceChanged as String),
+            object: nil
+        )
+
         if let hot_key_ref = self.toggle_keyboard_lock_hot_key_ref {
             UnregisterEventHotKey(hot_key_ref)
         }
         self.toggle_keyboard_lock_hot_key_ref = nil
         self.toggle_keyboard_lock_key_code = nil
+
+        if let event_handler_ref = self.toggle_keyboard_lock_hot_key_event_handler_ref {
+            RemoveEventHandler(event_handler_ref)
+            self.toggle_keyboard_lock_hot_key_event_handler_ref = nil
+        }
     }
 
     // RegisterEventHotKey needs a physical key code, so resolve logical "l" in the active layout.
@@ -399,7 +395,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    private func toggle_input_mode() {
+    func toggle_input_mode() {
         guard !self.keyboard_locked else {
             return
         }
@@ -414,7 +410,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
         self.toggle_input_mode_sound.play()
     }
 
-    private func toggle_keyboard_lock() {
+    func toggle_keyboard_lock() {
         guard self.keyboard_locked || self.event_tap != nil else {
             return
         }
@@ -616,6 +612,72 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         return key_code
     }
+}
+
+private func handle_input_mode_hot_key(
+    _ next_handler: EventHandlerCallRef?,
+    _ event: EventRef?,
+    _ user_data: UnsafeMutableRawPointer?
+) -> OSStatus {
+    guard let event, let user_data else {
+        return OSStatus(eventNotHandledErr)
+    }
+    var hot_key_id = EventHotKeyID()
+    let parameter_status = GetEventParameter(
+        event,
+        EventParamName(kEventParamDirectObject),
+        EventParamType(typeEventHotKeyID),
+        nil,
+        MemoryLayout<EventHotKeyID>.size,
+        nil,
+        &hot_key_id
+    )
+    guard parameter_status == noErr,
+          hot_key_id.signature == toggle_input_mode_hot_key_id.signature,
+          hot_key_id.id == toggle_input_mode_hot_key_id.id else {
+        return OSStatus(eventNotHandledErr)
+    }
+
+    let app_delegate = Unmanaged<AppDelegate>
+        .fromOpaque(user_data)
+        .takeUnretainedValue()
+    DispatchQueue.main.async {
+        app_delegate.toggle_input_mode()
+    }
+    return noErr
+}
+
+private func handle_keyboard_lock_hot_key(
+    _ next_handler: EventHandlerCallRef?,
+    _ event: EventRef?,
+    _ user_data: UnsafeMutableRawPointer?
+) -> OSStatus {
+    guard let event, let user_data else {
+        return OSStatus(eventNotHandledErr)
+    }
+    var hot_key_id = EventHotKeyID()
+    let parameter_status = GetEventParameter(
+        event,
+        EventParamName(kEventParamDirectObject),
+        EventParamType(typeEventHotKeyID),
+        nil,
+        MemoryLayout<EventHotKeyID>.size,
+        nil,
+        &hot_key_id
+    )
+    guard parameter_status == noErr,
+          hot_key_id.signature == toggle_keyboard_lock_hot_key_id.signature,
+          hot_key_id.id == toggle_keyboard_lock_hot_key_id.id else {
+        return OSStatus(eventNotHandledErr)
+    }
+
+    let app_delegate = Unmanaged<AppDelegate>
+        .fromOpaque(user_data)
+        .takeUnretainedValue()
+    DispatchQueue.main.async {
+        app_delegate.toggle_keyboard_lock()
+    }
+    return noErr
 }
 
 private func matches_keyboard_lock_hot_key(
