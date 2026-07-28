@@ -290,6 +290,11 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
         guard let key_code = self.current_keyboard_lock_key_code() else {
+            if let hot_key_ref = self.toggle_keyboard_lock_hot_key_ref {
+                UnregisterEventHotKey(hot_key_ref)
+            }
+            self.toggle_keyboard_lock_hot_key_ref = nil
+            self.toggle_keyboard_lock_key_code = nil
             print("Failed to resolve keyboard lock hot key for the current input source.")
             return
         }
@@ -341,50 +346,30 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    // RegisterEventHotKey needs a physical key code, so resolve logical "l" in the active layout.
+    // RegisterEventHotKey needs a physical key code, so resolve logical "l" from the input source.
     private func current_keyboard_lock_key_code() -> CGKeyCode? {
-        guard let unmanaged_input_source = TISCopyCurrentKeyboardLayoutInputSource() else {
+        guard let unmanaged_input_source = TISCopyCurrentKeyboardInputSource() else {
             return nil
         }
         let input_source = unmanaged_input_source.takeRetainedValue()
         defer { withExtendedLifetime(input_source) {} }
-        guard let layout_data_pointer = TISGetInputSourceProperty(
+        guard let input_source_id_pointer = TISGetInputSourceProperty(
             input_source,
-            kTISPropertyUnicodeKeyLayoutData
+            kTISPropertyInputSourceID
         ) else {
             return nil
         }
-        let layout_data = Unmanaged<CFData>
-            .fromOpaque(layout_data_pointer)
-            .takeUnretainedValue() as Data
+        let input_source_id = Unmanaged<CFString>
+            .fromOpaque(input_source_id_pointer)
+            .takeUnretainedValue() as String
 
-        return layout_data.withUnsafeBytes { buffer -> CGKeyCode? in
-            guard let keyboard_layout = buffer
-                .bindMemory(to: UCKeyboardLayout.self)
-                .baseAddress else {
+        switch input_source_id {
+            case "com.apple.keylayout.ABC":
+                return CGKeyCode(kVK_ANSI_L)
+            case "com.apple.keylayout.Dvorak":
+                return CGKeyCode(kVK_ANSI_P)
+            default:
                 return nil
-            }
-            for key_code in 0..<128 {
-                var dead_key_state: UInt32 = 0
-                var characters = [UniChar](repeating: 0, count: 4)
-                var character_count = 0
-                let status = UCKeyTranslate(
-                    keyboard_layout,
-                    UInt16(key_code),
-                    UInt16(kUCKeyActionDisplay),
-                    0,
-                    UInt32(LMGetKbdType()),
-                    OptionBits(kUCKeyTranslateNoDeadKeysMask),
-                    &dead_key_state,
-                    characters.count,
-                    &character_count,
-                    &characters
-                )
-                if status == noErr && character_count == 1 && characters[0] == 0x006C {
-                    return CGKeyCode(key_code)
-                }
-            }
-            return nil
         }
     }
 
