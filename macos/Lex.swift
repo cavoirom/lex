@@ -164,6 +164,12 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         return sound
     }()
+    private let keyboard_locked_sound: NSSound = {
+        guard let sound = NSSound(named: "Purr") else {
+            fatalError("Missing required system sound: Purr")
+        }
+        return sound
+    }()
 
     private var signal_sources: [DispatchSourceSignal] = []
     private var input_mode: InputMode = .telex
@@ -174,7 +180,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
     private var toggle_keyboard_lock_hot_key_event_handler_ref: EventHandlerRef?
     private var toggle_keyboard_lock_hot_key_ref: EventHotKeyRef?
     private var toggle_keyboard_lock_key_code: CGKeyCode?
-    private lazy var toggle_input_mode_sound: NSSound = self.telex_sound
+    private lazy var toggle_sound: NSSound = self.telex_sound
 
     private var event_tap: CFMachPort?
     private var event_tap_run_loop_source: CFRunLoopSource?
@@ -390,9 +396,9 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
         // Reset state.
         self.engine.reset()
         // Play sound when toggling mode.
-        self.toggle_input_mode_sound.stop()
-        self.toggle_input_mode_sound = self.input_mode == .telex ? self.telex_sound : self.literal_sound
-        self.toggle_input_mode_sound.play()
+        self.toggle_sound.stop()
+        self.toggle_sound = self.input_mode == .telex ? self.telex_sound : self.literal_sound
+        self.toggle_sound.play()
     }
 
     func toggle_keyboard_lock() {
@@ -402,6 +408,16 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
         self.keyboard_locked.toggle()
         self.engine.reset()
         self.update_status_item()
+        // Play sound when toggling keyboard lock.
+        self.toggle_sound.stop()
+        if self.keyboard_locked {
+            self.toggle_sound = self.keyboard_locked_sound
+        } else {
+            self.toggle_sound = self.input_mode == .telex
+                ? self.telex_sound
+                : self.literal_sound
+        }
+        self.toggle_sound.play()
     }
 
     private func update_status_item() {
