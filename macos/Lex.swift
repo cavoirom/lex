@@ -15,6 +15,7 @@ private let toggle_keyboard_lock_hot_key_id = EventHotKeyID(
 // Tag: LEX!
 // Use for identify Lex's synthetic event when processing event tap.
 private let synthetic_event_source_user_data: Int64 = 0x4C455821
+private let system_wide_accessibility_element = AXUIElementCreateSystemWide()
 // Indicate the status of login item registration
 private let login_item_registration_attempted_key = "login_item_registration_attempted"
 
@@ -450,6 +451,13 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
             print("Accessibility permission required. Grant access in System Settings > Privacy & Security > Accessibility, then relaunch.")
             return
         }
+        guard AXUIElementSetMessagingTimeout(
+            system_wide_accessibility_element,
+            0.1
+        ) == .success else {
+            print("Failed to set the Accessibility messaging timeout.")
+            return
+        }
 
         // TODO: we must understand the mask.
         let event_mask =
@@ -701,6 +709,55 @@ private func matches_keyboard_lock_hot_key(
         event_flags.intersection(shortcut_modifier_mask) == keyboard_lock_modifiers
 }
 
+private func select_previous_characters(_ character_count: Int) -> Bool {
+    precondition(character_count > 0)
+
+    var focused_element_value: CFTypeRef?
+    guard AXUIElementCopyAttributeValue(
+        system_wide_accessibility_element,
+        kAXFocusedUIElementAttribute as CFString,
+        &focused_element_value
+    ) == .success, let focused_element_value,
+            CFGetTypeID(focused_element_value) == AXUIElementGetTypeID() else {
+        return false
+    }
+    let focused_element = focused_element_value as! AXUIElement
+
+    var selected_range_value: CFTypeRef?
+    guard AXUIElementCopyAttributeValue(
+        focused_element,
+        kAXSelectedTextRangeAttribute as CFString,
+        &selected_range_value
+    ) == .success, let selected_range_value,
+            CFGetTypeID(selected_range_value) == AXValueGetTypeID() else {
+        return false
+    }
+    let selected_range_ax_value = selected_range_value as! AXValue
+    guard AXValueGetType(selected_range_ax_value) == .cfRange else {
+        return false
+    }
+
+    var selected_range = CFRange()
+    guard AXValueGetValue(selected_range_ax_value, .cfRange, &selected_range),
+            selected_range.length == 0,
+            selected_range.location >= character_count else {
+        return false
+    }
+
+    var replacement_range = CFRange(
+        location: selected_range.location - character_count,
+        length: character_count
+    )
+    guard let replacement_range_value = AXValueCreate(.cfRange, &replacement_range) else {
+        return false
+    }
+    return AXUIElementSetAttributeValue(
+        focused_element,
+        kAXSelectedTextRangeAttribute as CFString,
+        replacement_range_value
+    ) == .success
+}
+
 private func event_tap_callback(
     proxy: CGEventTapProxy,
     type event_type: CGEventType,
@@ -757,7 +814,7 @@ private func event_tap_callback(
             if app_delegate.is_literal() {
                 return Unmanaged.passUnretained(event)
             }
-            
+
             // Ignore Lex's synthetic events.
             if event.getIntegerValueField(.eventSourceUserData) == synthetic_event_source_user_data {
                 return Unmanaged.passUnretained(event)
@@ -840,17 +897,37 @@ private func event_tap_callback(
                 return Unmanaged.passUnretained(event)
             } else {
                 // The buffer effective has room, process with synthetic backspace and replacement.
-                guard let synthetic_event_source = app_delegate.get_synthetic_event_source() else {
-                    // No event source to send synthetic event.
-                    app_delegate.engine.reset()
-                    return Unmanaged.passUnretained(event)
-                }
-                
+
                 // Send the input character to engine.
                 app_delegate.engine.add(input)
 
                 // Calculate synthetic backspaces.
                 let backspace_count = app_delegate.engine.synthetic_backspaces()
+
+                if NSWorkspace.shared.frontmostApplication?.bundleIdentifier == "com.apple.Safari" {
+                    // Safari can process separate keyboard editing commands out of order. Select
+                    // the old text synchronously, then replace it with the returned key event.
+                    if backspace_count > 0 && !select_previous_characters(backspace_count) {
+                        app_delegate.engine.reset()
+                        return Unmanaged.passUnretained(event)
+                    }
+                    app_delegate.engine.compose_replacement { replacement in
+                        guard let replacement_base_address = replacement.baseAddress else {
+                            return
+                        }
+                        event.keyboardSetUnicodeString(
+                            stringLength: replacement.count,
+                            unicodeString: replacement_base_address
+                        )
+                    }
+                    return Unmanaged.passUnretained(event)
+                }
+
+                guard let synthetic_event_source = app_delegate.get_synthetic_event_source() else {
+                    // No event source to send synthetic event.
+                    app_delegate.engine.reset()
+                    return Unmanaged.passUnretained(event)
+                }
 
                 // Post synthetic backspaces to event tap.
                 if backspace_count > 0 {
@@ -891,7 +968,6 @@ private func event_tap_callback(
                         synthetic_characters_down.tapPostEvent(proxy)
                     }
 
-                    
                     if let synthetic_characters_up = CGEvent(
                         keyboardEventSource: synthetic_event_source,
                         virtualKey: 0,
