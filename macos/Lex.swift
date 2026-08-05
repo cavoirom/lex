@@ -74,12 +74,8 @@ private final class LexEngine {
         lex_init(self.state)
     }
 
-    func add(_ unicode_scalar: Unicode.Scalar) {
-        // TODO: should return error when not ASCII.
-        guard unicode_scalar.isASCII else {
-            return
-        }
-        lex_add(self.state, UInt8(unicode_scalar.value))
+    func add(_ character: UInt8) {
+        lex_add(self.state, character)
     }
 
     func backspace() {
@@ -466,11 +462,8 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
         // TODO: we must understand the mask.
         let event_mask =
             (CGEventMask(1) << CGEventType.keyDown.rawValue)
-            | (CGEventMask(1) << CGEventType.flagsChanged.rawValue)
             | (CGEventMask(1) << CGEventType.leftMouseDown.rawValue)
             | (CGEventMask(1) << CGEventType.rightMouseDown.rawValue)
-            | (CGEventMask(1) << CGEventType.tapDisabledByTimeout.rawValue)
-            | (CGEventMask(1) << CGEventType.tapDisabledByUserInput.rawValue)
         let self_pointer = Unmanaged.passUnretained(self).toOpaque()
         guard let tap = CGEvent.tapCreate(
             tap: .cgSessionEventTap,
@@ -683,12 +676,9 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         self.engine.compose_replacement { replacement in
-            guard let replacement_base_address = replacement.baseAddress else {
-                return
-            }
             event.keyboardSetUnicodeString(
                 stringLength: replacement.count,
-                unicodeString: replacement_base_address
+                unicodeString: replacement.baseAddress!
             )
         }
         return true
@@ -711,22 +701,10 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
                 ) {
                     synthetic_backspace_down.tapPostEvent(proxy)
                 }
-
-                if let synthetic_backspace_up = CGEvent(
-                    keyboardEventSource: synthetic_event_source,
-                    virtualKey: CGKeyCode(kVK_Delete),
-                    keyDown: false
-                ) {
-                    synthetic_backspace_up.tapPostEvent(proxy)
-                }
             }
         }
 
         self.engine.compose_replacement { replacement in
-            guard let replacement_base_address = replacement.baseAddress else {
-                return
-            }
-
             if let synthetic_characters_down = CGEvent(
                 keyboardEventSource: synthetic_event_source,
                 virtualKey: 0,
@@ -734,21 +712,9 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
             ) {
                 synthetic_characters_down.keyboardSetUnicodeString(
                     stringLength: replacement.count,
-                    unicodeString: replacement_base_address
+                    unicodeString: replacement.baseAddress!
                 )
                 synthetic_characters_down.tapPostEvent(proxy)
-            }
-
-            if let synthetic_characters_up = CGEvent(
-                keyboardEventSource: synthetic_event_source,
-                virtualKey: 0,
-                keyDown: false
-            ) {
-                synthetic_characters_up.keyboardSetUnicodeString(
-                    stringLength: replacement.count,
-                    unicodeString: replacement_base_address
-                )
-                synthetic_characters_up.tapPostEvent(proxy)
             }
         }
         return true
@@ -896,11 +862,6 @@ private func event_tap_callback(
             // Pass through event.
             return Unmanaged.passUnretained(event)
 
-        case .flagsChanged:
-            // Pass through event.
-            // Don't reset for plain Shift / Caps Lock.
-            return Unmanaged.passUnretained(event)
-
         case .keyDown:
             // Handle key down.
 
@@ -988,10 +949,7 @@ private func event_tap_callback(
                     app_delegate.engine.reset()
                         return Unmanaged.passUnretained(event)
                 }
-                guard let input = UnicodeScalar(UInt32(character)) else {
-                    app_delegate.engine.reset()
-                    return Unmanaged.passUnretained(event)
-                }
+                let input = UInt8(character)
 
             // Valid input, safe to process with the engine.
             if app_delegate.engine.buffer_full() {
