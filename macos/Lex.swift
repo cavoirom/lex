@@ -709,12 +709,15 @@ private func matches_keyboard_lock_hot_key(
         event_flags.intersection(shortcut_modifier_mask) == keyboard_lock_modifiers
 }
 
-private func select_previous_characters(_ character_count: Int) -> Bool {
+private func select_previous_characters(
+    _ character_count: Int,
+    in accessibility_application: AXUIElement
+) -> Bool {
     precondition(character_count > 0)
 
     var focused_element_value: CFTypeRef?
     guard AXUIElementCopyAttributeValue(
-        system_wide_accessibility_element,
+        accessibility_application,
         kAXFocusedUIElementAttribute as CFString,
         &focused_element_value
     ) == .success, let focused_element_value,
@@ -904,12 +907,29 @@ private func event_tap_callback(
                 // Calculate synthetic backspaces.
                 let backspace_count = app_delegate.engine.synthetic_backspaces()
 
-                if NSWorkspace.shared.frontmostApplication?.bundleIdentifier == "com.apple.Safari" {
+                // Anchor Safari detection and Accessibility lookup to this event's target process.
+                let target_process_identifier_value = event.getIntegerValueField(
+                    .eventTargetUnixProcessID
+                )
+                if let target_process_identifier = pid_t(exactly: target_process_identifier_value),
+                        target_process_identifier > 0,
+                        let target_application = NSRunningApplication(
+                            processIdentifier: target_process_identifier
+                        ),
+                        target_application.bundleIdentifier == "com.apple.Safari" {
                     // Safari can process separate keyboard editing commands out of order. Select
                     // the old text synchronously, then replace it with the returned key event.
-                    if backspace_count > 0 && !select_previous_characters(backspace_count) {
-                        app_delegate.engine.reset()
-                        return Unmanaged.passUnretained(event)
+                    if backspace_count > 0 {
+                        let accessibility_application = AXUIElementCreateApplication(
+                            target_process_identifier
+                        )
+                        if !select_previous_characters(
+                            backspace_count,
+                            in: accessibility_application
+                        ) {
+                            app_delegate.engine.reset()
+                            return Unmanaged.passUnretained(event)
+                        }
                     }
                     app_delegate.engine.compose_replacement { replacement in
                         guard let replacement_base_address = replacement.baseAddress else {
