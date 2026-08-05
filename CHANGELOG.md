@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## 0.2.1
+
+### Fixed
+
+- Web page in Safari received synthetic events out of order, cause wrong Vietnamese typing.
+
 ## 0.2.0
 
 ### Added
