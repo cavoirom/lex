@@ -121,6 +121,10 @@ private final class LexEngine {
 }
 
 private final class AppDelegate: NSObject, NSApplicationDelegate {
+    private static let accessibility_selection_replacement_applications: Set<String> = [
+        "com.apple.Safari",
+    ]
+
     let engine = LexEngine()
     private var status_item: NSStatusItem?
     private let telex_image: NSImage = {
@@ -593,8 +597,161 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
        NSApp.terminate(nil) 
     }
 
-    func get_synthetic_event_source() -> CGEventSource? {
-        return self.synthetic_event_source
+    private func select_previous_characters(
+        _ character_count: Int,
+        in accessibility_application: AXUIElement
+    ) -> Bool {
+        precondition(character_count > 0)
+
+        var focused_element_value: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(
+            accessibility_application,
+            kAXFocusedUIElementAttribute as CFString,
+            &focused_element_value
+        ) == .success, let focused_element_value,
+                CFGetTypeID(focused_element_value) == AXUIElementGetTypeID() else {
+            return false
+        }
+        let focused_element = focused_element_value as! AXUIElement
+
+        var selected_range_value: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(
+            focused_element,
+            kAXSelectedTextRangeAttribute as CFString,
+            &selected_range_value
+        ) == .success, let selected_range_value,
+                CFGetTypeID(selected_range_value) == AXValueGetTypeID() else {
+            return false
+        }
+        let selected_range_ax_value = selected_range_value as! AXValue
+        guard AXValueGetType(selected_range_ax_value) == .cfRange else {
+            return false
+        }
+
+        var selected_range = CFRange()
+        guard AXValueGetValue(selected_range_ax_value, .cfRange, &selected_range),
+                selected_range.length == 0,
+                selected_range.location >= character_count else {
+            return false
+        }
+
+        var replacement_range = CFRange(
+            location: selected_range.location - character_count,
+            length: character_count
+        )
+        guard let replacement_range_value = AXValueCreate(.cfRange, &replacement_range) else {
+            return false
+        }
+        return AXUIElementSetAttributeValue(
+            focused_element,
+            kAXSelectedTextRangeAttribute as CFString,
+            replacement_range_value
+        ) == .success
+    }
+
+    func accessibility_selection_replacement_process_identifier(
+        for event: CGEvent
+    ) -> pid_t? {
+        let process_identifier_value = event.getIntegerValueField(.eventTargetUnixProcessID)
+        guard let process_identifier = pid_t(exactly: process_identifier_value),
+                process_identifier > 0,
+                let application = NSRunningApplication(
+                    processIdentifier: process_identifier
+                ),
+                let bundle_identifier = application.bundleIdentifier,
+                Self.accessibility_selection_replacement_applications.contains(
+                    bundle_identifier
+                ) else {
+            return nil
+        }
+        return process_identifier
+    }
+
+    func replace_using_accessibility_selection(
+        event: CGEvent,
+        process_identifier: pid_t,
+        backspace_count: Int
+    ) -> Bool {
+        if backspace_count > 0 {
+            let accessibility_application = AXUIElementCreateApplication(process_identifier)
+            guard self.select_previous_characters(
+                backspace_count,
+                in: accessibility_application
+            ) else {
+                return false
+            }
+        }
+
+        self.engine.compose_replacement { replacement in
+            guard let replacement_base_address = replacement.baseAddress else {
+                return
+            }
+            event.keyboardSetUnicodeString(
+                stringLength: replacement.count,
+                unicodeString: replacement_base_address
+            )
+        }
+        return true
+    }
+
+    func replace_using_synthetic_backspaces(
+        proxy: CGEventTapProxy,
+        backspace_count: Int
+    ) -> Bool {
+        guard let synthetic_event_source = self.synthetic_event_source else {
+            return false
+        }
+
+        if backspace_count > 0 {
+            for _ in 0..<backspace_count {
+                if let synthetic_backspace_down = CGEvent(
+                    keyboardEventSource: synthetic_event_source,
+                    virtualKey: CGKeyCode(kVK_Delete),
+                    keyDown: true
+                ) {
+                    synthetic_backspace_down.tapPostEvent(proxy)
+                }
+
+                if let synthetic_backspace_up = CGEvent(
+                    keyboardEventSource: synthetic_event_source,
+                    virtualKey: CGKeyCode(kVK_Delete),
+                    keyDown: false
+                ) {
+                    synthetic_backspace_up.tapPostEvent(proxy)
+                }
+            }
+        }
+
+        self.engine.compose_replacement { replacement in
+            guard let replacement_base_address = replacement.baseAddress else {
+                return
+            }
+
+            if let synthetic_characters_down = CGEvent(
+                keyboardEventSource: synthetic_event_source,
+                virtualKey: 0,
+                keyDown: true
+            ) {
+                synthetic_characters_down.keyboardSetUnicodeString(
+                    stringLength: replacement.count,
+                    unicodeString: replacement_base_address
+                )
+                synthetic_characters_down.tapPostEvent(proxy)
+            }
+
+            if let synthetic_characters_up = CGEvent(
+                keyboardEventSource: synthetic_event_source,
+                virtualKey: 0,
+                keyDown: false
+            ) {
+                synthetic_characters_up.keyboardSetUnicodeString(
+                    stringLength: replacement.count,
+                    unicodeString: replacement_base_address
+                )
+                synthetic_characters_up.tapPostEvent(proxy)
+            }
+        }
+        return true
     }
 
     func enable_event_tap() {
@@ -707,58 +864,6 @@ private func matches_keyboard_lock_hot_key(
     ]
     return event_key_code == Int64(key_code) &&
         event_flags.intersection(shortcut_modifier_mask) == keyboard_lock_modifiers
-}
-
-private func select_previous_characters(
-    _ character_count: Int,
-    in accessibility_application: AXUIElement
-) -> Bool {
-    precondition(character_count > 0)
-
-    var focused_element_value: CFTypeRef?
-    guard AXUIElementCopyAttributeValue(
-        accessibility_application,
-        kAXFocusedUIElementAttribute as CFString,
-        &focused_element_value
-    ) == .success, let focused_element_value,
-            CFGetTypeID(focused_element_value) == AXUIElementGetTypeID() else {
-        return false
-    }
-    let focused_element = focused_element_value as! AXUIElement
-
-    var selected_range_value: CFTypeRef?
-    guard AXUIElementCopyAttributeValue(
-        focused_element,
-        kAXSelectedTextRangeAttribute as CFString,
-        &selected_range_value
-    ) == .success, let selected_range_value,
-            CFGetTypeID(selected_range_value) == AXValueGetTypeID() else {
-        return false
-    }
-    let selected_range_ax_value = selected_range_value as! AXValue
-    guard AXValueGetType(selected_range_ax_value) == .cfRange else {
-        return false
-    }
-
-    var selected_range = CFRange()
-    guard AXValueGetValue(selected_range_ax_value, .cfRange, &selected_range),
-            selected_range.length == 0,
-            selected_range.location >= character_count else {
-        return false
-    }
-
-    var replacement_range = CFRange(
-        location: selected_range.location - character_count,
-        length: character_count
-    )
-    guard let replacement_range_value = AXValueCreate(.cfRange, &replacement_range) else {
-        return false
-    }
-    return AXUIElementSetAttributeValue(
-        focused_element,
-        kAXSelectedTextRangeAttribute as CFString,
-        replacement_range_value
-    ) == .success
 }
 
 private func event_tap_callback(
@@ -907,100 +1012,27 @@ private func event_tap_callback(
                 // Calculate synthetic backspaces.
                 let backspace_count = app_delegate.engine.synthetic_backspaces()
 
-                // Anchor Safari detection and Accessibility lookup to this event's target process.
-                let target_process_identifier_value = event.getIntegerValueField(
-                    .eventTargetUnixProcessID
-                )
-                if let target_process_identifier = pid_t(exactly: target_process_identifier_value),
-                        target_process_identifier > 0,
-                        let target_application = NSRunningApplication(
-                            processIdentifier: target_process_identifier
-                        ),
-                        target_application.bundleIdentifier == "com.apple.Safari" {
-                    // Safari can process separate keyboard editing commands out of order. Select
-                    // the old text synchronously, then replace it with the returned key event.
-                    if backspace_count > 0 {
-                        let accessibility_application = AXUIElementCreateApplication(
-                            target_process_identifier
-                        )
-                        if !select_previous_characters(
-                            backspace_count,
-                            in: accessibility_application
-                        ) {
-                            app_delegate.engine.reset()
-                            return Unmanaged.passUnretained(event)
-                        }
-                    }
-                    app_delegate.engine.compose_replacement { replacement in
-                        guard let replacement_base_address = replacement.baseAddress else {
-                            return
-                        }
-                        event.keyboardSetUnicodeString(
-                            stringLength: replacement.count,
-                            unicodeString: replacement_base_address
-                        )
+                if let process_identifier = app_delegate
+                    .accessibility_selection_replacement_process_identifier(for: event) {
+                    if !app_delegate.replace_using_accessibility_selection(
+                        event: event,
+                        process_identifier: process_identifier,
+                        backspace_count: backspace_count
+                    ) {
+                        app_delegate.engine.reset()
+                        return Unmanaged.passUnretained(event)
                     }
                     return Unmanaged.passUnretained(event)
-                }
-
-                guard let synthetic_event_source = app_delegate.get_synthetic_event_source() else {
-                    // No event source to send synthetic event.
-                    app_delegate.engine.reset()
-                    return Unmanaged.passUnretained(event)
-                }
-
-                // Post synthetic backspaces to event tap.
-                if backspace_count > 0 {
-                    for _ in 0..<backspace_count {
-                        if let synthetic_backspace_down = CGEvent(
-                            keyboardEventSource: synthetic_event_source,
-                            virtualKey: CGKeyCode(kVK_Delete),
-                            keyDown: true
-                        ) {
-                            synthetic_backspace_down.tapPostEvent(proxy)
-                        }
-                        
-                        if let synthetic_backspace_up = CGEvent(
-                            keyboardEventSource: synthetic_event_source,
-                            virtualKey: CGKeyCode(kVK_Delete),
-                            keyDown: false
-                        ) {
-                            synthetic_backspace_up.tapPostEvent(proxy)
-                        }
-                    }
-                }
-                
-                // Compose replacement.
-                app_delegate.engine.compose_replacement { replacement in
-                    guard let replacement_base_address = replacement.baseAddress else {
-                        return
-                    }
-
-                    if let synthetic_characters_down = CGEvent(
-                        keyboardEventSource: synthetic_event_source,
-                        virtualKey: 0,
-                        keyDown: true
+                } else {
+                    if !app_delegate.replace_using_synthetic_backspaces(
+                        proxy: proxy,
+                        backspace_count: backspace_count
                     ) {
-                        synthetic_characters_down.keyboardSetUnicodeString(
-                            stringLength: replacement.count,
-                            unicodeString: replacement_base_address
-                        )
-                        synthetic_characters_down.tapPostEvent(proxy)
+                        app_delegate.engine.reset()
+                        return Unmanaged.passUnretained(event)
                     }
-
-                    if let synthetic_characters_up = CGEvent(
-                        keyboardEventSource: synthetic_event_source,
-                        virtualKey: 0,
-                        keyDown: false
-                    ) {
-                        synthetic_characters_up.keyboardSetUnicodeString(
-                            stringLength: replacement.count,
-                            unicodeString: replacement_base_address
-                        )
-                        synthetic_characters_up.tapPostEvent(proxy)
-                    }
+                    return nil
                 }
-                return nil
             }
 
 
