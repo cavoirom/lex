@@ -642,11 +642,20 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
         ) == .success
     }
 
-    func accessibility_selection_replacement_process_identifier(
-        for event: CGEvent
-    ) -> pid_t? {
-        let process_identifier_value = event.getIntegerValueField(.eventTargetUnixProcessID)
-        guard let process_identifier = pid_t(exactly: process_identifier_value),
+    func accessibility_selection_replacement_application() -> AXUIElement? {
+        var focused_application_value: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(
+            system_wide_accessibility_element,
+            kAXFocusedApplicationAttribute as CFString,
+            &focused_application_value
+        ) == .success, let focused_application_value,
+                CFGetTypeID(focused_application_value) == AXUIElementGetTypeID() else {
+            return nil
+        }
+        let focused_application = focused_application_value as! AXUIElement
+
+        var process_identifier: pid_t = 0
+        guard AXUIElementGetPid(focused_application, &process_identifier) == .success,
                 process_identifier > 0,
                 let application = NSRunningApplication(
                     processIdentifier: process_identifier
@@ -657,16 +666,15 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
                 ) else {
             return nil
         }
-        return process_identifier
+        return focused_application
     }
 
     func replace_using_accessibility_selection(
         event: CGEvent,
-        process_identifier: pid_t,
+        accessibility_application: AXUIElement,
         backspace_count: Int
     ) -> Bool {
         if backspace_count > 0 {
-            let accessibility_application = AXUIElementCreateApplication(process_identifier)
             guard self.select_previous_characters(
                 backspace_count,
                 in: accessibility_application
@@ -962,7 +970,8 @@ private func event_tap_callback(
                 app_delegate.engine.add(input)
                 return Unmanaged.passUnretained(event)
             } else {
-                // The buffer effective has room, process with synthetic backspace and replacement.
+                // The buffer effective has room, process input and replace existing characters
+                // when needed.
 
                 // Send the input character to engine.
                 app_delegate.engine.add(input)
@@ -970,11 +979,15 @@ private func event_tap_callback(
                 // Calculate synthetic backspaces.
                 let backspace_count = app_delegate.engine.synthetic_backspaces()
 
-                if let process_identifier = app_delegate
-                    .accessibility_selection_replacement_process_identifier(for: event) {
+                if backspace_count == 0 {
+                    return Unmanaged.passUnretained(event)
+                }
+
+                if let accessibility_application = app_delegate
+                    .accessibility_selection_replacement_application() {
                     if !app_delegate.replace_using_accessibility_selection(
                         event: event,
-                        process_identifier: process_identifier,
+                        accessibility_application: accessibility_application,
                         backspace_count: backspace_count
                     ) {
                         app_delegate.engine.reset()
