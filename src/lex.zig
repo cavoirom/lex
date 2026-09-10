@@ -4934,36 +4934,69 @@ test "fuzz public ABI full-buffer boundaries" {
             var engine = try FuzzHarness.Engine.init();
             defer engine.deinit();
 
-            var header: [1]u8 = undefined;
+            // Fill 0..255 characters, erase 0..255, then add 1..256 more. The final phase
+            // reaches automatic rollover twice when starting full and adding 256 characters.
+            var header: [3]u8 = undefined;
             smith.bytes(&header);
             const target_count: usize = header[0];
+            const backspace_count: usize = header[1];
+            const continuation_count: usize = @as(usize, header[2]) + 1;
+            var expected_length: usize = 0;
 
-            for (0..target_count) |i| {
-                try engine.add_app_path('B');
-                const count = i + 1;
-
-                if (count == 15) {
-                    try expectEqual(false, lex_buffer_effective_full(engine.raw_pointer));
-                    try expectEqual(false, lex_buffer_full(engine.raw_pointer));
-                } else if (count == 16) {
-                    try expectEqual(true, lex_buffer_effective_full(engine.raw_pointer));
-                    try expectEqual(false, lex_buffer_full(engine.raw_pointer));
-                } else if (count == maxInt(u8)) {
-                    try expectEqual(true, lex_buffer_effective_full(engine.raw_pointer));
-                    try expectEqual(true, lex_buffer_full(engine.raw_pointer));
-                    try engine.reset();
-                }
+            for (0..target_count) |_| {
+                try add_literal(&engine, &expected_length);
             }
+
+            for (0..backspace_count) |_| {
+                try engine.backspace();
+                expected_length -|= 1;
+                try expect_length(&engine, expected_length);
+            }
+
+            for (0..continuation_count) |_| {
+                try add_literal(&engine, &expected_length);
+            }
+        }
+
+        fn add_literal(engine: *FuzzHarness.Engine, expected_length: *usize) !void {
+            const visible_length_previous = engine.visible_length;
+            const expected_word_start = if (expected_length.* == maxInt(u8))
+                visible_length_previous
+            else
+                engine.word_start;
+            expected_length.* = if (expected_length.* == maxInt(u8)) 1 else expected_length.* + 1;
+
+            try engine.add_app_path('B');
+
+            try expectEqual(visible_length_previous + 1, engine.visible_length);
+            try expectEqual(expected_word_start, engine.word_start);
+            try expect_length(engine, expected_length.*);
+        }
+
+        fn expect_length(engine: *FuzzHarness.Engine, expected_length: usize) !void {
+            try expectEqual(expected_length, engine.visible_word().len);
+            try expectEqual(expected_length == 0, lex_buffer_empty(engine.raw_pointer));
+            try expectEqual(expected_length >= lex_replacement_buffer_length, lex_buffer_effective_full(engine.raw_pointer));
+            try expectEqual(expected_length == maxInt(u8), lex_buffer_full(engine.raw_pointer));
         }
     };
 
     const corpus = [_][]const u8{
-        &.{0},
-        &.{15},
-        &.{16},
-        &.{17},
-        &.{254},
-        &.{255},
+        &.{ 0, 0, 0 },
+        &.{ 15, 0, 0 },
+        &.{ 16, 0, 0 },
+        &.{ 17, 0, 0 },
+        &.{ 254, 0, 0 },
+        // Full buffer rolls over on the next add, without an explicit reset.
+        &.{ 255, 0, 0 },
+        // Backspace from full, refill, then optionally roll over.
+        &.{ 255, 1, 0 },
+        &.{ 255, 1, 1 },
+        // Erase back through the effective boundary or all the way to empty.
+        &.{ 255, 240, 0 },
+        &.{ 255, 255, 0 },
+        // Two automatic rollovers in one execution.
+        &.{ 255, 0, 255 },
     };
 
     try std.testing.fuzz({}, Harness.fuzz_one, .{ .corpus = &corpus });
