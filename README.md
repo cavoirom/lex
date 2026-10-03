@@ -27,7 +27,8 @@ trách nhiệm cho toàn bộ chương trình.
 - [x] Bật / tắt nhập Tiếng Việt: `Ctrl + Opt + Space`.
 - [x] Chỉ hiện biểu tượng trên thanh Menu của macOS.
 - [x] Khởi động khi đăng nhập.
-- [x] Khóa bàn phím bằng lựa chọn trên thanh Menu hoặc tổ hợp phím: `Ctrl + Opt + Cmd + L`.
+- [x] Khóa bàn phím và Trackpad bằng lựa chọn trên thanh Menu hoặc tổ hợp phím:
+      `Ctrl + Opt + Cmd + L`.
 
 Lưu ý: chương trình được thiết lập mặc định theo những chức năng trên và không thể tùy chỉnh. Người
 dùng có thể tắt chức năng _Khởi động khi đăng nhập_ trong menu (macOS 26): System Settings \>
@@ -53,7 +54,8 @@ Khởi động Lex sau khi đã cấp quyền.
   - [x] Phím tắt bật / tắt nhập Tiếng Việt: `Ctrl + Opt + Space`.
   - [x] Khởi động khi đăng nhập.
 - [x] 0.2.x
-  - [x] Khóa bàn phím bằng lựa chọn trên thanh Menu hoặc tổ hợp phím: `Ctrl + Opt + Cmd + L`.
+  - [x] Khóa bàn phím và Trackpad bằng lựa chọn trên thanh Menu hoặc tổ hợp phím:
+        `Ctrl + Opt + Cmd + L`.
   - [x] Hoàn thiện cơ chế kiểm thử.
 - [ ] 1.0.x - tất cả chức năng đã hoàn thành.
 

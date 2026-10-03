@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Changed
 
 - Refine the fuzz harness to cover the max buffer length boundary.
+- Enable lock will lock both keyboard and trackpad (mouse).
 
 ## 0.2.2
 

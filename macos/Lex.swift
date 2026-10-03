@@ -8,7 +8,7 @@ private let toggle_input_mode_hot_key_id = EventHotKeyID(
     signature: OSType(0x4C455821),
     id: 1
 )
-private let toggle_keyboard_lock_hot_key_id = EventHotKeyID(
+private let toggle_input_lock_hot_key_id = EventHotKeyID(
     signature: OSType(0x4C455821),
     id: 2
 )
@@ -143,10 +143,10 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
         image.isTemplate = true
         return image
     }()
-    private let keyboard_locked_image: NSImage = {
+    private let input_locked_image: NSImage = {
         guard let image = NSImage(
             systemSymbolName: "lock.fill",
-            accessibilityDescription: "Lex - Keyboard locked"
+            accessibilityDescription: "Lex - Input locked"
         ) else {
             fatalError("Missing required system symbol: lock.fill")
         }
@@ -165,7 +165,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         return sound
     }()
-    private let keyboard_locked_sound: NSSound = {
+    private let input_locked_sound: NSSound = {
         guard let sound = NSSound(named: "Purr") else {
             fatalError("Missing required system sound: Purr")
         }
@@ -174,13 +174,13 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private var signal_sources: [DispatchSourceSignal] = []
     private var input_mode: InputMode = .telex
-    private var keyboard_locked = false
-    private var lock_keyboard_item: NSMenuItem?
+    private var input_locked = false
+    private var lock_input_item: NSMenuItem?
     private var toggle_input_mode_hot_key_event_handler_ref: EventHandlerRef?
     private var toggle_input_mode_hot_key_ref: EventHotKeyRef?
-    private var toggle_keyboard_lock_hot_key_event_handler_ref: EventHandlerRef?
-    private var toggle_keyboard_lock_hot_key_ref: EventHotKeyRef?
-    private var toggle_keyboard_lock_key_code: CGKeyCode?
+    private var toggle_input_lock_hot_key_event_handler_ref: EventHandlerRef?
+    private var toggle_input_lock_hot_key_ref: EventHotKeyRef?
+    private var toggle_input_lock_key_code: CGKeyCode?
     private lazy var toggle_sound: NSSound = self.telex_sound
 
     private var event_tap: CFMachPort?
@@ -196,13 +196,13 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
         self.initialize_synthetic_event_source()
         self.start_event_tap()
         self.register_input_mode_hot_key()
-        self.register_keyboard_lock_hot_key()
+        self.register_input_lock_hot_key()
     }
     
     func applicationWillTerminate(_ notification: Notification) {
         print("Shutting down...")
         self.unregister_input_mode_hot_key()
-        self.unregister_keyboard_lock_hot_key()
+        self.unregister_input_lock_hot_key()
         self.stop_event_tap()
         self.destroy_synthetic_event_source()
         self.destroy_status_item()
@@ -264,8 +264,8 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    private func register_keyboard_lock_hot_key() {
-        if self.toggle_keyboard_lock_hot_key_event_handler_ref == nil {
+    private func register_input_lock_hot_key() {
+        if self.toggle_input_lock_hot_key_event_handler_ref == nil {
             let self_pointer = Unmanaged.passUnretained(self).toOpaque()
             var event_type = EventTypeSpec(
                 eventClass: OSType(kEventClassKeyboard),
@@ -273,14 +273,19 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
             )
             let handler_status = InstallEventHandler(
                 GetApplicationEventTarget(),
-                handle_keyboard_lock_hot_key,
+                handle_input_lock_hot_key,
                 1,
                 &event_type,
                 self_pointer,
-                &self.toggle_keyboard_lock_hot_key_event_handler_ref
+                &self.toggle_input_lock_hot_key_event_handler_ref
             )
             guard handler_status == noErr else {
-                print("Failed to install keyboard lock hot key event handler: \(handler_status)")
+                print("Failed to install input lock hot key event handler: \(handler_status)")
+                if self.input_locked {
+                    self.toggle_input_lock()
+                }
+                self.lock_input_item?.isEnabled = false
+                self.lock_input_item?.toolTip = "Input lock shortcut unavailable."
                 return
             }
 
@@ -294,67 +299,86 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         guard self.event_tap != nil else {
+            if self.input_locked {
+                self.toggle_input_lock()
+            }
+            self.lock_input_item?.isEnabled = false
+            self.lock_input_item?.toolTip = "Accessibility permission required."
             return
         }
-        guard let key_code = self.current_keyboard_lock_key_code() else {
-            if let hot_key_ref = self.toggle_keyboard_lock_hot_key_ref {
+        guard let key_code = self.current_input_lock_key_code() else {
+            if self.input_locked {
+                self.toggle_input_lock()
+            }
+            if let hot_key_ref = self.toggle_input_lock_hot_key_ref {
                 UnregisterEventHotKey(hot_key_ref)
             }
-            self.toggle_keyboard_lock_hot_key_ref = nil
-            self.toggle_keyboard_lock_key_code = nil
-            print("Failed to resolve keyboard lock hot key for the current input source.")
+            self.toggle_input_lock_hot_key_ref = nil
+            self.toggle_input_lock_key_code = nil
+            self.lock_input_item?.isEnabled = false
+            self.lock_input_item?.toolTip = "Unsupported keyboard layout."
+            print("Failed to resolve input lock hot key for the current input source.")
             return
         }
-        if self.toggle_keyboard_lock_key_code == key_code &&
-                self.toggle_keyboard_lock_hot_key_ref != nil {
+        if self.toggle_input_lock_key_code == key_code &&
+                self.toggle_input_lock_hot_key_ref != nil {
+            self.lock_input_item?.isEnabled = true
+            self.lock_input_item?.toolTip = nil
             return
         }
 
-        if let hot_key_ref = self.toggle_keyboard_lock_hot_key_ref {
+        if let hot_key_ref = self.toggle_input_lock_hot_key_ref {
             UnregisterEventHotKey(hot_key_ref)
         }
-        self.toggle_keyboard_lock_hot_key_ref = nil
-        self.toggle_keyboard_lock_key_code = nil
+        self.toggle_input_lock_hot_key_ref = nil
+        self.toggle_input_lock_key_code = nil
 
-        let keyboard_lock_id = toggle_keyboard_lock_hot_key_id
+        let input_lock_id = toggle_input_lock_hot_key_id
         var hot_key_ref: EventHotKeyRef?
         let status = RegisterEventHotKey(
             UInt32(key_code),
             UInt32(controlKey | optionKey | cmdKey),
-            keyboard_lock_id,
+            input_lock_id,
             GetApplicationEventTarget(),
             0,
             &hot_key_ref
         )
         guard status == noErr, let hot_key_ref else {
-            print("Failed to register keyboard lock hot key: \(status)")
+            print("Failed to register input lock hot key: \(status)")
+            if self.input_locked {
+                self.toggle_input_lock()
+            }
+            self.lock_input_item?.isEnabled = false
+            self.lock_input_item?.toolTip = "Input lock shortcut unavailable."
             return
         }
-        self.toggle_keyboard_lock_hot_key_ref = hot_key_ref
-        self.toggle_keyboard_lock_key_code = key_code
+        self.toggle_input_lock_hot_key_ref = hot_key_ref
+        self.toggle_input_lock_key_code = key_code
+        self.lock_input_item?.isEnabled = true
+        self.lock_input_item?.toolTip = nil
     }
 
-    private func unregister_keyboard_lock_hot_key() {
+    private func unregister_input_lock_hot_key() {
         DistributedNotificationCenter.default().removeObserver(
             self,
             name: Notification.Name(kTISNotifySelectedKeyboardInputSourceChanged as String),
             object: nil
         )
 
-        if let hot_key_ref = self.toggle_keyboard_lock_hot_key_ref {
+        if let hot_key_ref = self.toggle_input_lock_hot_key_ref {
             UnregisterEventHotKey(hot_key_ref)
         }
-        self.toggle_keyboard_lock_hot_key_ref = nil
-        self.toggle_keyboard_lock_key_code = nil
+        self.toggle_input_lock_hot_key_ref = nil
+        self.toggle_input_lock_key_code = nil
 
-        if let event_handler_ref = self.toggle_keyboard_lock_hot_key_event_handler_ref {
+        if let event_handler_ref = self.toggle_input_lock_hot_key_event_handler_ref {
             RemoveEventHandler(event_handler_ref)
-            self.toggle_keyboard_lock_hot_key_event_handler_ref = nil
+            self.toggle_input_lock_hot_key_event_handler_ref = nil
         }
     }
 
     // RegisterEventHotKey needs a physical key code, so resolve logical "l" from the input source.
-    private func current_keyboard_lock_key_code() -> CGKeyCode? {
+    private func current_input_lock_key_code() -> CGKeyCode? {
         guard let unmanaged_input_source = TISCopyCurrentKeyboardInputSource() else {
             return nil
         }
@@ -383,12 +407,12 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc
     private func keyboard_input_source_changed(_ notification: Notification) {
         DispatchQueue.main.async {
-            self.register_keyboard_lock_hot_key()
+            self.register_input_lock_hot_key()
         }
     }
 
     func toggle_input_mode() {
-        guard !self.keyboard_locked else {
+        guard !self.input_locked else {
             return
         }
         // Change mode.
@@ -402,17 +426,18 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
         self.toggle_sound.play()
     }
 
-    func toggle_keyboard_lock() {
-        guard self.keyboard_locked || self.event_tap != nil else {
+    func toggle_input_lock() {
+        guard self.input_locked ||
+                (self.event_tap != nil && self.registered_input_lock_key_code() != nil) else {
             return
         }
-        self.keyboard_locked.toggle()
+        self.input_locked.toggle()
         self.engine.reset()
         self.update_status_item()
-        // Play sound when toggling keyboard lock.
+        // Play sound when toggling input lock.
         self.toggle_sound.stop()
-        if self.keyboard_locked {
-            self.toggle_sound = self.keyboard_locked_sound
+        if self.input_locked {
+            self.toggle_sound = self.input_locked_sound
         } else {
             self.toggle_sound = self.input_mode == .telex
                 ? self.telex_sound
@@ -422,15 +447,15 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func update_status_item() {
-        self.lock_keyboard_item?.state = self.keyboard_locked ? .on : .off
+        self.lock_input_item?.state = self.input_locked ? .on : .off
 
         guard let button = self.status_item?.button else {
             return
         }
-        if self.keyboard_locked {
-            button.image = self.keyboard_locked_image
-            button.toolTip = "Lex - Keyboard locked"
-            button.setAccessibilityLabel("Lex - Keyboard locked")
+        if self.input_locked {
+            button.image = self.input_locked_image
+            button.toolTip = "Lex - Input locked"
+            button.setAccessibilityLabel("Lex - Input locked")
         } else if self.input_mode == .telex {
             button.image = self.telex_image
             button.toolTip = "Lex - Telex input"
@@ -459,11 +484,19 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
-        // TODO: we must understand the mask.
         let event_mask =
             (CGEventMask(1) << CGEventType.keyDown.rawValue)
+            | (CGEventMask(1) << CGEventType.mouseMoved.rawValue)
             | (CGEventMask(1) << CGEventType.leftMouseDown.rawValue)
+            | (CGEventMask(1) << CGEventType.leftMouseUp.rawValue)
             | (CGEventMask(1) << CGEventType.rightMouseDown.rawValue)
+            | (CGEventMask(1) << CGEventType.rightMouseUp.rawValue)
+            | (CGEventMask(1) << CGEventType.otherMouseDown.rawValue)
+            | (CGEventMask(1) << CGEventType.otherMouseUp.rawValue)
+            | (CGEventMask(1) << CGEventType.leftMouseDragged.rawValue)
+            | (CGEventMask(1) << CGEventType.rightMouseDragged.rawValue)
+            | (CGEventMask(1) << CGEventType.otherMouseDragged.rawValue)
+            | (CGEventMask(1) << CGEventType.scrollWheel.rawValue)
         let self_pointer = Unmanaged.passUnretained(self).toOpaque()
         guard let tap = CGEvent.tapCreate(
             tap: .cgSessionEventTap,
@@ -481,7 +514,6 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
         self.event_tap_run_loop_source = run_loop_source
         CFRunLoopAddSource(CFRunLoopGetCurrent(), run_loop_source, .commonModes)
         CGEvent.tapEnable(tap: tap, enable: true)
-        self.lock_keyboard_item?.isEnabled = true
         print("Event tap started.")
     }
 
@@ -522,14 +554,14 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.autoenablesItems = false
 
         let lock_item = NSMenuItem(
-            title: "Lock Keyboard",
-            action: #selector(lock_keyboard(_:)),
+            title: "Lock Input",
+            action: #selector(lock_input(_:)),
             keyEquivalent: "l"
         )
         lock_item.target = self
         lock_item.keyEquivalentModifierMask = [.control, .option, .command]
         lock_item.isEnabled = false
-        self.lock_keyboard_item = lock_item
+        self.lock_input_item = lock_item
         menu.addItem(lock_item)
 
         menu.addItem(.separator())
@@ -552,7 +584,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         NSStatusBar.system.removeStatusItem(status_item)
-        self.lock_keyboard_item = nil
+        self.lock_input_item = nil
         self.status_item = nil
     }
 
@@ -581,8 +613,8 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc
-    private func lock_keyboard(_ sender: Any?) {
-        self.toggle_keyboard_lock()
+    private func lock_input(_ sender: Any?) {
+        self.toggle_input_lock()
     }
 
     @objc
@@ -741,13 +773,13 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
         return self.input_mode == .literal
     }
 
-    func is_keyboard_locked() -> Bool {
-        return self.keyboard_locked
+    func is_input_locked() -> Bool {
+        return self.input_locked
     }
 
-    func registered_keyboard_lock_key_code() -> CGKeyCode? {
-        guard self.toggle_keyboard_lock_hot_key_ref != nil,
-              let key_code = self.toggle_keyboard_lock_key_code else {
+    func registered_input_lock_key_code() -> CGKeyCode? {
+        guard self.toggle_input_lock_hot_key_ref != nil,
+              let key_code = self.toggle_input_lock_key_code else {
             return nil
         }
         return key_code
@@ -787,7 +819,7 @@ private func handle_input_mode_hot_key(
     return noErr
 }
 
-private func handle_keyboard_lock_hot_key(
+private func handle_input_lock_hot_key(
     _ next_handler: EventHandlerCallRef?,
     _ event: EventRef?,
     _ user_data: UnsafeMutableRawPointer?
@@ -806,8 +838,8 @@ private func handle_keyboard_lock_hot_key(
         &hot_key_id
     )
     guard parameter_status == noErr,
-          hot_key_id.signature == toggle_keyboard_lock_hot_key_id.signature,
-          hot_key_id.id == toggle_keyboard_lock_hot_key_id.id else {
+          hot_key_id.signature == toggle_input_lock_hot_key_id.signature,
+          hot_key_id.id == toggle_input_lock_hot_key_id.id else {
         return OSStatus(eventNotHandledErr)
     }
 
@@ -815,12 +847,12 @@ private func handle_keyboard_lock_hot_key(
         .fromOpaque(user_data)
         .takeUnretainedValue()
     DispatchQueue.main.async {
-        app_delegate.toggle_keyboard_lock()
+        app_delegate.toggle_input_lock()
     }
     return noErr
 }
 
-private func matches_keyboard_lock_hot_key(
+private func matches_input_lock_hot_key(
     key_code: CGKeyCode,
     event_key_code: Int64,
     event_flags: CGEventFlags
@@ -831,13 +863,13 @@ private func matches_keyboard_lock_hot_key(
         .maskControl,
         .maskShift,
     ]
-    let keyboard_lock_modifiers: CGEventFlags = [
+    let input_lock_modifiers: CGEventFlags = [
         .maskCommand,
         .maskAlternate,
         .maskControl,
     ]
     return event_key_code == Int64(key_code) &&
-        event_flags.intersection(shortcut_modifier_mask) == keyboard_lock_modifiers
+        event_flags.intersection(shortcut_modifier_mask) == input_lock_modifiers
 }
 
 private func event_tap_callback(
@@ -864,6 +896,26 @@ private func event_tap_callback(
             // Pass through event.
             return Unmanaged.passUnretained(event)
 
+        default:
+            break
+    }
+
+    // Let the registered hot key handler lock or unlock input.
+    if event_type == .keyDown,
+            let key_code = app_delegate.registered_input_lock_key_code(),
+            matches_input_lock_hot_key(
+                key_code: key_code,
+                event_key_code: event.getIntegerValueField(.keyboardEventKeycode),
+                event_flags: event.flags
+            ) {
+        return Unmanaged.passUnretained(event)
+    }
+
+    if app_delegate.is_input_locked() {
+        return nil
+    }
+
+    switch event_type {
         case .leftMouseDown, .rightMouseDown:
             // Reset engine.
             app_delegate.engine.reset()
@@ -872,20 +924,6 @@ private func event_tap_callback(
 
         case .keyDown:
             // Handle key down.
-
-            // Let the registered hot key handler lock or unlock the keyboard.
-            if let key_code = app_delegate.registered_keyboard_lock_key_code(),
-                    matches_keyboard_lock_hot_key(
-                        key_code: key_code,
-                        event_key_code: event.getIntegerValueField(.keyboardEventKeycode),
-                        event_flags: event.flags
-                    ) {
-                return Unmanaged.passUnretained(event)
-            }
-
-            if app_delegate.is_keyboard_locked() {
-                return nil
-            }
 
             // passthrough event when in literal mode.
             if app_delegate.is_literal() {
